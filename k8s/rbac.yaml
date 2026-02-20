@@ -1,0 +1,78 @@
+# Role for the main Qubiva app - needs to create/manage Jobs and read pod logs
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: qubiva-app-role
+  namespace: qubiva
+  labels:
+    app: qubiva
+rules:
+  # Manage Kubernetes Jobs (Terraform/Discovery runners)
+  - apiGroups: ["batch"]
+    resources: ["jobs", "jobs/status"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+  # Manage pods: read logs for streaming, create/delete for analyst session pods
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "pods/status", "pods/exec"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+  # Read ConfigMaps (for runner configuration)
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]
+  # Secrets: read runner config, create/update initial admin password secret
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create", "update"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: qubiva-app-rolebinding
+  namespace: qubiva
+  labels:
+    app: qubiva
+subjects:
+  - kind: ServiceAccount
+    name: qubiva-app
+    namespace: qubiva
+roleRef:
+  kind: Role
+  name: qubiva-app-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Role for runner Jobs - IaC runner needs secrets access for kubernetes backend
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: qubiva-runner-role
+  namespace: qubiva
+  labels:
+    app: qubiva
+rules:
+  # Terraform kubernetes backend stores state in secrets
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  # Terraform kubernetes backend uses leases for state locking
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: qubiva-runner-rolebinding
+  namespace: qubiva
+  labels:
+    app: qubiva
+subjects:
+  - kind: ServiceAccount
+    name: qubiva-runner
+    namespace: qubiva
+roleRef:
+  kind: Role
+  name: qubiva-runner-role
+  apiGroup: rbac.authorization.k8s.io

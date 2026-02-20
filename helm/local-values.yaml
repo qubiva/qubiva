@@ -1,0 +1,21 @@
+# Local development overrides for Docker Desktop K8s
+image:
+  repository: qubiva/app
+  tag: "latest"
+  pullPolicy: Never
+
+runners:
+  iac:
+    image: qubiva/iac-runner
+    tag: latest
+  discovery:
+    image: qubiva/discovery-runner
+    tag: latest
+
+secrets:
+  databaseUrl: "mongodb://qubiva-mongo:27017/qubiva?replicaSet=rs0"
+  localEncryptionKey: "jpAUKruZqd7GkILzU9qD6V9grq_vxKbaSZT8TOefp-8="
+  localSigningKey: "k8s-dev-signing-key-not-for-production"
+  jwtSecret: "LZKP2kF57qLc484jzMtzOsmK-SvCAGccDDpC7g77oCs"
+  internalApiKey: "VgtoV9Wyr3hIxuPMlIhVNByCWMgv74TB7yta7Crp950"
+  llmApiKey: ""

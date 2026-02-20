@@ -1,0 +1,634 @@
+/* Basic resets and global styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+/* Query runs list specific styles */
+#cloud-queries-list {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+.run-item {
+    display: grid;
+    grid-template-columns: minmax(80px, auto) 1fr;
+    grid-template-areas: 
+        "id account"
+        "status status"
+        "time time"
+        "actions actions";
+    gap: 10px;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    align-items: center;
+}
+
+.run-item:last-child {
+    border-bottom: none;
+}
+
+.run-id {
+    grid-area: id;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.run-account-repo {
+    grid-area: account;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.run-status-container {
+    grid-area: status;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.run-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    min-width: 100px;
+    text-align: center;
+}
+
+.status-completed { background-color: #dff6dd; color: #107c10; }
+.status-failed { background-color: #fde7e9; color: #a80000; }
+.status-warning { background-color: #fff4ce; color: #8a6d00; }
+.status-in-progress { background-color: #deecf9; color: #0078d4; }
+.status-timeout { background-color: #e1dfdd; color: #323130; }
+
+.custom-spinner::before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    margin-right: 5px;
+    animation: customSpin 1s linear infinite;
+}
+
+@keyframes customSpin {
+    to { transform: rotate(360deg); }
+}
+
+.run-time {
+    grid-area: time;
+    color: #605e5c;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.run-actions {
+    grid-area: actions;
+}
+
+.view-logs-btn {
+    white-space: nowrap;
+    padding: 6px 12px;
+    background-color: #0078d4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.view-logs-btn:hover {
+    background-color: #106ebe;
+}
+
+@media (min-width: 768px) {
+    .run-item {
+        grid-template-columns: minmax(80px, auto) 1fr auto auto auto;
+        grid-template-areas: "id account status time actions";
+    }
+}
+
+/* Cloud Account Details styles */
+/* Cloud Account Details styles */
+.detail-line {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.detail-line i {
+    color: #4a90e2;
+    font-size: 18px;
+    margin-right: 12px;
+    margin-top: 2px;
+}
+
+.detail-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-label {
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.detail-value {
+    color: #333;
+}
+
+
+
+/* Reduce gap between dual listbox and save button */
+.bootstrap-duallistbox-container {
+    margin-bottom: 0 !important;
+}
+
+/* Configure Link Styling */
+.discovery-config-link {
+    font-size: 0.85em;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.discovery-config-link:hover {
+    text-decoration: underline;
+}
+
+/* Discovery Status Indicator */
+.discovery-status {
+    font-size: 0.75em;
+    margin-left: 5px;
+}
+
+.discovery-status.configured {
+    color: #28a745; /* Green */
+}
+
+.discovery-status.not-configured {
+    color: #dc3545; /* Red */
+}
+
+
+/* ============================================ */
+/* DISCOVERY DASHBOARD STYLES                  */
+/* ============================================ */
+/* ============================================ */
+/* DISCOVERY DASHBOARD STYLES - FINAL          */
+/* CONSOLIDATED WITH WHITE CALLOUTS            */
+/* ============================================ */
+
+/* Dashboard card spacing */
+#discovery-dashboard-card {
+    margin-bottom: 20px;
+}
+
+/* Summary boxes responsive height */
+.small-box {
+    border-radius: 4px;
+}
+
+.small-box .inner h3 {
+    font-size: 2rem;
+    font-weight: bold;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    line-height: 1.2;
+    overflow: hidden;
+}
+
+.small-box .inner p {
+    font-size: 0.9rem;
+}
+
+/* ============================================ */
+/* INSIGHTS SECTION - WHITE BACKGROUNDS        */
+/* ============================================ */
+
+/* Base callout - white background with colored left border */
+.callout {
+    border-left: 5px solid #28a745;
+    border-radius: 3px;
+    margin-bottom: 10px;
+    padding: 12px 15px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.callout h5 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #495057;
+}
+
+.callout h5 i {
+    margin-right: 8px;
+}
+
+/* Success callout - green border, white background */
+.callout-success {
+    border-left-color: #28a745;
+    background-color: #ffffff;
+}
+
+.callout-success h5 {
+    color: #495057;
+}
+
+.callout-success h5 i {
+    color: #28a745;
+}
+
+/* Warning callout - yellow border, white background */
+.callout-warning {
+    border-left-color: #ffc107;
+    background-color: #ffffff;
+}
+
+.callout-warning h5 {
+    color: #495057;
+}
+
+.callout-warning h5 i {
+    color: #ffc107;
+}
+
+/* Info callout - blue border, white background */
+.callout-info {
+    border-left-color: #17a2b8;
+    background-color: #ffffff;
+}
+
+.callout-info h5 {
+    color: #495057;
+}
+
+.callout-info h5 i {
+    color: #17a2b8;
+}
+
+/* Primary callout - purple border, white background */
+.callout-primary {
+    border-left-color: #007bff;
+    background-color: #ffffff;
+}
+
+.callout-primary h5 {
+    color: #495057;
+}
+
+.callout-primary h5 i {
+    color: #007bff;
+}
+
+/* Danger callout - red border, white background */
+.callout-danger {
+    border-left-color: #dc3545;
+    background-color: #ffffff;
+}
+
+.callout-danger h5 {
+    color: #495057;
+}
+
+.callout-danger h5 i {
+    color: #dc3545;
+}
+
+/* Alert boxes within callouts */
+.callout .alert {
+    margin-bottom: 10px;
+}
+
+.callout .alert:last-child {
+    margin-bottom: 0;
+}
+
+/* ============================================ */
+/* CHARTS SECTION                              */
+/* ============================================ */
+
+/* Chart containers */
+.card canvas {
+    max-height: 300px;
+}
+
+/* Historical placeholder styling */
+#historical-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#historical-placeholder .fa-chart-line {
+    opacity: 0.3;
+}
+
+/* Cost trend container - always visible */
+#cost-trend-container {
+    display: block !important;
+}
+
+/* ============================================ */
+/* TABLES SECTION                              */
+/* ============================================ */
+
+/* Table responsive wrapper - critical for mobile */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+}
+
+/* Ensure DataTables doesn't break out of container */
+.dataTables_wrapper {
+    overflow-x: auto;
+}
+
+/* Tag badges in resource table - WITH WRAPPING FIX */
+#resources-table .badge {
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+    display: inline-block;
+    white-space: normal !important;
+    word-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+#resources-table .badge-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+#resources-table .badge-light {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+}
+
+/* Table improvements */
+#resources-table td,
+#costs-table td,
+#benchmark-controls-table td {
+    vertical-align: middle;
+}
+
+/* Tags column width control */
+#resources-table td:nth-child(4) {
+    max-width: 300px;
+}
+
+/* DataTables button styling */
+.dt-buttons {
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.dt-buttons .btn {
+    margin-right: 0;
+    width: auto !important;
+    flex: 0 0 auto;
+}
+
+/* Hide "Showing X to Y of Z entries" text */
+#resources-table_info,
+#costs-table_info,
+#benchmark-controls-table_info {
+    display: none !important;
+}
+
+/* Table section headers */
+.card-body h5 {
+    color: #495057;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+/* Separator between tables */
+.card-body hr {
+    border-top: 2px solid #dee2e6;
+}
+
+/* ============================================ */
+/* UI ELEMENTS                                 */
+/* ============================================ */
+
+/* Loading spinner */
+#dashboard-loading .fa-spinner {
+    color: #3c8dbc;
+}
+
+/* No data state */
+#dashboard-no-data .fa-info-circle {
+    color: #999;
+}
+
+/* Refresh button animation */
+#refresh-dashboard-btn i {
+    transition: transform 0.3s ease;
+}
+
+#refresh-dashboard-btn:hover i {
+    transform: rotate(180deg);
+}
+
+/* Badge styling for alerts */
+.badge-danger {
+    background-color: #dc3545;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+    color: #333;
+}
+
+/* ============================================ */
+/* RESPONSIVE DESIGN                           */
+/* ============================================ */
+
+/* ============================================ */
+/* COMPLIANCE BADGE CONTAINER                  */
+/* ============================================ */
+
+/* Container uses flexbox with wrapping for badge cloud effect */
+.compliance-badge-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Individual compliance badges - clickable, responsive */
+.compliance-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Icon spacing within badge */
+.compliance-badge i {
+    margin-right: 6px;
+    font-size: 0.85em;
+}
+
+/* Hover effect for badges */
+.compliance-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    text-decoration: none;
+}
+
+/* Success badge - green for benchmark succeeded */
+.compliance-badge.badge-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.compliance-badge.badge-success:hover {
+    background-color: #218838;
+    color: white;
+}
+
+/* Warning badge - orange for benchmark failed (violations found) */
+.compliance-badge.badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.compliance-badge.badge-warning:hover {
+    background-color: #e0a800;
+    color: #212529;
+}
+
+/* Danger badge - red for execution failed */
+.compliance-badge.badge-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.compliance-badge.badge-danger:hover {
+    background-color: #c82333;
+    color: white;
+}
+
+/* Info badge - blue for in progress */
+.compliance-badge.badge-info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.compliance-badge.badge-info:hover {
+    background-color: #138496;
+    color: white;
+}
+
+/* Secondary badge - gray for queued and timed out */
+.compliance-badge.badge-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.compliance-badge.badge-secondary:hover {
+    background-color: #5a6268;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .small-box .inner h3 {
+        font-size: 1.5rem;
+    }
+
+    .card canvas {
+        height: 200px !important;
+    }
+
+    #resources-table .badge {
+        font-size: 0.65rem;
+    }
+
+    #resources-table td:nth-child(4) {
+        max-width: 200px;
+    }
+
+    /* Smaller badges on mobile */
+    .compliance-badge {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+    }
+
+    /* Ensure tables scroll horizontally on mobile */
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Reduce card body padding on mobile */
+    .card-body {
+        padding: 10px;
+    }
+
+    /* Make DataTables buttons wrap on mobile */
+    .dt-buttons .btn {
+        margin-bottom: 5px;
+    }
+
+    /* Ensure DataTable filter/search doesn't overflow */
+    .dataTables_filter {
+        width: 100%;
+    }
+
+    .dataTables_filter input {
+        width: 100% !important;
+        max-width: 100%;
+    }
+
+    /* Make table text slightly smaller on mobile */
+    #resources-table,
+    #costs-table,
+    #benchmark-controls-table {
+        font-size: 0.85rem;
+    }
+
+    /* Adjust table column widths for mobile */
+    #benchmark-controls-table th,
+    #benchmark-controls-table td {
+        white-space: nowrap;
+    }
+}

@@ -1,0 +1,6 @@
+{
+    "status_options": ["todo", "in_progress", "done", "blocked"],
+    "task_type_options": ["bug", "feature", "improvement"],
+    "priority_options": ["low", "medium", "high"]
+  }
+  

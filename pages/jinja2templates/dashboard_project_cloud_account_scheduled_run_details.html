@@ -1,0 +1,135 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Schedule Details - Qubiva Dashboard{% endblock %}
+{% block cloud_account_schedule_details_styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/cloud_account_scheduled_run_details.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/toastr/toastr.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h4></h4>
+    </div>
+</div>
+
+<div class="card-header card-secondary">
+    <h5 id="last-segment" class="page-title"></h5>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Schedule Details</h3>
+    </div>
+    <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex align-items-center">
+                <i class="fas fa-fingerprint mr-3"></i>
+                <div>
+                    <small class="text-muted d-block">Schedule ID</small>
+                    <span class="font-weight-medium" id="schedule-id"></span>
+                </div>
+            </li>
+            <li class="list-group-item d-flex align-items-center">
+                <i class="fas fa-user mr-3"></i>
+                <div>
+                    <small class="text-muted d-block">Requested By</small>
+                    <span class="font-weight-medium" id="schedule-requested-by"></span>
+                </div>
+            </li>
+            <li class="list-group-item d-flex align-items-center">
+                <i class="fas fa-clock mr-3"></i>
+                <div>
+                    <small class="text-muted d-block">Frequency</small>
+                    <span class="font-weight-medium" id="schedule-frequency"></span>
+                </div>
+            </li>
+            <li class="list-group-item d-flex align-items-center">
+                <i class="fas fa-forward mr-3"></i>
+                <div>
+                    <small class="text-muted d-block">Next Execution</small>
+                    <span class="font-weight-medium" id="schedule-next-execution"></span>
+                </div>
+            </li>
+            <li class="list-group-item d-flex align-items-center">
+                <i class="fas fa-calendar mr-3"></i>
+                <div>
+                    <small class="text-muted d-block">Last Modified</small>
+                    <span class="font-weight-medium" id="schedule-last-modified"></span>
+                </div>
+            </li>
+            <li class="list-group-item d-flex align-items-center">
+                <i class="fas fa-toggle-on mr-3"></i>
+                <div class="d-flex align-items-center justify-content-between w-100">
+                    <div>
+                        <small class="text-muted d-block">Status</small>
+                        <span class="font-weight-medium" id="schedule-status-label">Enabled</span>
+                    </div>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="schedule-status-toggle">
+                        <label class="custom-control-label" for="schedule-status-toggle"></label>
+                    </div>
+                </div>
+            </li>
+            <li class="list-group-item d-flex align-items-center">
+                <i class="fas fa-cog mr-3"></i>
+                <div>
+                    <small class="text-muted d-block">Run Type</small>
+                    <span class="font-weight-medium" id="schedule-type"></span>
+                </div>
+            </li>
+            <li class="list-group-item d-flex align-items-center" id="schedule-benchmark-row">
+                <i class="fas fa-check-circle mr-3"></i>
+                <div>
+                    <small class="text-muted d-block">Auto Benchmark</small>
+                    <span class="font-weight-medium" id="schedule-benchmark"></span>
+                </div>
+            </li>
+            <li class="list-group-item align-items-center d-none" id="schedule-mod-type-row">
+                <i class="fas fa-layer-group mr-3"></i>
+                <div>
+                    <small class="text-muted d-block">Benchmark Category</small>
+                    <span class="font-weight-medium" id="schedule-mod-type"></span>
+                </div>
+            </li>
+            <li class="list-group-item align-items-center d-none" id="schedule-benchmark-id-row">
+                <i class="fas fa-tag mr-3"></i>
+                <div>
+                    <small class="text-muted d-block">Benchmark</small>
+                    <span class="font-weight-medium" id="schedule-benchmark-id"></span>
+                </div>
+            </li>
+            <li class="list-group-item align-items-center d-none" id="schedule-git-repo-row">
+                <i class="fab fa-git-alt mr-3"></i>
+                <div>
+                    <small class="text-muted d-block">Git Repository</small>
+                    <span class="font-weight-medium" id="schedule-git-repo"></span>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Schedule Execution History</h3>
+        <div class="card-tools">
+            <button type="button" class="btn btn-tool" id="refresh-requests">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div id="schedule-requests-list">
+        </div>
+        <div id="pagination-container" class="mt-3 p-3">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block cloud_account_schedule_details_scripts %}
+{{ super() }}
+<script src="{{ static_content_url }}/static/plugins/toastr/toastr.min.js"></script>
+<script src="{{ static_content_url }}/static/custom/js/cloud_account_scheduled_run_details.js?v=5"></script>
+{% endblock %}

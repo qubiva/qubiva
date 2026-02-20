@@ -1,0 +1,557 @@
+/* Refined Azure DevOps-inspired colors and styling */
+:root {
+    --sidebar-bg: #EAEAEA;
+    --sidebar-text: #252423; /* Black color */
+    --sidebar-hover: #e1dfdd;
+    --sidebar-active: #CFCFCF;
+    --search-bg: #e1dfdd; /* Lighter shade of the sidebar background */
+    --search-text: #252423;
+    --search-button: #E5E5E5;
+    --dropdown-bg: #F3F3F3; /* Light background for the dropdown */
+    --dropdown-text: #252423; /* Text color in the dropdown */
+    --project-bg: #f3f2f1;
+    --project-text: #252423;
+    --main-bg: #F8F8F8;
+    --header-bg: #EAEAEA;
+    --border-color: #e1dfdd;
+    --link-color: #0078d4;
+    --sidebar-logo-text: #575757;
+    --icon-api: #352312;
+    --icon-credentials: #5aa39d;
+    --icon-license: #af7716;
+
+
+
+    /* Icon colors */
+    --icon-dashboard: #8b8904;
+    --icon-projects: #276da3;
+    --icon-users: #185659;
+    --icon-new-user: #185659;
+    --icon-manage-user: #185659;
+    --icon-github: #6F42C1;
+    --icon-cloud: #2F855A;
+    --icon-scheduled-runs: #2F855A;
+    --icon-workspace: #9e5d12;
+    --icon-tasks: #a2252d;
+    --icon-settings: #6F42C1 ;
+    --icon-org-policy: #6F42C1;
+    --icon-github-app: #24292e;
+}
+
+/* Apply font */
+body, .main-sidebar, .main-header, .content-wrapper {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-size: 13px;
+}
+
+/* Sidebar */
+.main-sidebar {
+    background-color: var(--sidebar-bg) !important;
+    color: var(--sidebar-text) !important;
+    border-right: 1px solid var(--border-color);
+    box-shadow: none;
+    position: relative; /* Ensure the vertical line is positioned correctly */
+}
+
+.main-sidebar::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0; /* Position it on the left */
+    width: 4px; /* Thickness of the line */
+    height: 100%; /* Full height of the sidebar */
+    background-color: #276DA3;    left: 0; /* Keep the line at the left edge */
+    width: 4px; /* Adjust width for the mini sidebar */; /* Your chosen color */
+    z-index: 1; /* Ensure it appears in front of the sidebar background */
+}
+
+.sidebar-mini.sidebar-collapse .main-sidebar::before {
+    left: 0; /* Keep the line at the left edge */
+    width: 4px; /* Adjust width for the mini sidebar */
+}
+
+/* Sidebar navigation items */
+.nav-sidebar .nav-item > .nav-link {
+    color: var(--sidebar-text) !important; /* Ensuring text is always black */
+    padding: 8px 15px;
+}
+
+.nav-sidebar .nav-item > .nav-link:hover {
+    background-color: var(--sidebar-hover) !important;
+    color: var(--sidebar-text) !important; /* Text stays black on hover */
+}
+
+/* Active link styling in sidebar */
+.nav-link-active {
+    background-color: var(--sidebar-active) !important;
+    color: var(--sidebar-text) !important; /* Text stays black when active */
+    font-weight: 600 !important;
+}
+
+/* Icons in sidebar */
+.nav-icon-dashboard { color: var(--icon-dashboard) !important; }
+.nav-icon-projects { color: var(--icon-projects) !important; }
+.nav-icon-new-user { color: var(--icon-users) !important; }
+.nav-icon-manage-user { color: var(--icon-users) !important; }
+.nav-icon-users {color: var(--icon-users) !important; }
+.nav-icon-github { color: var(--icon-github) !important; }
+.nav-icon-cloud { color: var(--icon-cloud) !important; }
+.nav-icon-scheduled-runs { color: var(--icon-scheduled-runs) !important; }
+.nav-icon-cloud-alerts { color: var(--icon-cloud) !important; }
+.nav-icon-cloud-insights { color: var(--icon-cloud) !important; }
+.nav-icon-workspace { color: var(--icon-workspace) !important; }
+.nav-icon-tasks { color: var(--icon-tasks) !important; }
+.nav-icon-api { color: var(--icon-api) !important; }
+.nav-icon-settings { color: var(--icon-settings) !important; }
+.nav-icon-org-policy { color: var(--icon-settings) !important; }
+.nav-icon-credentials { color: var(--icon-credentials) !important; }
+.nav-icon-github-app { color: var(--icon-github-app) !important; }
+.nav-icon-license { color: var(--icon-license) !important; }
+
+
+
+
+
+/* Ensure the Qubiva logo text is black */
+.brand-text {
+    color: var(--sidebar-logo-text) !important; /* Use the black color variable */
+    font-weight: normal !important; /* Ensure it maintains the correct font weight */
+}
+
+.btn {
+    border-radius: 0%;
+}
+
+.sidebar .btn-sidebar {
+    background-color: var(--search-bg) !important; /* Match the search bar background */
+    border: none !important; /* Remove any border that might cause visual issues */
+    box-shadow: none !important; /* Remove any box-shadow */
+    color: var(--search-text) !important; /* Ensure the icon inside remains the correct color */
+}
+
+.sidebar .form-control-sidebar {
+    color: var(--sidebar-text) !important; /* Set the text color to black */
+    background-color: var(--search-bg) !important; /* Ensures background color is consistent */
+    border: none !important; /* Remove any border */
+    box-shadow: none !important; /* Remove any shadow */
+}
+
+
+/* Remove focus border from search input */
+.sidebar .form-control-sidebar:focus {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Override dropdown background and text color */
+.sidebar .sidebar-search-results .list-group-item {
+    background-color: var(--dropdown-bg) !important;
+    color: var(--dropdown-text) !important;
+    border-left-color: var(--link-color) !important; /* Matches the border color */
+}
+
+/* Adjust the color of the search title and highlighted text */
+.sidebar .sidebar-search-results .list-group-item .search-title {
+    color: var(--dropdown-text) !important; /* Ensure the text color is consistent */
+}
+
+.sidebar .sidebar-search-results .list-group-item .search-title strong {
+    color: var(--dropdown-text) !important; /* Highlighted text color matches the dropdown text */
+}
+
+/* Adjust the color of the search path */
+.sidebar .sidebar-search-results .list-group-item .search-path {
+    color: var(--dropdown-text) !important;
+}
+
+/* Hover state for search dropdown items */
+.sidebar .sidebar-search-results .list-group-item:hover {
+    background-color: var(--sidebar-hover) !important;
+    color: var(--dropdown-text) !important;
+}
+
+/* Remove dotted border for active elements */
+*:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Remove the black line under the logo */
+.main-sidebar .brand-link {
+    border-bottom: none !important;
+}
+
+/* Dropdown items in sidebar */
+.sidebar .nav-treeview > .nav-item > .nav-link {
+    padding-left: 30px;
+}
+
+/* Top-level menu (Projects) background */
+.sidebar .nav-item.has-treeview.menu-open > .nav-link {
+    background-color: var(--sidebar-bg) !important;
+    color: var(--sidebar-text) !important;
+}
+
+/* Style for the dropdown arrow in the Projects menu */
+.sidebar .nav-item.has-treeview > .nav-link .right {
+    color: var(--sidebar-text) !important;
+}
+
+/* Main content area */
+body, .content-wrapper {
+    background-color: var(--main-bg);
+    color: var(--sidebar-text);
+}
+
+/* Navbar */
+.main-header {
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.main-footer {
+    background-color: var(--header-bg);
+}
+
+/* Content headers */
+.content-header h1 {
+    color: var(--sidebar-text);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.page-title {
+    font-size: 1.3rem; /* Smaller font size */
+    font-weight: normal; /* Normal font weight */
+    color: #252423; /* Dark color for the text */
+    letter-spacing: 1px; /* Slight spacing between letters */
+    text-align: left; /* Align the title to the left */
+    padding: 10px 0; /* Add some padding for spacing */
+    margin-bottom: 20px; /* Space below the title */
+    border-bottom: 2px solid #276DA3; /* Add a bottom border for emphasis */
+    display: inline-block; /* Make the title inline-block to limit the border width to text */
+}
+
+
+
+.form-control {
+    border-radius: 0%
+}
+
+.form-control.form-control-lg:active {
+    border-color: #276DA3; /* Custom border color on hover */
+}
+
+
+.form-control.form-control-lg:focus,
+.form-control.form-control-lg:active {
+    border: 1px solid #276DA3;
+}
+
+/* Remove blinking cursor on pagination links */
+.pagination .page-link {
+    user-select: none; /* Prevent text selection */
+    cursor: pointer;   /* Ensure the pointer cursor is used */
+}
+
+/*You are here decorator*/
+.breadcrumb-wrapper {
+    font-size: 0.9rem;
+    color: #6c757d;
+    padding: 5px 0;
+}
+
+.breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0;
+    margin: -2px 0 0 -8px;
+    list-style: none;
+    background-color: transparent;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+    padding: 2px 0 0 8px;
+}
+
+.breadcrumb-item:not(:first-child)::before {
+    content: "›";
+    padding-right: 8px;
+    color: #6c757d;
+}
+
+.breadcrumb-item.active {
+    font-weight: bold;
+    color: #343a40;
+}
+
+@media (max-width: 576px) {
+    .breadcrumb-wrapper {
+        font-size: 0.8rem;
+    }
+}
+
+.info-box.bg-info {
+    background-color: #17a2b8 !important;
+    color: white;
+  }
+  
+  .info-box.bg-info .info-box-content {
+    color: white;
+  }
+  
+  .info-box.bg-info .info-box-icon {
+    color: rgb(56, 56, 56);
+  }
+  
+  /* For documentation specific styling */
+  .info-box.bg-docs {
+    background-color: #FFFFFF !important;
+  }
+  
+  .info-box.bg-docs .info-box-content,
+  .info-box.bg-docs .info-box-icon {
+    color: rgb(56, 56, 56);
+  }
+
+  .info-box.project-info {
+    max-width: 800px;
+    margin: 0 auto 2rem;
+    padding: 1.5rem;
+  }
+  
+  .info-box.project-info .info-box-icon {
+    padding: 1rem;
+    background: transparent;
+  }
+  
+  .info-box.project-info .info-box-content {
+    padding: 0 1rem;
+    line-height: 1.6;
+    white-space: normal;
+    word-wrap: break-word;
+  }
+
+  .info-box-text {
+    white-space: pre-line !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    line-height: 1.5;
+  }
+
+  .autofill-dummy {
+    display: none !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
+/* Hide any autofill styling that might leak through */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px white inset !important;
+    -webkit-text-fill-color: inherit !important;
+    background-color: transparent !important;
+}
+
+/* Override AdminLTE's cursor for our autofill prevention fields */
+.form-control[readonly]:not([disabled]) {
+    cursor: text !important;
+}
+
+input[readonly]:not([disabled]) {
+    cursor: text !important;
+}
+
+/* Keep blocked cursor only for actually disabled fields */
+.form-control[disabled],
+input[disabled] {
+    cursor: not-allowed !important;
+}
+
+input[disabled], .form-control[disabled] {
+    background-color: #e9ecef !important;
+}
+
+.session-pill__label {
+  font-size: 0.875rem;
+  color: #344054;
+  white-space: nowrap;
+}
+
+/* Session Pill (final) */
+#session-cta-pill .nav-link { padding-left:.5rem; padding-right:.5rem; }
+
+/* Session Pill (refined, thin + color-matched) */
+#session-cta-pill .nav-link { padding-left: .4rem; padding-right: .4rem; }
+
+.session-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px; /* thin */
+  border-radius: 999px;
+  background: #f7f9fc; /* neutral */
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: none;
+  line-height: 1;
+  vertical-align: middle;
+  margin-top: 0; /* keep on same baseline */
+}
+
+#session-cta-pill > .nav-link {
+  display: flex;
+  align-items: center;
+}
+
+.session-pill__label {
+  font-size: 0.82rem;
+  color: #252423; /* same tone as logout text */
+  white-space: nowrap;
+}
+
+.session-pill__time {
+  font-weight: 500;
+  margin-left: 4px;
+  color: #252423;
+}
+
+#session-cta-pill .session-pill__btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #252423; /* same as logout */
+  opacity: 1;     /* ensure visible */
+  cursor: pointer;
+}
+
+#session-cta-pill .session-pill__btn-icon:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+#session-cta-pill .session-pill__btn-icon i {
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;                 /* keep solid set */
+  font-size: 13px;                  /* slightly smaller */
+  line-height: 1;
+  color: #252423 !important;
+  text-shadow: 0 0 0.4px #252423;   /* subtle anti-bold trick */
+}
+
+
+.session-pill__btn-icon:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+
+.session-pill--critical {
+  background: #E1DFDD; /* same as normal */
+  border-color: rgba(0, 0, 0, 0.08);
+}
+.session-pill--critical .session-pill__label {
+  color: #252423; /* keep consistent */
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .session-pill { gap: 6px; padding: 2px 6px; }
+  .session-pill__label-text { display: none; }
+  .session-pill__label { font-size: 0.8rem; }
+}
+@media (max-width: 576px) {
+  .session-pill { gap: 4px; padding: 2px 5px; }
+}
+
+/* Logout Pill (matching session pill style) */
+#logout-pill-container .nav-link { padding-left: .4rem; padding-right: .4rem; }
+
+.logout-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px; /* thin */
+  border-radius: 999px;
+  background: #E1DFDD; /* match session pill */
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: none;
+  line-height: 1;
+  vertical-align: middle;
+  margin-top: 0;
+}
+
+#logout-pill-container > .nav-link {
+  display: flex;
+  align-items: center;
+}
+
+.logout-pill__label {
+  font-size: 0.82rem;
+  color: #252423;
+  white-space: nowrap;
+}
+
+.logout-pill__user {
+  font-weight: 500;
+  color: #252423;
+}
+
+#logout-pill-container .logout-pill__btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #252423;
+  opacity: 1;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+#logout-pill-container .logout-pill__btn-icon:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+#logout-pill-container .logout-pill__btn-icon i {
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 1;
+  color: #252423 !important;
+  text-shadow: 0 0 0.4px #252423;
+}
+
+/* Prevent logout user text from overflowing */
+.logout-pill__user {
+  display: inline-block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .logout-pill__user { max-width: 120px; }
+}
+
+/* Responsive adjustments for logout pill */
+@media (max-width: 992px) {
+  .logout-pill { gap: 6px; padding: 2px 6px; }
+  .logout-pill__label { font-size: 0.8rem; }
+}
+@media (max-width: 576px) {
+  .logout-pill { gap: 4px; padding: 2px 5px; }
+}

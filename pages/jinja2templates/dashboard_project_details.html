@@ -1,0 +1,56 @@
+{% extends "dashboard_base.html" %}
+{% block global_stats_styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/resource-overview.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/project-resource-overview.css">
+{% endblock %}
+
+{% block title %}Project Details - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div class="resource-overview">
+    <div class="dashboard-layout">
+        <!-- Resources Column -->
+        <div class="projects-column">
+            <h2>{{ project_name }} - Overview</h2>
+            <div class="project-description">
+                <!-- Description will be inserted by JS -->
+            </div>
+            <div id="resourceMap" class="projects-list">
+                <!-- Resources will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Details Column -->
+        <div class="details-column">
+            <!-- Task Status Section -->
+            <div id="quickAccess" class="quick-access">
+                <h2>My Tasks</h2>
+                <div class="task-list">
+                    <!-- Tasks will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="welcome-message" style="display: none; flex-direction: column; justify-content: center; align-items: center; height: 50vh; text-align: center;">
+        <i class="fas fa-door-open fa-4x"></i><br/>
+        <h4>Welcome to</h4>
+        <h3 style="font-weight: bold;">{{ project_name }}</h3>
+    </div>
+</div>
+{% endblock %}
+
+{% block global_stats_scripts %}
+<script>
+    function getCurrentUser() {
+        return "{{ user }}";
+    }
+    
+    function getProjectName() {
+        return "{{ project_name }}";
+    }
+</script>
+{{ super() }}
+<script src="{{ static_content_url }}/static/custom/js/project-resource-map.js"></script>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "dashboard_base.html" %}
+
+{% block workspaces_create_select2 %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/create_workspace.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+{% endblock %}
+
+{% block title %}Create Workspace - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-2">
+  <div class="col-sm-6">
+    <h4></h4> <!-- create a neat space near header-->
+  </div>
+</div>
+<div class="card-header card-secondary">
+    <div class="info-box bg-docs">
+      <span class="info-box-icon"><i class="fas fa-book"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Create a workspace for managing deployments. Define variables and secrets with the highest precedence over project and cloud account levels. Deploy configurations sourced from your linked Git repositories. State files are managed and locked automatically to ensure consistency and prevent conflicts.</span>
+      </div>
+    </div>
+    <h5 class="page-title">Create Workspace</h5>
+</div>
+    <div class="card-body">
+        <form id="create-workspace-form">
+            <div class="form-group">
+                <label for="workspace-name">Workspace Name</label>
+                <input type="text" id="workspace-name" class="form-control" placeholder="Workspace Name" required>
+            </div>
+            <div class="form-group">
+                <label for="workspace-description">Description</label>
+                <textarea id="workspace-description" class="form-control" placeholder="Workspace Description" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="terraform-version">{{ iac_engine_label }} Version</label>
+              <input type="text" id="terraform-version" class="form-control" placeholder="Enter {{ iac_engine_label }} version (e.g. 1.11.0)" required>
+            </div>
+
+            <!-- EXACT COPY from working terraform executor -->
+            <div class="form-group">
+                <label for="git-repo-search">Git Repository</label>
+                <select class="form-control select2" id="git-repo-search" style="width: 100%;">
+                  <option selected="selected">Select a git repository</option>
+                </select>
+            </div>
+            <!-- Add this AFTER the git repository form group -->
+            <div class="form-group">
+                <label for="cloud-account-search">Cloud Account</label>
+                <select class="form-control select2" id="cloud-account-search" style="width: 100%;">
+                  <option selected="selected">Select a cloud account</option>
+                </select>
+            </div>
+            
+            <!-- Section for Variables -->
+            <div class="form-group">
+                <label for="variables">Variables</label>
+                <div id="variables-entries"></div>
+                <button type="button" id="add-variable-entry" class="btn btn-secondary mt-2">Add Variable</button>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" id="create-workspace-button" class="btn btn-primary">Create Workspace</button>
+                <div id="spinner" class="spinner-border text-primary" role="status" style="display: none;">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="successModalLabel">Success</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="modalMessage">
+        Workspace created successfully.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="viewWorkspaceButton">View Workspace</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Failure Modal -->
+<div class="modal fade" id="failureModal" tabindex="-1" role="dialog" aria-labelledby="failureModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="failureModalLabel">Error</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="failureModalMessage">
+        Failed to create workspace. Please try again.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block create_workspace_scripts %}
+{{ super() }}
+<script src="{{ static_content_url }}/static/plugins/jquery/jquery.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/select2/js/select2.full.min.js"></script>
+<script src="{{ static_content_url }}/static/custom/js/create-workspace.js"></script>
+{% endblock %}

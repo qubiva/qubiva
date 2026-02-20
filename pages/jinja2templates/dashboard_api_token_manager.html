@@ -1,0 +1,115 @@
+{% extends "dashboard_base.html" %}
+
+{% block manage_api_tokens_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+{% endblock %}
+
+{% block title %}Manage API Tokens - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-2">
+    <div class="col-sm-6">
+    <h4></h4> <!-- create a neat space near header-->
+    </div>
+</div>
+<div class="card-header card-secondary">
+  <h5 class="page-title">Manage API Tokens</h5>
+  <div class="card-body">
+      <!-- Token List -->
+      <div id="api-tokens-list-container">
+          <h6>Existing Tokens</h6>
+          <div id="api-tokens-list" class="list-group">
+              <!-- Tokens will be dynamically populated here -->
+          </div>
+          <p id="no-tokens-message" class="text-muted" style="display: none;">
+              <i class="fas fa-info-circle"></i> No API tokens found. Create a new one below.
+          </p>
+      </div>
+
+      <!-- Form for creating a new token -->
+      <h6 class="mt-4">Create New Token</h6>
+      <form id="create-api-token-form">
+        <div class="form-group">
+            <label for="token-name">Token Name</label>
+            <input type="text" class="form-control" id="token-name" placeholder="Enter token name (alphanumeric only)" required>
+        </div>
+        <div class="form-group">
+            <label for="expiry-type">Expiration Time Format</label>
+            <select class="form-control" id="expiry-type">
+                <option value="hours">Hours</option>
+                <option value="days">Days</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="expiry-value">Expiry Value</label>
+            <input type="number" class="form-control" id="expiry-value" min="1" placeholder="Enter expiry value" required>
+            <small class="form-text text-muted">Enter a value in the selected unit (e.g., hours or days).</small>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> Create Token
+        </button>
+      </form>        
+
+      <!-- Revocation notice -->
+      <div id="revocation-feedback" class="alert alert-success mt-3" style="display: none;">
+          <i class="fas fa-check-circle"></i> Token revoked successfully.
+      </div>
+  </div>
+</div>
+
+<!-- Modal for displaying API token and status messages -->
+<div class="modal fade" id="apiTokenModal" tabindex="-1" role="dialog" aria-labelledby="apiTokenModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="apiTokenModalLabel"></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="successContent" style="display: none;">
+          <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span id="successMessage"></span>
+          </div>
+          <div class="form-group">
+            <label for="apiToken"><strong>API Token</strong></label>
+            <div class="input-group">
+              <input type="text" class="form-control font-monospace" id="apiToken" readonly />
+              <div class="input-group-append">
+                <button class="btn btn-outline-secondary" id="copyTokenButton" type="button">
+                  <i class="fas fa-copy"></i>
+                  Copy
+                </button>
+              </div>
+            </div>
+            <div class="alert alert-warning mt-3" style="font-size: 1.1em;">
+              <i class="fas fa-exclamation-triangle"></i>
+              Make sure to save this token securely. You won't be able to see it again!
+            </div>
+          </div>
+        </div>
+        <div id="errorContent" style="display: none;">
+          <div>
+            <i class="fas fa-exclamation-circle text-dark"></i>
+            <span id="errorMessage"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block manage_api_tokens_scripts %}
+{{ super() }}
+<!-- Include jQuery, Bootstrap, and Select2 before your custom scripts -->
+<script src="{{ static_content_url }}/static/plugins/jquery/jquery.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="{{ static_content_url }}/static/custom/js/api_token_manager.js"></script>
+{% endblock %}

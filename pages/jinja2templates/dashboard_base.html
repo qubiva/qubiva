@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Qubiva{% endblock %}</title>
+     <!-- Favicons -->
+     <link rel="icon" type="image/x-icon" href="{{ static_content_url }}/static/custom/favicons/favicon.ico">
+     <link rel="icon" type="image/png" sizes="16x16" href="{{ static_content_url }}/static/custom/favicons/favicon-16x16.png">
+     <link rel="icon" type="image/png" sizes="32x32" href="{{ static_content_url }}/static/custom/favicons/favicon-32x32.png">
+     <link rel="apple-touch-icon" href="{{ static_content_url }}/static/custom/favicons/apple-touch-icon.png">
+     <link rel="icon" type="image/png" sizes="192x192" href="{{ static_content_url }}/static/custom/favicons/android-chrome-192x192.png">
+     <link rel="icon" type="image/png" sizes="512x512" href="{{ static_content_url }}/static/custom/favicons/android-chrome-512x512.png">
+     <link rel="icon" type="image/x-icon" href="{{ static_content_url }}/static/custom/images/favicon.ico">
+    <link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/pace.css">
+    <script src="{{ static_content_url }}/static/plugins/jquery/jquery.min.js"></script>
+    <script src="{{ static_content_url }}/static/custom/js/login_handler.js"></script>
+    <script src="{{ static_content_url }}/static/custom/js/session_manager.js"></script>
+    <script src="{{ static_content_url }}/static/plugins/jquery-validation/jquery.validate.min.js"></script>
+    <script src="{{ static_content_url }}/static/custom/js/pace-settings.js"></script>
+    <script src="{{ static_content_url }}/static/plugins/pace-progress/pace.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet" href="{{ static_content_url }}/static/plugins/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link rel="stylesheet" href="{{ static_content_url }}/static/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="{{ static_content_url }}/static/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+    <link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/dashboard.css">
+    <script>
+        let activeRequests = 0; // Tracks concurrent requests
+        let dimmerTimeout;      // Timeout for delaying hide
+        let dimmerVisible = false; // Tracks if the dimmer is currently visible
+
+        // Show the dimmer, ensuring it doesn't repeatedly trigger
+        const showDimmer = () => {
+            if (!dimmerVisible) {
+                dimmerVisible = true;
+                clearTimeout(dimmerTimeout); // Clear any pending hide timeout
+                $('#ajax-dimmer').stop(true, true).fadeIn(400); // Smooth fade-in
+            }
+        };
+
+        // Hide the dimmer only when no active requests are left
+        const hideDimmer = () => {
+            if (activeRequests === 0 && dimmerVisible) {
+                dimmerTimeout = setTimeout(() => {
+                    if (activeRequests === 0) { // Double-check no requests are active
+                        dimmerVisible = false;
+                        $('#ajax-dimmer').stop(true, true).fadeOut(200); // Smooth fade-out
+                    }
+                }, 300); // Delay to prevent flickering
+            }
+        };
+
+        // ✅ jQuery AJAX integration with skipDimmer support
+        // Use ajaxSend/ajaxComplete so we can inspect per-request options
+        $(document).ajaxSend(function(event, jqXHR, options) {
+            // If this request explicitly opts out of dimmer, ignore it
+            if (options && options.skipDimmer === true) {
+                return;
+            }
+            activeRequests++;
+            showDimmer();
+        }).ajaxComplete(function(event, jqXHR, options) {
+            if (options && options.skipDimmer === true) {
+                return;
+            }
+            activeRequests--;
+            hideDimmer();
+        });
+
+        // ✅ Fetch API integration with skipDimmer support
+        const originalFetch = window.fetch;
+        window.fetch = async function(input, init = {}) {
+            const skipDimmer = init && init.skipDimmer === true;
+
+            if (!skipDimmer) {
+                activeRequests++;
+                showDimmer();
+            }
+
+            try {
+                // fetch will ignore unknown fields like skipDimmer in init
+                const response = await originalFetch.call(this, input, init);
+                return response;
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            } finally {
+                if (!skipDimmer) {
+                    activeRequests--;
+                    hideDimmer();
+                }
+            }
+        };
+
+        // Convenience helper for silent / background calls (no dimmer)
+        window.silentFetch = function(input, init = {}) {
+            return window.fetch(input, { ...init, skipDimmer: true });
+        };
+
+        // Debugging active requests (Optional, for dev purposes)
+        setInterval(() => {
+            console.log(`Active Requests: ${activeRequests}, Dimmer Visible: ${dimmerVisible}`);
+        }, 1000);
+
+        // Safety mechanism: Force hide dimmer when page is fully loaded
+        $(window).on('load', function() {
+            setTimeout(() => {
+                // If dimmer is still visible after page load, force hide it
+                if (activeRequests === 0 && dimmerVisible) {
+                    console.warn('Forcing dimmer to hide - page loaded but dimmer still visible');
+                    dimmerVisible = false;
+                    $('#ajax-dimmer').stop(true, true).fadeOut(200);
+                }
+            }, 500); // Wait 500ms after page load
+        });
+
+        // Additional safety: Reset counter if it gets stuck
+        $(document).ready(function() {
+            // After 10 seconds, if there are still "active" requests but no actual network activity,
+            // reset the counter (this handles stuck requests)
+            setTimeout(() => {
+                if (activeRequests > 0 && $.active === 0) {
+                    console.warn(`Resetting stuck activeRequests counter from ${activeRequests} to 0`);
+                    activeRequests = 0;
+                    hideDimmer();
+                }
+            }, 10000);
+
+            // Allow clicking the dimmer to force hide it (emergency escape)
+            $('#ajax-dimmer').on('click', function() {
+                console.warn('Dimmer manually dismissed by user click');
+                activeRequests = 0;
+                dimmerVisible = false;
+                $(this).stop(true, true).fadeOut(200);
+            });
+        });
+    </script>
+
+    
+    <script>
+        Pace.options = {
+            ajax: {
+                trackMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE']
+            }
+        };
+        
+        $(window).on('load', function() {
+            if ($.active === 0) {
+                Pace.options.ajax = false;
+            } else {
+                $(document).one('ajaxStop', function() {
+                    Pace.options.ajax = false;
+                });
+            }
+        });
+    </script>
+    
+    <!-- Conditional CSS -->
+    {% block inventory_styles %}{% endblock %}
+    {% block projects_create_select2 %}{% endblock %}
+    {% block create_new_users_select2 %}{% endblock %}
+    {% block manage_users_select2 %}{% endblock %}
+    {% block projects_edit_select2 %}{% endblock %}
+    {% block cloud_accounts_create_select2 %}{% endblock %}
+    {% block project_listing_styles %}{% endblock %}
+    {% block cloud_accounts_styles %}{% endblock %}
+    {% block github_repos_styles %}{% endblock %}
+    {% block github_accounts_create_select2 %}{% endblock %}
+    {% block workspaces_styles %}{% endblock %}
+    {% block terraform_executor_styles %}{% endblock %}
+    {% block workspaces_create_select2 %}{% endblock %}
+    {% block workspaces_edit_select2 %}{% endblock %}
+    {% block cloud_query_styles %}{% endblock %}
+    {% block terraform_logs_styles %}{% endblock %}    
+    {% block task_manager_styles %}{% endblock %}
+    {% block cloud_account_scheduled_runs_styles %}{% endblock %}
+    {% block cloud_account_schedule_details_styles %}{% endblock %}
+    {% block credential_create_select2 %}{% endblock %}
+    {% block credentials_styles %}{% endblock %}
+    {% block credential_edit_select2 %}{% endblock %}
+    {% block manage_api_tokens_css %}{% endblock %}
+    {% block alert_manager_styles %}{% endblock %}        
+    {% block analyst_styles %}{% endblock %}
+    {% block global_stats_styles %}{% endblock %}
+    {% block project_stats_styles %}{% endblock %}
+    {% block org_policy_styles %}{% endblock %}
+    {% block github_app_config_select2 %}{% endblock %}
+    {% block manage_sso_styles %}{% endblock %}
+</head>
+
+<body class="hold-transition sidebar-mini">
+    <div id="ajax-dimmer" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 2001; cursor: pointer;" title="Click to dismiss if stuck"></div>
+    <div class="wrapper">
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
+            </ul>
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item" id="session-renewal-container" style="display: none;">
+                    <a class="nav-link" href="#" id="renew-session-btn" role="button" title="Renew session">
+                        <i class="far fa-redo-alt"></i>
+                    </a>
+                </li>
+                <!-- Session Pill (hidden by default) -->
+                <li class="nav-item d-none" id="session-cta-pill">
+                <a class="nav-link p-0 px-2 d-flex align-items-center" href="javascript:void(0)" tabindex="-1" aria-disabled="true" style="cursor:default;">
+                    <span class="session-pill">
+                    <span class="session-pill__label">
+                        <span class="session-pill__label-text">Session ends in</span>
+                        <span id="session-timer-text" class="session-pill__time">--:--</span>
+                    </span>
+                    <span class="session-pill__btn-icon" id="renew-session-btn" title="Renew session" aria-label="Renew session">
+                        <i class="fas fa-redo-alt"></i>
+                    </span>
+                    </span>
+                </a>
+                </li>
+
+
+                <li class="nav-item" id="logout-pill-container">
+                    <span class="nav-link p-0 px-2 d-flex align-items-center">
+                        <span class="logout-pill">
+                            <span class="logout-pill__label">
+                                <span class="logout-pill__user">{{ user }}</span>
+                            </span>
+                            <a href="#" class="logout-pill__btn-icon" data-widget="logout" id="logout-link" role="button" title="Logout" aria-label="Logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </a>
+                        </span>
+                    </span>
+                </li>                      
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </a>
+                </li>      
+            </ul>
+        </nav>
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-secondary elevation-0">
+            <!-- Brand Logo -->
+<a href="#" class="brand-link">
+  <img src="{{ static_content_url }}/static/dist/img/qubiva_logo.jpg" alt="AdminLTE Logo" class="brand-image img-circle elevation-0" style="opacity: .8">
+  <span class="brand-text font-weight-light" style="display: flex; flex-direction: column;">
+    <span>Qubiva</span>
+    <small style="font-size: 0.7em; opacity: 0.7;">{{ release_version }}</small>
+  </span>
+</a>
+            
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar user panel (optional) -->
+                <div class="form-inline">
+                    <div class="input-group" data-widget="sidebar-search">
+                        <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+                        <div class="input-group-append">
+                            <button class="btn btn-sidebar">
+                                <i class="fas fa-search fa-fw"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <!-- Dashboard -->
+                        <li class="nav-item">
+                            <a href="/dashboard" class="nav-link {% if request.url.path == '/dashboard' %}nav-link-active{% endif %}">
+                                <i class="nav-icon fas fa-tachometer-alt nav-icon-dashboard"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+
+                        <!-- Cloud Analyst -->
+                        <li class="nav-item">
+                            <a href="/dashboard/analyst" class="nav-link {% if request.url.path.startswith('/dashboard/analyst') %}nav-link-active{% endif %}">
+                                <i class="nav-icon fas fa-robot nav-icon-cloud-analyst"></i>
+                                <p>Cloud Analyst</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item menu-open">
+                            <a href="#" class="nav-link {% if request.url.path.startswith('/dashboard/users') %}nav-link-active{% endif %}">
+                                <i data-permission='["org_user_add", "org_user_roles_edit"]' class="fas fa-user-friends nav-icon nav-icon-users"></i>
+                                <p>
+                                    Users
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <!-- New Users -->
+                                <li class="nav-item" data-permission='["org_user_add"]'>
+                                    <a href="/dashboard/add-users" class="nav-link {% if request.url.path == '/dashboard/add-users' %}nav-link-active{% endif %}">
+                                        <i class="fas fa-user-plus nav-icon nav-icon-new-user"></i>
+                                        <p>New Users</p>
+                                    </a>
+                                </li>
+                        
+                                <!-- Manage Users -->
+                                <li class="nav-item" data-permission='["org_user_roles_edit"]'>
+                                    <a href="/dashboard/manage-users" class="nav-link {% if request.url.path == '/dashboard/manage-users' %}nav-link-active{% endif %}">
+                                        <i class="fas fa-users nav-icon nav-icon-manage-user"></i>
+                                        <p>Manage Users</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                
+                        <!-- Projects -->
+                        <li class="nav-item menu-open">
+                            <a href="#" class="nav-link {% if request.url.path.startswith('/dashboard/projects/') and not request.url.path.endswith('/create') and not request.url.path.endswith('/edit') %}nav-link-active{% endif %}">
+                                <i class="nav-icon fas fa-project-diagram nav-icon-projects"></i>
+                                <p>
+                                    Projects
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/dashboard/projects" class="nav-link {% if request.url.path == '/dashboard/projects' %}nav-link-active{% endif %}">
+                                        <i class="fas fa-eye nav-icon nav-icon-projects"></i>
+                                        <p>My Cloud Projects</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item" data-permission='["org_project_create"]'>
+                                    <a href="/dashboard/projects/create" class="nav-link {% if request.url.path == '/dashboard/projects/create' %}nav-link-active{% endif %}">
+                                        <i class="fas fa-plus-square nav-icon nav-icon-projects"></i>
+                                        <p>Create Cloud Project</p>
+                                    </a>
+                                </li>
+                                {% if request.url.path.startswith('/dashboard/projects/') and not request.url.path.endswith('projects/create') %}
+                                {% set project_name = request.url.path.split('/')[3] %}
+                                <li class="nav-item menu-open">
+                                    <a href="#" class="nav-link nav-link-active">
+                                        <i class="fas fa-folder nav-icon nav-icon-projects"></i>
+                                        <p class="d-inline-flex">
+                                            projects/<span class="text-truncate d-inline-block" style="max-width: 50px">{{ project_name }}</span>
+                                            <i class="right fas fa-angle-left"></i>
+                                        </p>
+                                    </a>
+                                    <ul class="nav nav-treeview">
+                                        <li class="nav-item">
+                                            <a href="/dashboard/projects/{{ project_name }}"
+                                               class="nav-link {% if request.url.path == '/dashboard/projects/' ~ project_name %}nav-link-active{% endif %}">
+                                                <i class="fas fa-eye nav-icon nav-icon-projects"></i>
+                                                <p>View Project</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item" data-permission='["project_edit"]'>
+                                            <a href="/dashboard/projects/{{ project_name }}/edit"
+                                               class="nav-link {% if request.url.path.endswith('/edit') and not '/cloud_accounts/' in request.url.path and not '/workspaces/' in request.url.path %}nav-link-active{% endif %}">
+                                                <i class="fas fa-edit nav-icon nav-icon-projects"></i>
+                                                <p>Edit Project</p>
+                                            </a>
+                                        </li>
+
+                                        <!-- Git repos-->
+                                        <li class="nav-item">
+                                            <a href="/dashboard/projects/{{ project_name }}/git_repos"
+                                            class="nav-link {% if request.url.path.endswith('/git_repos') %}nav-link-active{% endif %}">
+                                                <i class="fab fa-github nav-icon nav-icon-github"></i>
+                                                <p>Git Repositories</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item" data-permission='["project_git_repo_add"]'>
+                                            <a href="/dashboard/projects/{{ project_name }}/git_repos/add"
+                                            class="nav-link {% if request.url.path.endswith('/git_repos/add') %}nav-link-active{% endif %}">
+                                                <i class="fas fa-plus nav-icon nav-icon-github"></i>
+                                                <p>Link Repository</p>
+                                            </a>
+                                        </li>
+                                        {% if '/git_repos/' in request.url.path and not request.url.path.endswith('/add') %}
+                                        {% set repo_name = request.url.path.split('/')[5] %}
+                                        <li class="nav-item" data-permission='["project_git_repo_edit"]'>
+                                            <a href="/dashboard/projects/{{ project_name }}/git_repos/{{ repo_name }}/edit"
+                                            class="nav-link {% if '/git_repos/' in request.url.path and request.url.path.endswith('/edit') %}nav-link-active{% endif %}">
+                                                <i class="fas fa-edit nav-icon nav-icon-github"></i>
+                                                <p>Edit Repository</p>
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        
+                                        <!-- Credentials -->
+                                        <li class="nav-item">
+                                            <a href="/dashboard/projects/{{ project_name }}/credentials"
+                                            class="nav-link {% if request.url.path.endswith('/credentials') %}nav-link-active{% endif %}">
+                                                <i class="fas fa-key nav-icon nav-icon-credentials"></i>
+                                                <p>View Cloud Credentials</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item" data-permission='["project_credential_add"]'>
+                                            <a href="/dashboard/projects/{{ project_name }}/credentials/create"
+                                            class="nav-link {% if request.url.path.endswith('/credentials/create') %}nav-link-active{% endif %}">
+                                                <i class="fas fa-plus nav-icon nav-icon-credentials"></i>
+                                                <p>Add Cloud Credential</p>
+                                            </a>
+                                        </li>
+                                        {% if '/credentials/' in request.url.path and not request.url.path.endswith('/create') %}
+                                        {% set credential_name = request.url.path.split('/')[5] %}
+                                        <li class="nav-item" data-permission='["project_credential_edit"]'>
+                                            <a href="/dashboard/projects/{{ project_name }}/credentials/{{ credential_name }}/edit"
+                                            class="nav-link {% if '/credentials/' in request.url.path and request.url.path.endswith('/edit') %}nav-link-active{% endif %}">
+                                                <i class="fas fa-edit nav-icon nav-icon-credentials"></i>
+                                                <p>Edit Cloud Credential</p>
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                
+                                        <!-- Cloud Accounts -->
+                                        <li class="nav-item">
+                                            <a href="/dashboard/projects/{{ project_name }}/cloud_accounts"
+                                               class="nav-link {% if request.url.path.endswith('/cloud_accounts') and not '/cloud_accounts/' in request.url.path %}nav-link-active{% endif %}">
+                                                <i class="fas fa-cloud nav-icon nav-icon-cloud"></i>
+                                                <p>View Cloud Accounts</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item" data-permission='["project_cloud_account_create"]'>
+                                            <a href="/dashboard/projects/{{ project_name }}/cloud_accounts/create"
+                                               class="nav-link {% if request.url.path.endswith('/cloud_accounts/create') %}nav-link-active{% endif %}">
+                                                <i class="fas fa-plus nav-icon nav-icon-cloud"></i>
+                                                <p>Add Cloud Account</p>
+                                            </a>
+                                        </li>                                        
+                                        {% if '/cloud_accounts/' in request.url.path and not request.url.path.endswith('/create') %}
+                                        {% set path_parts = request.url.path.split('/') %}
+                                        {% if path_parts|length >= 7 %}
+                                        {% set cloud_platform = path_parts[5] %}
+                                        {% set cloud_account_id = path_parts[6] %}
+                                        <li class="nav-item menu-open">
+                                            <a href="#" class="nav-link nav-link-active">
+                                                <i class="fas fa-folder nav-icon nav-icon-cloud"></i>
+                                                <p class="d-inline-flex">
+                                                    {{ cloud_platform }}/<span class="text-truncate d-inline-block" style="max-width: 50px">{{ cloud_account_id }}</span>
+                                                    <i class="right fas fa-angle-left"></i>
+                                                </p>
+                                            </a>
+                                            <ul class="nav nav-treeview">
+                                                <li class="nav-item">
+                                                    <a href="/dashboard/projects/{{ project_name }}/cloud_accounts/{{ cloud_platform }}/{{ cloud_account_id }}"
+                                                       class="nav-link {% if request.url.path.endswith(cloud_account_id) and not request.url.path.endswith('/edit') %}nav-link-active{% endif %}">
+                                                        <i class="fas fa-eye nav-icon nav-icon-cloud"></i>
+                                                        <p>View Cloud Account</p>
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item" data-permission='["project_cloud_account_edit"]'>
+                                                    <a href="/dashboard/projects/{{ project_name }}/cloud_accounts/{{ cloud_platform }}/{{ cloud_account_id }}/edit"
+                                                       class="nav-link {% if request.url.path.endswith('/edit') and '/cloud_accounts/' in request.url.path %}nav-link-active{% endif %}">
+                                                        <i class="fas fa-edit nav-icon nav-icon-cloud"></i>
+                                                        <p>Edit Cloud Account</p>
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a href="/dashboard/projects/{{ project_name }}/cloud_accounts/{{ cloud_platform }}/{{ cloud_account_id }}/scheduled_runs"
+                                                       class="nav-link {% if request.url.path.endswith('/scheduled_runs') %}nav-link-active{% endif %}">
+                                                        <i class="fas fa-clock nav-icon nav-icon-scheduled-runs"></i>
+                                                        <p>Scheduled Runs</p>
+                                                    </a>
+                                                </li>   
+                                                <li class="nav-item">
+                                                    <a href="/dashboard/projects/{{ project_name }}/cloud_accounts/{{ cloud_platform }}/{{ cloud_account_id }}/alerts"
+                                                       class="nav-link {% if request.url.path.endswith('/alerts') %}nav-link-active{% endif %}">
+                                                        <i class="fas fa-bell nav-icon nav-icon-cloud-alerts"></i>
+                                                        <p>Alerts</p>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        {% endif %}
+                                        {% endif %}
+                
+                                        <!-- Workspaces -->
+                                        <li class="nav-item">
+                                            <a href="/dashboard/projects/{{ project_name }}/workspaces"
+                                               class="nav-link {% if request.url.path.endswith('/workspaces') %}nav-link-active{% endif %}">
+                                                <i class="fas fa-cube nav-icon nav-icon-workspace"></i>
+                                                <p>View Workspaces</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item" data-permission='["project_workspace_create"]'>
+                                            <a href="/dashboard/projects/{{ project_name }}/workspaces/create"
+                                               class="nav-link {% if request.url.path.endswith('/workspaces/create') %}nav-link-active{% endif %}">
+                                                <i class="fas fa-plus nav-icon nav-icon-workspace"></i>
+                                                <p>Create Workspace</p>
+                                            </a>
+                                        </li>
+                                        {% if '/workspaces/' in request.url.path and not request.url.path.endswith('/create') %}
+                                        {% set workspace_name = request.url.path.split('/')[5] %}
+                                        <li class="nav-item menu-open">
+                                            <a href="#" class="nav-link nav-link-active">
+                                                <i class="fas fa-cube nav-icon nav-icon-workspace"></i>
+                                                <p class="d-inline-flex">
+                                                    workspaces/<span class="text-truncate d-inline-block" style="max-width: 50px">{{ workspace_name }}</span>
+                                                    <i class="right fas fa-angle-left"></i>
+                                                </p>
+                                            </a>
+                                            <ul class="nav nav-treeview">
+                                                <li class="nav-item">
+                                                    <a href="/dashboard/projects/{{ project_name }}/workspaces/{{ workspace_name }}"
+                                                    class="nav-link {% if request.url.path.endswith(workspace_name) %}nav-link-active{% endif %}">
+                                                        <i class="fas fa-eye nav-icon nav-icon-workspace"></i>
+                                                        <p>View Workspace</p>
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item" data-permission='["project_workspace_edit"]'>
+                                                    <a href="/dashboard/projects/{{ project_name }}/workspaces/{{ workspace_name }}/edit"
+                                                    class="nav-link {% if request.url.path.endswith('/edit') and '/workspaces/' in request.url.path %}nav-link-active{% endif %}">
+                                                        <i class="fas fa-edit nav-icon nav-icon-workspace"></i>
+                                                        <p>Edit Workspace</p>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        {% endif %}
+                                        <li class="nav-item">
+                                            <a href="/dashboard/projects/{{ project_name }}/tasks"
+                                               class="nav-link {% if request.url.path.endswith('/tasks') or '/tasks/' in request.url.path %}nav-link-active{% endif %}">
+                                                <i class="fas fa-tasks nav-icon nav-icon-tasks"></i>
+                                                <p>View Tasks</p>
+                                            </a>
+                                        </li>                                        
+                                    </ul>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                        <li class="nav-item menu-open">
+                            <a href="#" class="nav-link {% if request.url.path.startswith('/dashboard/settings/') %}nav-link-active{% endif %}">
+                                <i class="fas fa-cogs nav-icon nav-icon-settings"></i>
+                                <p>
+                                    Settings
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item" data-permission='["org_admin"]'>
+                                    <a href="/dashboard/manage-org-policy" class="nav-link {% if request.url.path == '/dashboard/manage-org-policy' %}nav-link-active{% endif %}">
+                                        <i class="fas fa-shield-alt nav-icon nav-icon-org-policy"></i>
+                                        <p>Manage Org Policy</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item" data-permission='["org_admin"]'>
+                                    <a href="/dashboard/manage-sso" class="nav-link {% if request.url.path == '/dashboard/manage-sso' %}nav-link-active{% endif %}">
+                                        <i class="fas fa-sign-in-alt nav-icon nav-icon-sso"></i>
+                                        <p>Manage Single Sign-On</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item" data-permission='["org_admin"]'>
+                                    <a href="/dashboard/manage-github-app" class="nav-link {% if request.url.path == '/dashboard/manage-github-app' %}nav-link-active{% endif %}">
+                                        <i class="fab fa-github nav-icon nav-icon-github-app"></i>
+                                        <p>GitHub App Registration</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item menu-open">
+                            <a href="#" class="nav-link {% if request.url.path.startswith('/api') %}nav-link-active{% endif %}">
+                                <i class="fas fa-code nav-icon nav-icon-api"></i>
+                                <p>
+                                    API
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/dashboard/api-tokens" class="nav-link {% if request.url.path == '/api-tokens' %}nav-link-active{% endif %}">
+                                        <i class="fas fa-key nav-icon nav-icon-api"></i>
+                                        <p>API Tokens</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/docs" target="_blank" class="nav-link {% if request.url.path == '/docs' %}nav-link-active{% endif %}">
+                                        <i class="fas fa-book nav-icon nav-icon-api"></i>
+                                        <p>API Docs</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>                        
+                    </ul>
+                </nav>              
+            </div>
+            
+            </aside>
+            <div class="content-wrapper">
+                <div class="content">
+                    <!-- Add this breadcrumb structure to your base.html where you want to display the URL -->
+                    <div class="container-fluid">
+                        <nav aria-label="breadcrumb" class="breadcrumb-wrapper">
+                            <ol class="breadcrumb" id="url-path-display">
+                                <!-- All items will be added dynamically -->
+                            </ol>
+                        </nav>
+                        <!-- <p data-permission='["project_edit","amiyav_view"]'>Miyav banga</p> -->
+                        {% block content %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+        <aside class="control-sidebar control-sidebar-dark">
+        </aside>
+        <!-- <footer class="main-footer">
+            handle this later!!! this is causing some issues
+        </footer> -->
+        </div>
+        <!-- Google Font: Source Sans Pro -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="{{ static_content_url }}/static/plugins/fontawesome-free/css/all.min.css">
+        <!-- daterange picker -->
+        <!-- Bootstrap4 Duallistbox -->
+        <link rel="stylesheet" href="{{ static_content_url }}/static/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css">
+        <!-- BS Stepper -->
+        <script src="{{ static_content_url }}/static/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="{{ static_content_url }}/static/dist/js/adminlte.js"></script>
+        <script src="{{ static_content_url }}/static/plugins/sweetalert2/sweetalert2.min.js"></script>
+        <!-- Shared utilities (loaded before page-specific scripts) -->
+        <script src="{{ static_content_url }}/static/custom/js/utils/url-helpers.js"></script>
+        <script src="{{ static_content_url }}/static/custom/js/utils/variable-entry.js"></script>
+
+        {% block inventory_scripts %}{% endblock %}
+        {% block projects_scripts %}{% endblock %}  
+        {% block github_repos_scripts %}{% endblock %}  
+        {% block cloud_accounts_scripts %}{% endblock %}  
+        {% block project_home_scripts %}{% endblock %}
+        {% block create_project_scripts %}{% endblock %}
+        {% block create_new_users_scripts %}{% endblock %}
+        {% block manage_users_scripts %}{% endblock %}
+        {% block edit_project_scripts %}{% endblock %}
+        {% block create_cloud_account_scripts %}{% endblock %}
+        {% block edit_cloud_account_scripts %}{% endblock %}
+        {% block add_github_repo_scripts %}{% endblock %}
+        {% block edit_github_repo_scripts %}{% endblock %}
+        {% block create_workspace_scripts %}{% endblock %}
+        {% block edit_workspace_scripts %}{% endblock %}
+        {% block workspaces_scripts %}{% endblock %}
+        {% block terraform_executor_scripts %}{% endblock %}
+        {% block cloud_query_scripts %}{% endblock %}
+        {% block terraform_logs_scripts %}{% endblock %}
+        {% block task_manager_scripts %}{% endblock %}
+        {% block cloud_account_scheduled_runs_scripts %}{% endblock %}
+        {% block cloud_account_schedule_details_scripts %}{% endblock %}
+        {% block manage_api_tokens_scripts %}{% endblock %}
+        {% block alert_manager_scripts %}{% endblock %}
+        {% block analyst_scripts %}{% endblock %}
+        {% block global_stats_scripts %}{% endblock %}
+        {% block project_stats_scripts %}{% endblock %}
+        {% block org_policy_scripts %}{% endblock %}
+        {% block create_credential_scripts %}{% endblock %}
+        {% block credentials_scripts %}{% endblock %}
+        {% block edit_credential_scripts %}{% endblock %}
+        {% block cloud_accounts_edit_select2 %}{% endblock %}
+        {% block github_app_config_scripts %}{% endblock %}
+        {% block manage_sso_scripts %}{% endblock %}
+        <script src="{{ static_content_url }}/static/custom/js/logout.js"></script>  
+        <script src="{{ static_content_url }}/static/custom/js/sidebar.js"></script>
+
+
+        <!-- Intentionally load the user permissions at the end -->
+        {% if permissions is defined %}
+        <script>
+            window.userPermissions = {{ permissions|tojson }};
+        </script>
+        {% else %}
+        <script>
+            window.userPermissions = window.userPermissions || [];
+        </script>
+        {% endif %}
+
+        <script src="{{ static_content_url }}/static/custom/js/permissions-handler.js"></script>
+        <script src="{{ static_content_url }}/static/custom/js/url_path_display.js"></script>
+        <script src="{{ static_content_url }}/static/custom/js/prevent_autofill.js"></script>
+    </body>
+</html>

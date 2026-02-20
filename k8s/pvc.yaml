@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qubiva-artifacts
+  namespace: qubiva
+  labels:
+    app: qubiva
+spec:
+  # Production multi-node clusters: change to ReadWriteMany (requires NFS/EFS/Azure Files CSI)
+  # Single-node clusters (Docker Desktop, minikube): ReadWriteOnce works since all pods share the node
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

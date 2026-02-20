@@ -1,0 +1,37 @@
+.user-email {
+    min-width: 150px;
+    flex-grow: 1;
+}
+
+.user-roles {
+    min-width: 250px;
+    flex-grow: 2;
+}
+
+.button-container {
+    text-align: left; /* Ensure buttons are left-aligned */
+}
+
+.remove-user i {
+    font-size: 1.2em; /* Adjust the size of the 'X' icon */
+}
+
+@media (max-width: 768px) {
+    .user-entry {
+        flex-wrap: wrap;
+    }
+
+    .user-email,
+    .user-roles {
+        min-width: 100%;
+    }
+}
+
+input.select2-search__field {
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+}
+
+input.select2-search__field {
+    width: 100%;
+}

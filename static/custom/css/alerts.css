@@ -1,0 +1,127 @@
+#refresh-alerts {
+    margin-top: 20px; /* Adds space above the button */
+    white-space: nowrap; /* Prevents text wrapping */
+}
+
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+/* Main vertical line */
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #007bff;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 45px;
+    margin-bottom: 25px;
+}
+
+/* Blue dot markers */
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #007bff;
+}
+
+.timeline-item .time {
+    color: #666;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.timeline-item .fa-clock {
+    margin-right: 5px;
+    color: #666;
+}
+
+/* Event titles */
+.timeline-header {
+    margin: 0;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+/* Resolution details box */
+.timeline-body {
+    background: #f8f9fa;
+    padding: 15px;
+    margin-top: 10px;
+    border-radius: 4px;
+}
+
+.timeline-body strong {
+    display: inline-block;
+    min-width: 120px;
+}
+
+:root {
+    --primary-blue: #0d6efd;  /* Bootstrap primary blue */
+}
+
+.btn-info {
+    background-color: var(--primary-blue) !important;
+    border-color: var(--primary-blue) !important;
+    color: white !important;
+}
+
+.alert-info {
+    background-color: #e7f1ff !important;  /* Lighter shade of primary blue */
+    border-color: #cfe2ff !important;
+    color: var(--primary-blue) !important;
+}
+
+/* Alerts table layout */
+#alerts-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+#alerts-table th:nth-child(1), /* Alert ID */
+#alerts-table td:nth-child(1) {
+    width: 20%;
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#alerts-table th:nth-child(2), /* Summary */
+#alerts-table td:nth-child(2) {
+    width: 35%;
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#alerts-table th:nth-child(3), /* Status */
+#alerts-table td:nth-child(3) {
+    width: 10%;
+    text-align: center;
+}
+
+#alerts-table th:nth-child(4), /* Created */
+#alerts-table td:nth-child(4) {
+    width: 20%;
+}
+
+#alerts-table th:nth-child(5), /* Actions */
+#alerts-table td:nth-child(5) {
+    width: 15%;
+    text-align: right;
+}

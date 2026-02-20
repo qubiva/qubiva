@@ -1,0 +1,246 @@
+{% extends "dashboard_base.html" %}
+
+{% block cloud_accounts_create_select2 %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/create_cloud_account.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+{% endblock %}
+
+{% block title %}Add Cloud Account - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-2">
+  <div class="col-sm-6">
+    <h4></h4> <!-- create a neat space near header-->
+  </div>
+</div>
+<div class="card-header card-secondary">
+  <div class="info-box bg-docs">
+    <span class="info-box-icon"><i class="fas fa-book"></i></span>
+    <div class="info-box-content">
+      <span class="info-box-text">Add existing cloud accounts to your project by registering them with the required credentials. You can either reference an existing credential from your project or provide new credentials directly. This allows for querying, data exports, deployments, AI Insights and other cloud operations.</span>
+    </div>
+  </div>  
+    <h5 class="page-title">Add Cloud Account</h5>
+    <div class="card-body">
+        <form id="create-cloud-account-form" autocomplete="off">
+            <div class="form-group">
+                <label for="cloud-platform">Cloud Platform</label>
+                <select id="cloud-platform" class="form-control" required>
+                    <option value="" disabled selected>Select Cloud Platform</option>
+                    <option value="AWS">AWS</option>
+                    <option value="Azure">Azure</option>
+                    <option value="GCP">GCP</option>
+                </select>
+            </div>
+            <div class="form-group" style="display: none;">
+              <label for="cloud-id">Cloud ID</label>
+              <input type="text" id="cloud-id" class="form-control" placeholder="AWS or GCP or Azure account ID" required autocomplete="off">
+            </div>
+
+            <!-- Credential Selection Method -->
+            <div class="form-group" id="credential-method-group" style="display: none;">
+                <label>Authentication Method</label>
+                <div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="credential-method" id="use-existing-credential" value="existing">
+                        <label class="form-check-label" for="use-existing-credential">
+                            Use Existing Credential
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="credential-method" id="provide-credentials" value="new" checked>
+                        <label class="form-check-label" for="provide-credentials">
+                            Provide New Credentials
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Existing Credential Selection -->
+            <div class="form-group" id="existing-credential-group" style="display: none;">
+                <label for="credential-reference">Select Credential</label>
+                <select id="credential-reference" class="form-control">
+                    <option value="" disabled selected>Search and select a credential...</option>
+                </select>
+                <small class="form-text text-muted">Search for existing credentials in this project</small>
+            </div>
+
+            <!-- New Credentials Section -->
+            <div id="new-credentials-section">
+                <div class="form-group" id="secret-type-group" style="display: none;">
+                  <label for="secret-type">Authentication Type</label>
+                  <select id="secret-type" class="form-control" required>
+                      <option value="" disabled selected>Select Authentication Type</option>
+                  </select>
+                </div>          
+                
+                <!-- AWS External Certificate Authority fields -->
+                <div id="aws-external-cert-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="certificate">Certificate</label>
+                        <div class="input-group">
+                            <textarea id="certificate" class="form-control" placeholder="Certificate" rows="4" autocomplete="off"></textarea>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="certificate">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="key">Key</label>
+                        <div class="input-group">
+                            <textarea id="key" class="form-control" placeholder="Key" rows="4" autocomplete="off"></textarea>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="key">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Keep the ARN fields as they are (not sensitive) -->
+                    <div class="form-group">
+                        <label for="profile-arn">Profile ARN</label>
+                        <input type="text" id="profile-arn" class="form-control" placeholder="Profile ARN" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="role-arn">Role ARN</label>
+                        <input type="text" id="role-arn" class="form-control" placeholder="Role ARN" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="trust-anchor-arn">Trust Anchor ARN</label>
+                        <input type="text" id="trust-anchor-arn" class="form-control" placeholder="Trust Anchor ARN" autocomplete="off">
+                    </div>
+                </div>
+
+                <!-- AWS Access Key Pair fields -->
+                <div id="aws-access-key-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="access-key-id">Access Key ID</label>
+                        <div class="input-group">
+                            <input type="password" id="access-key-id" class="form-control" placeholder="Access Key ID" autocomplete="off">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="access-key-id">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="secret-access-key">Secret Access Key</label>
+                        <div class="input-group">
+                            <input type="password" id="secret-access-key" class="form-control" placeholder="Secret Access Key" autocomplete="new-password">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="secret-access-key">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Azure Service Principal fields -->
+                <div id="azure-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="azure-client-id">Client ID</label>
+                        <input type="text" id="azure-client-id" class="form-control" placeholder="Client ID" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="azure-tenant-id">Tenant ID</label>
+                        <input type="text" id="azure-tenant-id" class="form-control" placeholder="Tenant ID" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="azure-client-secret">Client Secret</label>
+                        <div class="input-group">
+                            <input type="password" id="azure-client-secret" class="form-control" placeholder="Client Secret" autocomplete="new-password">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="azure-client-secret">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GCP Service Account fields -->
+                <div id="gcp-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="google-application-credentials">Application Credentials</label>
+                        <div class="input-group">
+                            <textarea id="google-application-credentials" class="form-control" placeholder="Paste your Google Application Credentials JSON here" rows="4" autocomplete="off"></textarea>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="google-application-credentials">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section for Variables -->
+            <div class="form-group">
+                <label for="variables">Variables</label>
+                <div id="variables-entries"></div>
+                <button type="button" id="add-variable-entry" class="btn btn-secondary mt-2">Add Variable</button>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" id="create-cloud-account-button" class="btn btn-primary">Add Cloud Account</button>
+                <div id="spinner" class="spinner-border text-primary" role="status" style="display: none;">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="successModalLabel">Success</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="modalMessage">
+        Cloud account created successfully.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="viewProjectButton">View Cloud Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Failure Modal -->
+<div class="modal fade" id="failureModal" tabindex="-1" role="dialog" aria-labelledby="failureModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="failureModalLabel">Error</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="failureModalMessage">
+        Failed to add cloud account. Please try again.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block create_cloud_account_scripts %}
+{{ super() }}
+<script src="{{ static_content_url }}/static/plugins/select2/js/select2.full.min.js"></script>
+<script src="{{ static_content_url }}/static/custom/js/create-cloud-account.js"></script>
+{% endblock %}

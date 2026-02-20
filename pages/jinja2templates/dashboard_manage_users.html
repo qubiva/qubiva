@@ -1,0 +1,93 @@
+{% extends "dashboard_base.html" %}
+
+{% block manage_users_select2 %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/manage_users.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+{% endblock %}
+
+{% block title %}Manage Users - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div id="manage-users">
+  <div class="row mb-2">
+    <div class="col-sm-6">
+      <h4></h4>
+    </div>
+  </div>
+  <div class="card-header card-secondary">
+    <div class="info-box bg-docs">
+      <span class="info-box-icon"><i class="fas fa-book"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Manage existing users in your organization within Qubiva. Update roles only for organization-level users responsible for overseeing the Qubiva application. For standard users, roles should remain unassigned here, as project-specific roles will be managed within the scope of each project.</span>
+      </div>
+    </div>
+    <h5 class="page-title">User Management</h5>
+  </div>
+  <div class="card-body">
+    <div class="input-group mb-4">
+      <input type="search" 
+             class="form-control form-control-lg" 
+             placeholder="Search by username or roles" 
+             id="user-search"
+             name="q"
+             autocomplete="off"
+             autocorrect="off"
+             autocapitalize="off"
+             spellcheck="false">
+      <div class="input-group-append">
+        <button type="button" class="btn btn-lg btn-default" id="reset-button">
+          <i class="fas fa-sync"></i>
+        </button>
+      </div>
+    </div>
+    <form id="manage-users-form">
+      <div id="users-container" class="mt-4"></div>
+      <div id="pagination-container" class="mt-3"></div>
+      <button type="button" id="save-changes-button" class="btn btn-primary mt-3">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modals for Success and Error -->
+<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="successModalLabel">Success</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="modalMessage">Changes saved successfully.</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="errorModalLabel">Error</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="errorMessage">Failed to save changes. Please try again.</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block manage_users_scripts %}
+{{ super() }}
+<script src="{{ static_content_url }}/static/plugins/select2/js/select2.full.min.js"></script>
+<script src="{{ static_content_url }}/static/custom/js/manage-users.js"></script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "dashboard_base.html" %}
+
+{% block projects_edit_select2 %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/create_project.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+{% endblock %}
+
+{% block title %}Edit Project - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-2">
+  <div class="col-sm-6">
+  <h4></h4> <!-- create a neat space near header-->
+  </div>
+</div>
+<div class="card-header card-secondary">
+        <h5 class="page-title">Edit Project</h5>
+</div>        
+    <div class="card-body">
+        <form id="edit-project-form">
+            <div class="form-group">
+                <label for="project-name">Project Name</label>
+                <input type="text" id="project-name" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label for="project-description">Project Description</label>
+                <textarea class="form-control" id="project-description" rows="2" placeholder="Describe your project"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Edit Members</label>
+                <input type="text" class="form-control" id="user-search" placeholder="Search for users..." autocomplete="off">
+                <div id="user-search-results" class="list-group mt-2"></div>
+            </div>
+            <div class="form-group" id="members-container"></div>
+            
+            <!-- New section for Variables and Secrets -->
+            <div class="form-group">
+                <label for="variables">Variables and Secrets</label>
+                <div id="variables-entries"></div>
+                <button type="button" id="add-variable-entry" class="btn btn-secondary mt-2">Add Variable/Secret</button>
+            </div>
+
+            <button type="submit" id="update-project-button" class="btn btn-primary" disabled>Update Project</button>
+            <div id="spinner" class="spinner-border text-primary" role="status" style="display: none;">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="successModalLabel">Success</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="modalMessage">
+        Project updated successfully.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="viewProjectButton">View Project</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Failure Modal -->
+<div class="modal fade" id="failureModal" tabindex="-1" role="dialog" aria-labelledby="failureModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="failureModalLabel">Error</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="failureMessage">
+        Failed to update the project. Please try again.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block edit_project_scripts %}
+{{ super() }}
+<!-- Include necessary scripts for Select2 and form handling -->
+<script src="{{ static_content_url }}/static/plugins/select2/js/select2.full.min.js"></script>
+<script src="{{ static_content_url }}/static/custom/js/edit-project.js"></script>
+{% endblock %}

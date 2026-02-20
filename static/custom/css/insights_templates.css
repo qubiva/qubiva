@@ -1,0 +1,253 @@
+/* Card styling */
+.card-description, .description-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Template and modal content */
+.template-description {
+    white-space: pre-wrap;
+    color: #666;
+}
+
+.modal-dialog {
+    max-height: 90vh;
+}
+
+.modal-body {
+    max-height: calc(90vh - 200px);
+    overflow-y: auto;
+}
+
+/* Template metadata section - New styles */
+.template-metadata {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.metadata-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.metadata-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.metadata-item:last-child {
+    border-bottom: none;
+}
+
+.metadata-label {
+    color: #6c757d;
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.metadata-value {
+    flex: 1;
+    color: #212529;
+    font-size: 0.9rem;
+}
+
+.metadata-value.monospace {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+}
+
+.markdown-content {
+    overflow-wrap: break-word;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Status and badge styling */
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-queued {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-running {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.status-completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-failed {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.template-status-info {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.template-status-info table {
+    margin-bottom: 0;
+}
+
+.template-status-info td {
+    padding: 0.3rem;
+}
+
+.template-status-info td:first-child {
+    width: 120px;
+    font-weight: 500;
+}
+
+/* Error and loading states */
+.no-results-message {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    text-align: center;
+    border-radius: 0.5rem;
+}
+
+.error-message {
+    margin: 1rem 0;
+    border-radius: 0.25rem;
+}
+
+/* Refresh button */
+.refresh-results {
+    border-radius: 0.25rem;
+}
+
+.refresh-results .fas {
+    transition: transform 0.3s ease;
+}
+
+.refresh-results:hover .fas {
+    transform: rotate(180deg);
+}
+
+/* Query section */
+.template-query pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    font-size: 0.9rem;
+}
+
+/* Query section specific styles */
+.query-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.query-section .metadata-label {
+    color: #6c757d;
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.query-section .query-content {
+    background: #f8f9fa;
+    padding: 0px;
+    margin: 0;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #333;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.template-results {
+    border-top: 1px solid #e9ecef;
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Status spacing fix */
+.template-status-info:empty {
+    display: none;  /* Remove space when empty */
+}
+
+/* Single icon refresh button */
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 8px;
+    color: #666;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.btn-icon:hover {
+    color: #333;
+}
+
+.refresh-results .fas {
+    font-size: 16px;
+}
+
+.refresh-results:hover .fas {
+    transform: rotate(180deg);
+}
+
+.icon-wrapper {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    flex-shrink: 0;
+}
+
+.icon-wrapper i {
+    color: #666;
+    font-size: 14px;
+}
+
+.metadata-info {
+    flex: 1;
+}
+
+.card-title {
+    margin-bottom: 0.5rem; /* Add spacing below the title */
+    font-weight: bold;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-description {
+    display: block; /* Ensure the description starts on a new line */
+    margin-top: 0.25rem; /* Add spacing between title and description */
+    font-size: 0.9rem;
+    color: #6c757d;
+    white-space: normal; /* Allow wrapping of text */
+    overflow: visible; /* Ensure text is not truncated */
+}
