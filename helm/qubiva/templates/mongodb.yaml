@@ -28,32 +28,7 @@ spec:
           ports:
             - containerPort: 27017
               name: mongodb
-          lifecycle:
-            postStart:
-              exec:
-                command:
-                  - /bin/sh
-                  - -c
-                  - |
-                    for i in $(seq 1 30); do
-                      RESULT=$(mongosh --quiet --eval "
-                        try {
-                          var s = rs.status();
-                          if (s.ok === 1) { print('READY'); quit(0); }
-                        } catch(e) {
-                          try {
-                            rs.initiate({_id:'rs0',members:[{_id:0,host:'{{ include "qubiva.fullname" . }}-mongo:27017'}]});
-                            print('INITIATED');
-                            quit(0);
-                          } catch(e2) { print('RETRY: ' + e2.message); }
-                        }
-                      " 2>/dev/null) || true
-                      case "$RESULT" in
-                        READY|INITIATED) exit 0 ;;
-                      esac
-                      sleep 2
-                    done
-                    echo "MongoDB RS init failed after 60s" >&2
+          # RS init handled by app deployment initContainer
           volumeMounts:
             - name: mongo-data
               mountPath: /data/db

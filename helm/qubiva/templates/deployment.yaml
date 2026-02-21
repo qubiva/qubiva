@@ -34,6 +34,27 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
+      {{- if .Values.mongodb.enabled }}
+      initContainers:
+        - name: wait-for-mongodb
+          image: {{ .Values.mongodb.image }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              HOST="{{ include "qubiva.fullname" . }}-mongo:27017"
+              echo "Waiting for MongoDB at $HOST..."
+              until mongosh --host "$HOST" --quiet --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+                echo "  MongoDB not ready, retrying..."
+                sleep 2
+              done
+              echo "MongoDB is accepting connections."
+              mongosh --host "$HOST" --quiet --eval "try{rs.status()}catch(e){rs.initiate({_id:'rs0',members:[{_id:0,host:'$HOST'}]})}" >/dev/null 2>&1
+              echo "Waiting for primary election..."
+              until mongosh --host "$HOST" --quiet --eval "rs.status().members[0].stateStr" 2>/dev/null | grep -q PRIMARY; do
+                sleep 1
+              done
+              echo "MongoDB replica set is ready."
+      {{- end }}
       containers:
         - name: qubiva
           image: {{ include "qubiva.image" . }}
