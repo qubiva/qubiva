@@ -34,10 +34,25 @@ spec:
                   - /bin/sh
                   - -c
                   - |
-                    sleep 5 && mongosh --quiet --eval "
-                      try { rs.status(); print('RS already initialized'); }
-                      catch(e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}); print('RS initialized'); }
-                    " || true
+                    for i in $(seq 1 30); do
+                      RESULT=$(mongosh --quiet --eval "
+                        try {
+                          var s = rs.status();
+                          if (s.ok === 1) { print('READY'); quit(0); }
+                        } catch(e) {
+                          try {
+                            rs.initiate({_id:'rs0',members:[{_id:0,host:'qubiva-mongo:27017'}]});
+                            print('INITIATED');
+                            quit(0);
+                          } catch(e2) { print('RETRY: ' + e2.message); }
+                        }
+                      " 2>/dev/null) || true
+                      case "$RESULT" in
+                        READY|INITIATED) exit 0 ;;
+                      esac
+                      sleep 2
+                    done
+                    echo "MongoDB RS init failed after 60s" >&2
           volumeMounts:
             - name: mongo-data
               mountPath: /data/db
