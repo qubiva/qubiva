@@ -591,6 +591,12 @@
             
             </aside>
             <div class="content-wrapper">
+                {% if app_banner_message %}
+                <div class="alert alert-warning alert-dismissible fade show m-2 mb-0" role="alert" style="font-size: 0.85em;">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>{{ app_banner_message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                {% endif %}
                 <div class="content">
                     <!-- Add this breadcrumb structure to your base.html where you want to display the URL -->
                     <div class="container-fluid">

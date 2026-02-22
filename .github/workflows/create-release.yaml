@@ -81,6 +81,21 @@ jobs:
           ${{ env.IMAGE_PREFIX }}/qubiva-iac-runner:latest
         platforms: linux/amd64
 
+    - name: Install Helm
+      uses: azure/setup-helm@v4
+
+    - name: Update Helm chart version
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        SEMVER="${VERSION#v}"
+        sed -i "s/^version:.*/version: ${SEMVER}/" helm/qubiva/Chart.yaml
+        sed -i "s/^appVersion:.*/appVersion: \"${VERSION}\"/" helm/qubiva/Chart.yaml
+
+    - name: Package and push Helm chart
+      run: |
+        helm package helm/qubiva
+        helm push qubiva-*.tgz oci://${{ env.REGISTRY }}/qubiva/charts
+
     - name: Generate changelog
       id: changelog
       run: |
@@ -106,16 +121,22 @@ jobs:
           docker pull ${{ env.IMAGE_PREFIX }}/qubiva-discovery-runner:${{ steps.version.outputs.version }}
           ```
 
-          ## Quick Start
+          ## Deploy
 
           ```bash
-          helm install qubiva ./helm/qubiva \
+          helm install qubiva oci://ghcr.io/qubiva/charts/qubiva --version ${{ steps.version.outputs.version }} \
             --namespace qubiva --create-namespace \
-            --set image.tag=${{ steps.version.outputs.version }} \
-            --set secrets.localEncryptionKey=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())") \
-            --set secrets.localSigningKey=$(openssl rand -base64 32) \
-            --set secrets.jwtSecret=$(openssl rand -base64 32) \
-            --set secrets.internalApiKey=$(openssl rand -base64 32)
+            --set secrets.localEncryptionKey="$(python3 -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')" \
+            --set secrets.localSigningKey="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')" \
+            --set secrets.jwtSecret="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')" \
+            --set secrets.internalApiKey="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+          ```
+
+          ## Demo
+
+          ```bash
+          docker compose up
+          # Open http://localhost:8000 — login: admin@qubiva.local / Demo@2026
           ```
 
           ## Changelog

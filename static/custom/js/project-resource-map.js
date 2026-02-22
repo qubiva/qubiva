@@ -257,23 +257,28 @@ class ProjectResourceMap {
         if (!runners) return '';
 
         const pool = runners.pool || {};
-        const hasPool = Object.values(pool).some(p => p.enabled);
-        const hasRecent = runners.recent?.length > 0;
+        if (Object.keys(pool).length === 0) return '';
 
-        if (!hasPool && !hasRecent) return '';
-
-        const projectName = getProjectName();
-
-        // Pool status badges
-        const poolStatusHtml = hasPool ? Object.entries(pool)
-            .filter(([, p]) => p.enabled)
+        // Pool status badges — show all pools, including disabled ones
+        const poolStatusHtml = Object.entries(pool)
             .map(([type, p]) => {
                 const poolMeta = {
-                    terraform:  { label: 'IaC',       icon: 'fa-cube' },
+                    iac:        { label: 'IaC',       icon: 'fa-cube' },
                     discovery:  { label: 'Discovery', icon: 'fa-database' },
                     analyst:    { label: 'Analyst',   icon: 'fa-robot' },
                 };
                 const meta = poolMeta[type] || { label: type, icon: 'fa-server' };
+
+                if (!p.enabled) {
+                    return `
+                        <div class="pool-status-item pool-ondemand">
+                            <i class="fas ${meta.icon}"></i>
+                            <span class="pool-label">${meta.label}</span>
+                            <span class="pool-counts">on-demand</span>
+                        </div>
+                    `;
+                }
+
                 const readyCls = p.ready > 0 ? 'pool-ready' : 'pool-empty';
                 const parts = [];
                 if (p.ready > 0) parts.push(`${p.ready} ready`);
@@ -297,7 +302,7 @@ class ProjectResourceMap {
                         ${modeHtml}
                     </div>
                 `;
-            }).join('') : '';
+            }).join('');
 
         // Mode explanation banner (only when all enabled pools are pool_only and none are ready)
         const enabledPools = Object.entries(pool).filter(([, p]) => p.enabled);
@@ -306,39 +311,6 @@ class ProjectResourceMap {
         const modeBannerHtml = allPoolOnly && noneReady
             ? `<div class="pool-mode-banner"><i class="fas fa-info-circle"></i> All runners are busy or offline. New jobs will wait until a runner becomes available.</div>`
             : '';
-
-        // Recent runs
-        const statusConfig = {
-            'in progress':        { icon: 'fa-spinner fa-spin', cls: 'running' },
-            'queued':             { icon: 'fa-clock',           cls: 'queued' },
-            'initializing':       { icon: 'fa-cog fa-spin',     cls: 'running' },
-            'completed':          { icon: 'fa-check-circle',    cls: 'completed' },
-            'failed':             { icon: 'fa-times-circle',    cls: 'failed' },
-            'execution failed':   { icon: 'fa-times-circle',    cls: 'failed' },
-            'timed out':          { icon: 'fa-clock',           cls: 'failed' },
-            'cancelled':          { icon: 'fa-ban',             cls: 'failed' },
-            'benchmark succeeded':{ icon: 'fa-check-circle',    cls: 'completed' },
-            'benchmark failed':   { icon: 'fa-times-circle',    cls: 'failed' },
-        };
-
-        const recentHtml = hasRecent ? runners.recent.map(run => {
-            const cfg = statusConfig[run.state] || { icon: 'fa-circle', cls: '' };
-            const typeLabel = run.type === 'terraform' ? 'IaC' : 'Discovery';
-            const ago = this.timeAgo(run.requested_on);
-            const workspace = run.workspace
-                ? `<span class="runner-workspace">${run.workspace}</span>`
-                : '';
-            return `
-                <a href="/dashboard/projects/${projectName}/requests/${run.type}/${run.request_id}"
-                   class="resource-item runner-item ${cfg.cls}">
-                    <i class="fas ${cfg.icon}"></i>
-                    <span class="runner-type">${typeLabel}</span>
-                    ${workspace}
-                    <span class="runner-state">${run.state}</span>
-                    <span class="runner-time">${ago}</span>
-                </a>
-            `;
-        }).join('') : '';
 
         return `
             <div class="resource-group runners-section">
@@ -349,9 +321,8 @@ class ProjectResourceMap {
                         <i class="fas fa-sync-alt"></i>
                     </span>
                 </h3>
-                ${poolStatusHtml ? `<div class="pool-status">${poolStatusHtml}</div>` : ''}
+                <div class="pool-status">${poolStatusHtml}</div>
                 ${modeBannerHtml}
-                ${recentHtml ? `<div class="resource-list">${recentHtml}</div>` : ''}
             </div>
         `;
     }

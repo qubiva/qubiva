@@ -246,7 +246,7 @@ async def lifespan(app: FastAPI):
 
     await runner_pool_maintenance()
 
-    # Create default admin user on first boot (ArgoCD pattern: store password in K8s Secret)
+    # Create default admin user on first boot
     success, _ = await project_manager.user_exists(master_admin)
     if not success:
         import secrets as _secrets
@@ -257,7 +257,6 @@ async def lifespan(app: FastAPI):
             ]
         )
         if success:
-            # Store initial password in a K8s Secret (never log it)
             _store_initial_admin_secret(first_boot_password)
             namespace = os.environ.get("K8S_NAMESPACE", "default")
             logger.info("=" * 60)
@@ -265,7 +264,7 @@ async def lifespan(app: FastAPI):
             logger.info(f"  Username: {master_admin}")
             logger.info("  Retrieve password:")
             logger.info(f"    kubectl get secret qubiva-initial-admin-secret -n {namespace} \\")
-            logger.info("      -o jsonpath='{.data.password}' | base64 -d")
+            logger.info("      -o jsonpath='{{.data.password}}' | base64 -d")
             logger.info("  Please change this password after first login!")
             logger.info("=" * 60)
         else:

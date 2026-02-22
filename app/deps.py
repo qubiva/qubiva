@@ -136,6 +136,7 @@ templates.env.globals["app_base_url"] = ""  # Set properly in app.py lifespan
 
 release_version = os.getenv("RELEASE_VERSION", "local-dev")
 templates.env.globals["release_version"] = release_version
+templates.env.globals["app_banner_message"] = os.getenv("APP_BANNER_MESSAGE", "")
 
 
 # ---------------------------------------------------------------------------
