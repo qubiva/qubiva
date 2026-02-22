@@ -70,7 +70,7 @@ The demo comes pre-loaded with sample projects, cloud accounts (AWS, Azure, GCP)
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/qubiva/qubiva?quickstart=1)
 
-Click the button above, then click **"Create new codespace"** on the next page. Wait for the setup to complete — once done, the terminal will show a message with the login credentials. A browser tab will open automatically with the app, or click the **Ports** tab and open the link for port 8000. Free for up to 60 hours/month on any GitHub account.
+Click the button above, then click **"Create new codespace"** on the next page. Wait for the setup to complete — once done, the terminal will show a message with the login credentials. A browser tab will open automatically with the app. Free for up to 60 hours/month on any GitHub account.
 
 ### Option 2: Run locally with Docker
 
@@ -80,7 +80,7 @@ cd qubiva
 docker compose up
 ```
 
-Once the containers are up, open **http://localhost:8000**.
+Once the containers are up, open **http://localhost**.
 
 ### Demo login
 

@@ -136,7 +136,7 @@ jobs:
 
           ```bash
           docker compose up
-          # Open http://localhost:8000 — login: admin@qubiva.local / Demo@2026
+          # Open http://localhost — login: admin@qubiva.local / Demo@2026
           ```
 
           ## Changelog
