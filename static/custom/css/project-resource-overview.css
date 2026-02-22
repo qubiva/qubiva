@@ -354,6 +354,10 @@
     color: #9ca3af;
 }
 
+.pool-status-item.pool-ondemand i {
+    color: #9ca3af;
+}
+
 .pool-label {
     font-weight: 600;
 }

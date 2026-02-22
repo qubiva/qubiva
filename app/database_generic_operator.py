@@ -12,7 +12,7 @@ logger.setLevel(logging.DEBUG)
 class MongoDBManager:
     def __init__(self):
         DATABASE_URL = os.getenv("DATABASE_URL")
-        logger.debug(DATABASE_URL)
+        logger.debug("Connecting to MongoDB")
 
         if not DATABASE_URL:
             raise EnvironmentError("Required environment variable 'DATABASE_URL' is not set.")

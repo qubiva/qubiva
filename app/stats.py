@@ -331,38 +331,11 @@ class StatsProvider:
             if success:
                 overview["tasks"] = self._categorize_tasks(tasks, username, include_title=True)
 
-            # Get runner pool status + recent run activity
+            # Get runner pool status
             pool_summary = RunnerPoolManager.get_pool_summary()
             if self.session_manager:
                 pool_summary.update(self.session_manager.get_pool_summary())
-            runners_data = {"pool": pool_summary}
-            if self.request_tracker:
-                try:
-                    success, requests_data = await self.request_tracker.list_requests(
-                        project_name,
-                        request_type=["terraform", "discovery"],
-                        page=1,
-                        page_size=10,
-                    )
-                    if success:
-                        runs = requests_data.get("runs", [])
-                        terminal = self.request_tracker.TERMINAL_STATES
-                        active_runs = [r for r in runs if r.get("state") not in terminal]
-                        runners_data["active_count"] = len(active_runs)
-                        runners_data["recent"] = [
-                            {
-                                "request_id": r.get("request_id"),
-                                "type": r.get("request_type"),
-                                "state": r.get("state", "unknown"),
-                                "workspace": r.get("workspace_name", ""),
-                                "requested_on": r.get("requested_on", ""),
-                                "requested_by": r.get("requested_by", ""),
-                            }
-                            for r in runs[:10]
-                        ]
-                except Exception as e:
-                    logger.error(f"Error fetching runner status for {project_name}: {e}")
-            overview["runners"] = runners_data
+            overview["runners"] = {"pool": pool_summary}
 
             return overview
 

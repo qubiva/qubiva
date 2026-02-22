@@ -62,13 +62,29 @@ Most cloud tools do one thing — IaC execution, compliance scanning, or resourc
 - **MongoDB** stores projects, accounts, users, tasks (replica set required for change streams)
 - **Loki** aggregates runner logs for retention and history beyond pod lifetime
 
-## Quick start (Helm)
+## Try it
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/qubiva/qubiva?quickstart=1)
+
+One click — launches a demo with sample data in your browser. No installs, no cloud credentials, no API keys. Login: `admin@qubiva.local` / `Demo@2026`.
+
+Or run the demo locally with Docker:
 
 ```bash
-# Add the repo (or clone and install from local)
-helm install qubiva ./helm/qubiva \
+git clone https://github.com/qubiva/qubiva.git
+cd qubiva
+docker compose up
+```
+
+Open **http://localhost:8000** with the same credentials.
+
+> **Note:** The demo runs with pre-loaded sample data for evaluation purposes only. To connect real cloud accounts and run actual infrastructure operations, deploy on Kubernetes using the Helm chart below.
+
+## Deploy (Helm)
+
+```bash
+helm install qubiva oci://ghcr.io/qubiva/charts/qubiva \
   --namespace qubiva --create-namespace \
-  --set secrets.databaseUrl="mongodb://qubiva-mongo:27017/qubiva?replicaSet=rs0" \
   --set secrets.localEncryptionKey="$(python3 -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')" \
   --set secrets.localSigningKey="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')" \
   --set secrets.jwtSecret="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')" \
@@ -84,14 +100,6 @@ kubectl port-forward -n qubiva svc/qubiva 8000:80
 # Retrieve password:
 kubectl get secret qubiva-initial-admin-secret -n qubiva \
   -o jsonpath='{.data.password}' | base64 -d
-```
-
-## Quick start (raw manifests)
-
-```bash
-# Edit k8s/secret.yaml with real values first!
-kubectl apply -k k8s/
-kubectl port-forward -n qubiva svc/qubiva 8000:80
 ```
 
 ## Configuration

@@ -1,0 +1,77 @@
+# Qubiva — Docker Compose (local demo / evaluation)
+# Usage:
+#   docker compose up
+#   Open http://localhost:8000
+#   Login: admin@qubiva.local / Demo@2026
+#
+# Note: Runner pools (IaC/discovery) require Kubernetes and are disabled
+# in this mode. Use the Helm chart for production deployments.
+
+services:
+  mongodb:
+    image: mongo:7
+    command: mongod --replSet rs0 --bind_ip_all
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: >
+        mongosh --quiet --eval "
+          try { rs.status().ok && 1 }
+          catch(e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}).ok && 1 }
+        "
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+
+  demo-seed:
+    image: ghcr.io/qubiva/qubiva:v0.1.0
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: python
+    command: ["/demo/seed.py"]
+    environment:
+      DATABASE_URL: "mongodb://mongodb:27017/qubiva?replicaSet=rs0&directConnection=true"
+      LOCAL_ENCRYPTION_KEY: "qqoLh4B72q0jgxTjsLvG4jwSpzxNj_-6iH4vfYAAwgs="
+      ARTIFACTS_STORAGE_PATH: "/app/data/artifacts"
+    volumes:
+      - ./demo:/demo:ro
+      - artifacts:/app/data/artifacts
+
+  loki:
+    image: grafana/loki:3.3.2
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
+
+  qubiva:
+    image: qubiva-local:test
+    ports:
+      - "8000:8000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      demo-seed:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: "mongodb://mongodb:27017/qubiva?replicaSet=rs0&directConnection=true"
+      LOCAL_ENCRYPTION_KEY: "qqoLh4B72q0jgxTjsLvG4jwSpzxNj_-6iH4vfYAAwgs="
+      LOCAL_SIGNING_KEY: "demo-only-signing-key"
+      JWT_SECRET: "demo-only-jwt-secret"
+      INTERNAL_API_KEY: "demo-only-internal-key"
+      K8S_NAMESPACE: "default"
+      LOG_LEVEL: "INFO"
+      LOKI_URL: "http://loki:3100"
+      MASTER_ADMIN_USER: "admin@qubiva.local"
+      RELEASE_VERSION: "v0.1.0-demo"
+      APP_BANNER_MESSAGE: "Demo environment with sample data. Some features require Kubernetes and are not available here. Do not enter real cloud credentials. Data will be lost when containers are removed. Deploy via Helm for the full experience."
+      ARTIFACTS_STORAGE_PATH: "/app/data/artifacts"
+    volumes:
+      - artifacts:/app/data/artifacts
+
+volumes:
+  mongodb-data:
+  loki-data:
+  artifacts:
