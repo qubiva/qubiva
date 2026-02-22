@@ -3,7 +3,7 @@ name: qubiva
 description: Cloud governance platform — manage infrastructure, enforce policies, and query cloud resources across AWS, Azure, and GCP.
 type: application
 version: 0.1.0
-appVersion: "0.1.0"
+appVersion: "v0.1.0"
 home: https://github.com/qubiva/qubiva
 sources:
   - https://github.com/qubiva/qubiva
