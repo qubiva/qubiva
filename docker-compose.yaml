@@ -1,7 +1,7 @@
 # Qubiva — Docker Compose (local demo / evaluation)
 # Usage:
 #   docker compose up
-#   Open http://localhost:8000
+#   Open http://localhost
 #   Login: admin@qubiva.local / Demo@2026
 #
 # Note: Runner pools (IaC/discovery) require Kubernetes and are disabled
@@ -25,7 +25,7 @@ services:
       start_period: 10s
 
   demo-seed:
-    image: ghcr.io/qubiva/qubiva:v0.1.0
+    image: ghcr.io/qubiva/qubiva:latest
     depends_on:
       mongodb:
         condition: service_healthy
@@ -47,9 +47,9 @@ services:
       - loki-data:/loki
 
   qubiva:
-    image: qubiva-local:test
+    image: ghcr.io/qubiva/qubiva:latest
     ports:
-      - "8000:8000"
+      - "80:8000"
     depends_on:
       mongodb:
         condition: service_healthy

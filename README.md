@@ -64,11 +64,15 @@ Most cloud tools do one thing — IaC execution, compliance scanning, or resourc
 
 ## Try it
 
+The demo comes pre-loaded with sample projects, cloud accounts (AWS, Azure, GCP), discovery data, compliance benchmarks, and alerts. Everything works out of the box — you don't need real cloud credentials or API keys.
+
+### Option 1: Run in your browser via GitHub Codespaces
+
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/qubiva/qubiva?quickstart=1)
 
-One click — launches a demo with sample data in your browser. No installs, no cloud credentials, no API keys. Login: `admin@qubiva.local` / `Demo@2026`.
+Click the button above, then click **"Create new codespace"** on the next page. Wait for the setup to complete — once done, the terminal will show a message with the login credentials. A browser tab will open automatically with the app. Free for up to 60 hours/month on any GitHub account.
 
-Or run the demo locally with Docker:
+### Option 2: Run locally with Docker
 
 ```bash
 git clone https://github.com/qubiva/qubiva.git
@@ -76,7 +80,11 @@ cd qubiva
 docker compose up
 ```
 
-Open **http://localhost:8000** with the same credentials.
+Once the containers are up, open **http://localhost**.
+
+### Demo login
+
+`admin@qubiva.local` / `Demo@2026`
 
 > **Note:** The demo runs with pre-loaded sample data for evaluation purposes only. To connect real cloud accounts and run actual infrastructure operations, deploy on Kubernetes using the Helm chart below.
 
