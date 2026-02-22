@@ -80,7 +80,10 @@ Then access the dashboard:
 ```bash
 kubectl port-forward -n qubiva svc/qubiva 8000:80
 # Open http://localhost:8000
-# Default admin: admin@qubiva.local (password printed in pod logs)
+# Default admin: admin@qubiva.local
+# Retrieve password:
+kubectl get secret qubiva-initial-admin-secret -n qubiva \
+  -o jsonpath='{.data.password}' | base64 -d
 ```
 
 ## Quick start (raw manifests)

@@ -21,7 +21,7 @@ class UserManager(ManagerBase):
         """
         Creates multiple users with organization roles and sends an email notification.
         """
-        logger.debug(f"Received users: {users}")
+        logger.debug(f"Received {len(users)} user(s) to create")
 
         # Validate `users` input
         if not isinstance(users, list):

@@ -52,8 +52,9 @@ from app.routes import (
     dashboard,
 )
 
+log_level = getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO)
 logger = logging.getLogger("uvicorn.error")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(log_level)
 
 # Silence websocket ping/pong keepalive logs
 
@@ -106,9 +107,8 @@ def _store_initial_admin_secret(password: str):
                 raise
         logger.info("Initial admin password stored in Secret 'qubiva-initial-admin-secret'")
     except Exception as e:
-        # Fall back to logging the password if K8s API is unavailable (local dev)
-        logger.warning(f"Could not create K8s Secret for initial password: {e}")
-        logger.info(f"  Initial admin password: {password}")
+        logger.error(f"Could not create K8s Secret for initial password: {e}")
+        logger.error("  Admin password cannot be retrieved. Delete the admin user from the database and restart to regenerate.")
 
 
 async def recover_orphaned_requests():
