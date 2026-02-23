@@ -3,31 +3,33 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![CI](https://github.com/Qubiva/qubiva/actions/workflows/ci.yaml/badge.svg)](https://github.com/Qubiva/qubiva/actions/workflows/ci.yaml)
 
-Open-source multi-cloud governance platform. Execute OpenTofu/Terraform with approval workflows, discover cloud resources via SQL, enforce OPA policies and compliance benchmarks, and query your infrastructure with AI (bring your own LLM). Built-in RBAC, SSO, alerts, and automation for AWS, Azure, and GCP.
+Open-source multi-cloud governance platform. Execute OpenTofu/Terraform runs, discover cloud resources via SQL, enforce OPA policies and compliance benchmarks, manage tasks and sprints, and query your infrastructure with AI (bring your own LLM). Built-in RBAC, SSO, alerts, and automation for AWS, Azure, and GCP.
 
 ## Why Qubiva?
 
 Most cloud tools do one thing — IaC execution, compliance scanning, or resource inventory. Qubiva brings them together in a single self-hosted platform with unified credentials, consistent RBAC, and no vendor lock-in.
 
 - **One platform instead of five** — IaC execution, cloud discovery, compliance benchmarks, policy enforcement, and AI-powered querying under one roof
-- **Bring your own LLM** — Cloud Analyst works with any OpenAI-compatible API (OpenAI, Anthropic, Groq, Azure OpenAI, and more). No AI vendor lock-in.
+- **Bring your own LLM** — Cloud Analyst works with any OpenAI-compatible API (OpenAI, Groq, Azure OpenAI, Google Gemini, and more). No AI vendor lock-in.
 - **Self-hosted, open source** — Runs on any Kubernetes cluster. OpenTofu by default, Terraform optional. Apache 2.0 licensed.
 - **Enterprise-ready** — SAML 2.0 SSO, organization and project-level RBAC, full audit trail, scheduled automation, and email alerts out of the box
 
 ## Features
 
-- **Infrastructure as Code** — Execute OpenTofu/Terraform plans with approval workflows, state management, and run history
+- **Infrastructure as Code** — Execute OpenTofu/Terraform plans with state management, run history, and real-time log streaming
 - **Cloud discovery** — Query live cloud resources using SQL across all connected accounts
-- **Compliance benchmarks** — Run compliance checks against industry standards (CIS, SOC 2, HIPAA, PCI DSS, and more)
+- **Compliance benchmarks** — Run compliance checks against industry standards (CIS, SOC 2, HIPAA, PCI DSS, NIST 800-53, and more)
 - **Policy enforcement** — Conftest/OPA policy checks on infrastructure changes before they deploy
 - **Cloud Analyst** — AI-powered chat that queries your cloud infrastructure in natural language (bring your own LLM)
+- **Task management** — Create tasks with priorities, due dates, assignments, and custom tags. Organize work into sprints. Add comments with @mentions and email notifications. Link tasks with relationships (parent/child, blocks/blocked-by, related)
 - **Multi-cloud management** — Projects, cloud accounts, workspaces, and shared credentials across AWS, Azure, and GCP
 - **Scheduled runs** — Cron-based automation for discovery, compliance, and IaC execution
 - **GitHub integration** — Connect GitHub App for IaC template repositories
 - **Alerts and notifications** — Configurable cloud resource alerts with email notifications
-- **Audit trail** — Full audit log of all user and system actions
+- **User management** — Invite users, assign project roles, manage organization-level access
 - **RBAC** — Organization and project-level roles with granular permissions
 - **SSO** — SAML 2.0 single sign-on (Azure AD, Okta, etc.)
+- **Audit trail** — Full audit log of all user and system actions
 - **Real-time logs** — Live log streaming for running jobs with full history via Loki
 
 ### Supported clouds
@@ -64,15 +66,19 @@ Most cloud tools do one thing — IaC execution, compliance scanning, or resourc
 
 ## Try it
 
-The demo comes pre-loaded with sample projects, cloud accounts (AWS, Azure, GCP), discovery data, compliance benchmarks, and alerts. Everything works out of the box — you don't need real cloud credentials or API keys.
+The demo comes pre-loaded with sample projects, cloud accounts (AWS, Azure, GCP), discovery data, compliance benchmarks, and alerts. Everything works out of the box — no cloud credentials or API keys needed.
 
-### Option 1: Run in your browser via GitHub Codespaces
+Login: `admin@qubiva.local` / `Demo@2026`
+
+### In your browser (GitHub Codespaces)
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/qubiva/qubiva?quickstart=1)
 
-Click the button above, then click **"Create new codespace"** on the next page. Wait for the setup to complete — once done, the terminal will show a message with the login credentials. A browser tab will open automatically with the app. Free for up to 60 hours/month on any GitHub account.
+Click the button, then **"Create new codespace"**. Wait for setup to complete. A browser tab will open automatically with the app. If your browser blocks the popup, go to the **Ports** tab in the Codespaces editor and click the URL for port 80.
 
-### Option 2: Run locally with Docker
+> Codespaces is free for up to 60 hours/month. Remember to delete your codespace at [github.com/codespaces](https://github.com/codespaces) when you're done to conserve your free hours.
+
+### Locally with Docker
 
 ```bash
 git clone https://github.com/qubiva/qubiva.git
@@ -80,11 +86,7 @@ cd qubiva
 docker compose up
 ```
 
-Once the containers are up, open **http://localhost**.
-
-### Demo login
-
-`admin@qubiva.local` / `Demo@2026`
+Open **http://localhost** once the containers are up.
 
 > **Note:** The demo runs with pre-loaded sample data for evaluation purposes only. To connect real cloud accounts and run actual infrastructure operations, deploy on Kubernetes using the Helm chart below.
 
@@ -132,7 +134,7 @@ Default engine is **OpenTofu** (open source). Switch to Terraform by setting:
 
 ### Cloud Analyst (AI Chat)
 
-Bring your own LLM. Supports any OpenAI-compatible API (OpenAI, Groq, Azure OpenAI, Anthropic, etc.).
+Bring your own LLM. Supports any OpenAI-compatible API (OpenAI, Groq, Azure OpenAI, Google Gemini, etc.).
 
 ```json
 {
@@ -183,11 +185,10 @@ app/
   app.py              # FastAPI entry point
   deps.py             # Shared dependencies and managers
   routes/             # 16 route modules
-  llm/                # LLM provider abstraction (OpenAI, Anthropic, Azure)
+  llm/                # LLM provider abstraction (OpenAI, Azure, Groq, etc.)
   chat_manager.py     # Cloud Analyst chat orchestration
   runner_pool.py      # Pre-warmed K8s runner pod pools
 helm/qubiva/        # Helm chart
-k8s/                  # Raw Kubernetes manifests
 iac_runner/           # IaC runner Docker image
 discovery_runner/     # Discovery/compliance runner Docker image
 pages/jinja2templates/# UI templates
