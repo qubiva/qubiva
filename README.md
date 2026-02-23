@@ -5,6 +5,20 @@
 
 Open-source multi-cloud governance platform. Execute OpenTofu/Terraform runs, discover cloud resources via SQL, enforce OPA policies and compliance benchmarks, manage tasks and sprints, and query your infrastructure with AI (bring your own LLM). Built-in RBAC, SSO, alerts, and automation for AWS, Azure, and GCP.
 
+## Try it
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/qubiva/qubiva?quickstart=1)
+
+Try a fully loaded demo — pre-loaded with sample cloud data, ready to explore.
+
+Click the button above, then **"Create new codespace"**. Wait for setup to complete. A browser tab will open automatically with the app. If your browser blocks the popup, go to the **Ports** tab in the Codespaces editor and click the URL for port 80. Login: `admin@qubiva.local` / `Demo@2026`
+
+> Codespaces is free for up to 60 hours/month. Remember to delete your codespace at [github.com/codespaces](https://github.com/codespaces) when you're done to conserve your free hours.
+
+Or run the demo locally: `git clone https://github.com/qubiva/qubiva.git && cd qubiva && docker compose up` — then open **http://localhost** with the same credentials.
+
+> **Note:** The demo runs with pre-loaded sample data for evaluation only. To connect real cloud accounts, deploy on Kubernetes using the [Helm chart](#deploy-helm).
+
 ## Why Qubiva?
 
 Most cloud tools do one thing — IaC execution, compliance scanning, or resource inventory. Qubiva brings them together in a single self-hosted platform with unified credentials, consistent RBAC, and no vendor lock-in.
@@ -63,32 +77,6 @@ Most cloud tools do one thing — IaC execution, compliance scanning, or resourc
 - **Runners** are K8s Jobs launched on demand — isolated execution for IaC and cloud queries
 - **MongoDB** stores projects, accounts, users, tasks (replica set required for change streams)
 - **Loki** aggregates runner logs for retention and history beyond pod lifetime
-
-## Try it
-
-The demo comes pre-loaded with sample projects, cloud accounts (AWS, Azure, GCP), discovery data, compliance benchmarks, and alerts. Everything works out of the box — no cloud credentials or API keys needed.
-
-Login: `admin@qubiva.local` / `Demo@2026`
-
-### In your browser (GitHub Codespaces)
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/qubiva/qubiva?quickstart=1)
-
-Click the button, then **"Create new codespace"**. Wait for setup to complete. A browser tab will open automatically with the app. If your browser blocks the popup, go to the **Ports** tab in the Codespaces editor and click the URL for port 80.
-
-> Codespaces is free for up to 60 hours/month. Remember to delete your codespace at [github.com/codespaces](https://github.com/codespaces) when you're done to conserve your free hours.
-
-### Locally with Docker
-
-```bash
-git clone https://github.com/qubiva/qubiva.git
-cd qubiva
-docker compose up
-```
-
-Open **http://localhost** once the containers are up.
-
-> **Note:** The demo runs with pre-loaded sample data for evaluation purposes only. To connect real cloud accounts and run actual infrastructure operations, deploy on Kubernetes using the Helm chart below.
 
 ## Deploy (Helm)
 
