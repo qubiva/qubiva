@@ -82,11 +82,19 @@ Most cloud tools do one thing — IaC execution, compliance scanning, or resourc
 
 ```bash
 helm install qubiva oci://ghcr.io/qubiva/charts/qubiva \
+  --namespace qubiva --create-namespace
+```
+
+Encryption keys and secrets are auto-generated on first install and preserved across upgrades. To provide your own encryption key:
+
+```bash
+# Generate a Fernet-compatible encryption key
+python3 -c 'import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())'
+
+# Pass it during install
+helm install qubiva oci://ghcr.io/qubiva/charts/qubiva \
   --namespace qubiva --create-namespace \
-  --set secrets.localEncryptionKey="$(python3 -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')" \
-  --set secrets.localSigningKey="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')" \
-  --set secrets.jwtSecret="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')" \
-  --set secrets.internalApiKey="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+  --set secrets.localEncryptionKey="YOUR_KEY_HERE"
 ```
 
 Then access the dashboard:
