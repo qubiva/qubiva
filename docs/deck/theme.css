@@ -1,0 +1,237 @@
+/* @theme qubiva */
+
+@import 'default';
+
+:root {
+  --primary: #00d4ff;
+  --accent: #ff006e;
+  --bg-dark: #0a0a1a;
+  --bg-card: rgba(255,255,255,0.04);
+  --text: #e8e8f0;
+  --text-muted: #8888aa;
+  --gradient: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0a0a1a 100%);
+}
+
+section {
+  background: var(--gradient);
+  color: var(--text);
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  padding: 60px 80px;
+  justify-content: center;
+}
+
+/* Title slide */
+section.lead {
+  text-align: center;
+  justify-content: center;
+}
+
+section.lead h1 {
+  font-size: 4.5em;
+  background: linear-gradient(135deg, #00d4ff, #7b61ff, #ff006e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.1em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+section.lead h2 {
+  font-size: 1.4em;
+  color: var(--text-muted);
+  border: none;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+}
+
+/* Regular headings */
+h1 {
+  color: var(--primary);
+  font-size: 2.8em;
+  font-weight: 700;
+  margin-bottom: 0.3em;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  color: var(--primary);
+  font-size: 2em;
+  font-weight: 600;
+  border-bottom: 2px solid rgba(0,212,255,0.3);
+  padding-bottom: 0.2em;
+  margin-bottom: 0.6em;
+}
+
+h3 {
+  color: var(--accent);
+  font-size: 1.5em;
+  font-weight: 600;
+}
+
+/* Big statement slides */
+section.statement {
+  text-align: center;
+  justify-content: center;
+}
+
+section.statement h1 {
+  font-size: 3.2em;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+section.statement em {
+  font-style: normal;
+  color: var(--primary);
+}
+
+section.statement strong {
+  color: var(--accent);
+}
+
+/* Emphasis */
+strong {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+em {
+  font-style: normal;
+  color: var(--primary);
+}
+
+/* Lists */
+ul, ol {
+  margin-left: 0.5em;
+}
+
+li {
+  margin-bottom: 0.6em;
+  line-height: 1.6;
+  font-size: 1.1em;
+}
+
+li::marker {
+  color: var(--primary);
+}
+
+/* Code */
+code {
+  background: rgba(0,212,255,0.1);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+pre {
+  background: rgba(0,0,0,0.4);
+  border-left: 3px solid var(--primary);
+  border-radius: 8px;
+  padding: 1em 1.5em;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+th {
+  background: rgba(0,212,255,0.15);
+  color: var(--primary);
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 2px solid rgba(0,212,255,0.3);
+}
+
+td {
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+
+/* Links */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0,212,255,0.3);
+}
+
+a:hover {
+  color: var(--accent);
+}
+
+/* Grid layout helper */
+section.grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+}
+
+/* Card-style blocks */
+blockquote {
+  background: var(--bg-card);
+  border-left: 3px solid var(--primary);
+  border-radius: 8px;
+  padding: 1em 1.5em;
+  margin: 0.5em 0;
+  font-style: normal;
+}
+
+blockquote strong {
+  color: var(--primary);
+}
+
+/* Footer */
+footer {
+  color: var(--text-muted);
+  font-size: 0.7em;
+}
+
+/* Page number */
+section::after {
+  color: var(--text-muted);
+  font-size: 0.7em;
+}
+
+/* Divider slide */
+section.divider {
+  text-align: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f0f2a 0%, #1a1040 40%, #0a0a1a 100%);
+}
+
+section.divider h1 {
+  font-size: 3.5em;
+  background: linear-gradient(90deg, #00d4ff, #ff006e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* CTA slide */
+section.cta {
+  text-align: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a0a1a 100%);
+}
+
+section.cta h1 {
+  font-size: 3em;
+  color: var(--text);
+  margin-bottom: 0.5em;
+}
+
+section.cta h2 {
+  border: none;
+  font-size: 1.2em;
+  color: var(--text-muted);
+  font-weight: 300;
+}
