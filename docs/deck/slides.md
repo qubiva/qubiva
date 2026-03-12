@@ -18,36 +18,37 @@ footer: "qubiva.io"
 <!-- _class: statement -->
 <!-- _paginate: false -->
 
-# 5 tools. 5 logins. 5 bills.
-# **Zero visibility.**
+# Your cloud team juggles *five tools*,
+# *five logins*, and *five bills*
+# — with **zero visibility.**
 
 ---
 
-## The Problem
+## Every Cloud Team Knows This Pain
 
-Every cloud team stitches together a patchwork:
+You're stitching together a fragile patchwork:
 
 - **IaC execution** — Terraform Cloud, Spacelift, Env0
-- **Resource inventory** — AWS Config, Steampipe CLI, manual scripts
+- **Resource inventory** — AWS Config, Steampipe, manual scripts
 - **Compliance** — Prowler, ScoutSuite, spreadsheets
 - **Policy enforcement** — OPA, Sentinel, custom glue code
 - **Task tracking** — Jira, Asana, yet another tool
 
-Each with its own credentials, RBAC, and learning curve.
+Each tool brings its own credentials, RBAC, billing, and learning curve.
 
-**The result?** Gaps, drift, and no single source of truth.
+**More tools ≠ more visibility.** It's the opposite.
 
 ---
 
-## The Cost of Tool Sprawl
+## The Real Cost
 
-> **$** Gartner: *30% of cloud spend is wasted* due to poor visibility
+> **Wasted spend** — *30% of cloud budgets* go to waste due to poor visibility *(Gartner)*
 
-> **Risk** Compliance violations cost *$14.8M on average* (Ponemon)
+> **Compliance risk** — The average cost of a compliance violation is *$14.8M* *(Ponemon)*
 
-> **Time** Platform teams spend *40%+ of their time* switching context
+> **Lost productivity** — Platform teams spend *40%+ of their week* context-switching between tools
 
-> **Talent** Every new tool = onboarding, training, maintenance burden
+> **Hiring drag** — Every new tool means more onboarding, training, and maintenance
 
 The more tools you add, the more fragile the stack becomes.
 
@@ -55,62 +56,56 @@ The more tools you add, the more fragile the stack becomes.
 
 <!-- _class: divider -->
 
-# Meet Qubiva
+# What if one platform replaced them all?
 
 ---
 
 <!-- _class: compact -->
 
-## One Platform. Six Capabilities.
+## Everything Your Cloud Team Needs
 
-> **IaC Execution** — Run OpenTofu/Terraform plans with state management and live logs
+> **IaC Execution** — Run OpenTofu/Terraform plans with state management and real-time logs
 
 > **Cloud Discovery** — Query live resources across all accounts using SQL
 
-> **Compliance** — Run CIS, SOC 2, HIPAA, PCI DSS, NIST 800-53 benchmarks
+> **Compliance** — CIS, SOC 2, HIPAA, PCI DSS, NIST 800-53, and hundreds more benchmarks
 
 > **Policy Enforcement** — OPA/Conftest policy checks before anything deploys
 
-> **Cloud Analyst (AI)** — Ask questions about your infrastructure in plain English
+> **Cloud Analyst** — Ask questions about your infrastructure in plain English (AI-powered)
 
-> **Task Management** — Sprints, assignments, priorities, comments, linked tasks
+> **Task Management** — Sprints, priorities, assignments, comments, linked tasks
 
-All sharing *one set of credentials*, *one RBAC model*, *one audit trail*.
+One set of credentials. One RBAC model. One audit trail.
 
 ---
 
-## Cloud Analyst — AI-Powered Queries
+## Cloud Analyst — Talk to Your Infrastructure
 
-Ask your infrastructure anything:
+Ask anything about your cloud in plain English:
 
 > *"Which EC2 instances in us-east-1 are running without encryption?"*
 
-> *"Show me all Azure VMs that haven't been patched in 30 days"*
+> *"Show me all Azure VMs that haven't been patched in 30 days."*
 
 > *"What's our monthly GCP spend by project?"*
 
-- **Bring your own LLM** — OpenAI, Azure OpenAI, Groq, Gemini, and more
-- Your data stays in your cluster. Always.
-
-**No AI vendor lock-in. No data leaving your perimeter.**
+**Bring your own LLM** — OpenAI, Groq, Azure OpenAI, Gemini, and more.
+Your data never leaves your cluster. No AI vendor lock-in.
 
 ---
 
-## True Multi-Cloud
+## One Pane of Glass — AWS, Azure, GCP
 
-Works identically across **AWS**, **Azure**, and **GCP**:
+Every capability works identically across all three clouds:
 
-> **IaC Execution** — Plan, apply, and destroy across all three clouds
+- **IaC Execution** — Plan, apply, and destroy across any provider
+- **Resource Discovery** — SQL queries against live resources, any account
+- **Compliance** — Industry benchmarks for every cloud, same workflow
+- **AI Querying** — Natural language across your entire fleet
+- **Credential Management** — One vault, all clouds
 
-> **Resource Discovery** — SQL queries against live resources, any account
-
-> **Compliance Benchmarks** — CIS, SOC 2, HIPAA for every cloud
-
-> **AI-Powered Querying** — Natural language across your entire fleet
-
-> **Credential Management** — One vault, all three clouds
-
-One pane of glass. No more context switching.
+No more switching consoles. No more stitching outputs.
 
 ---
 
@@ -132,27 +127,26 @@ One pane of glass. No more context switching.
 ```
 
 Runners are **isolated K8s Jobs** — no shared state, no blast radius.
-Scales horizontally. Works on any Kubernetes cluster.
+Scales horizontally. Runs on any Kubernetes cluster.
 
 ---
 
 <!-- _class: compact -->
 
-## Enterprise Ready — Out of the Box
+## Enterprise Ready — From Day One
 
 - **SAML 2.0 SSO** — Azure AD, Okta, any identity provider
-- **RBAC** — Organization and project-level roles, granular permissions
+- **RBAC** — Organization and project-level roles with granular permissions
 - **Audit Trail** — Every action logged, queryable, exportable
-- **Scheduled Automation** — Cron-based discovery, compliance, IaC runs
-- **Email Alerts** — Notifications for cloud resource changes
+- **Scheduled Automation** — Cron-based discovery, compliance, and IaC runs
+- **Email Alerts** — Notifications on cloud resource changes
 - **GitHub Integration** — Connect IaC repos via GitHub App
 
-No bolt-on enterprise tier for basic security.
-**Security is included from day one.**
+Security isn't an upgrade. **It's included from day one.**
 
 ---
 
-## Open Source, Your Terms
+## Open Source, On Your Terms
 
 - **Self-hosted** — your Kubernetes cluster, your VPC, your rules
 - **No vendor lock-in** — OpenTofu by default, Terraform optional
@@ -168,34 +162,34 @@ No bolt-on enterprise tier for basic security.
 
 ### Community Edition — Free, forever
 
-> The **full platform**: IaC, Discovery, Compliance, Policy, AI Chat, Tasks
+> The **full platform** — IaC, Discovery, Compliance, Policy, AI Chat, Tasks
 > Unlimited users, projects, and cloud accounts
 > Self-hosted on any K8s cluster — AGPL-3.0 licensed
 
 ### Enterprise — Paid add-ons
 
-> **Cloud AI Governance** — advanced AI-driven policy and cost optimization
+> **Cloud AI Governance** — AI-driven policy recommendations and cost optimization
 > **Priority support** with SLA
 > **Custom integrations** and dedicated onboarding
 
-**Free is not a demo.** The community edition is the real product.
+**Free is not a trial.** The community edition is the real product.
 
 ---
 
-## Try It Right Now
+## See It Live — Right Now
 
-**One click — fully loaded demo:**
+**One click — fully loaded demo with sample cloud data:**
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/qubiva/qubiva?quickstart=1)
 
+Click **"Create new codespace"**, wait for setup, and the app opens automatically.
+If your browser blocks the popup, go to the **Ports** tab and click the URL for port 80.
+
 **Or run locally:**
+`git clone https://github.com/qubiva/qubiva.git && cd qubiva && docker compose up`
+Open **http://localhost** — login: `admin@qubiva.local` / `Demo@2026`
 
-```bash
-git clone https://github.com/qubiva/qubiva.git
-cd qubiva && docker compose up
-```
-
-Open **http://localhost** — pre-loaded with sample cloud data.
+> Demo uses realistic sample data to emulate a real multi-cloud environment.
 
 ---
 
