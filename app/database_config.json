@@ -1,0 +1,22 @@
+{
+  "database": "qubiva",
+  "collections": {
+    "org_settings": "org_settings",
+    "requests": "requests",
+    "users": "users",
+    "projects": "projects",
+    "cloud_accounts": "cloud_accounts",
+    "credentials": "credentials",
+    "workspaces": "workspaces",
+    "tasks": "tasks",
+    "comments": "comments",
+    "tags": "tags",
+    "task_relationships": "task_relationships",
+    "sprints": "sprints",
+    "schedules": "schedules",
+    "project_tags": "project_tags",
+    "alerts": "alerts",
+    "system_locks": "system_locks",
+    "analyst_conversations": "analyst_conversations"
+  }
+}

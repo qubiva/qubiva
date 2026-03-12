@@ -1,0 +1,174 @@
+/* Basic resets and global styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+/* Terraform runs list specific styles */
+#terraform-runs-list {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+.run-item {
+    display: grid;
+    grid-template-columns: minmax(80px, auto) 1fr;
+    grid-template-areas: 
+        "id account"
+        "status status"
+        "time time"
+        "actions actions";
+    gap: 10px;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    align-items: center;
+}
+
+.run-item:last-child {
+    border-bottom: none;
+}
+
+.run-id {
+    grid-area: id;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.run-account-repo {
+    grid-area: account;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.run-status-container {
+    grid-area: status;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.run-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    min-width: 100px;
+    text-align: center;
+}
+
+.status-completed { background-color: #dff6dd; color: #107c10; }
+.status-failed { background-color: #fde7e9; color: #a80000; }
+.status-warning { background-color: #fff4ce; color: #8a6d00; }
+.status-in-progress { background-color: #deecf9; color: #0078d4; }
+.status-timeout { background-color: #e1dfdd; color: #323130; }
+
+.custom-spinner::before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    margin-right: 5px;
+    animation: customSpin 1s linear infinite;
+}
+
+@keyframes customSpin {
+    to { transform: rotate(360deg); }
+}
+
+.run-time {
+    grid-area: time;
+    color: #605e5c;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.run-actions {
+    grid-area: actions;
+}
+
+.view-logs-btn {
+    white-space: nowrap;
+    padding: 6px 12px;
+    background-color: #0078d4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.view-logs-btn:hover {
+    background-color: #106ebe;
+}
+
+@media (min-width: 768px) {
+    .run-item {
+        grid-template-columns: minmax(80px, auto) 1fr auto auto auto;
+        grid-template-areas: "id account status time actions";
+    }
+}
+
+.detail-line {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding: 0;
+}
+
+.detail-line:last-child {
+    margin-bottom: 0;
+}
+
+.detail-line i {
+    width: 20px;
+    margin-right: 15px;
+    color: #007bff;
+    font-size: 16px;
+}
+
+.detail-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 2px;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.detail-value {
+    color: #212529;
+    font-size: 14px;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.detail-value a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.detail-value a:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,201 @@
+{% extends "dashboard_base.html" %}
+
+{% block alert_manager_styles %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/alerts.css">
+{% endblock %}
+
+{% block title %}Cloud Alerts - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card-header card-secondary">
+        <h5 class="page-title">Cloud Alerts</h5>
+    </div><br />
+    
+    <!-- Filter Card -->
+    <div class="card">
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="time-range">Time Range</label>
+                    <input type="text" class="form-control" id="time-range" placeholder="Select time range" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label for="status-filter">Status</label>
+                    <select class="form-control" id="status-filter">
+                        <option value="all" selected>All Status</option>
+                        <option value="open">Open</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-right d-flex align-items-end">
+                    <button class="btn btn-primary" id="refresh-alerts">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+                  
+        </div>
+    </div>
+
+    <!-- Alerts List -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="alerts-table">
+                    <thead>
+                        <tr>
+                            <th>Alert ID</th>
+                            <th>Summary</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alerts-body">
+                        <!-- Alerts will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted" id="alerts-count">
+                    Showing <span id="showing-start">0</span> to <span id="showing-end">0</span> of <span id="total-alerts">0</span> alerts
+                </div>
+                <ul class="pagination pagination-sm m-0" id="alerts-pagination">
+                    <!-- Pagination will be populated here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Detail Modal -->
+<div class="modal fade" id="alert-modal" tabindex="-1" role="dialog" data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="alert-modal-title">Alert Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Alert Summary Section -->
+                <div class="alert-summary mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Alert ID:</strong> <span id="modal-alert-id"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong> <span id="modal-alert-status"></span>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <strong>Created:</strong> <span id="modal-alert-created"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Raw Alert Data Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Raw Alert Data</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" id="copy-json">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <pre><code id="raw-alert-json" class="json"></code></pre>
+                    </div>
+                </div>
+
+                <!-- Resolution Form (shown only for open alerts) -->
+                <div id="resolution-form-section" class="mt-3" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Resolve Alert</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="resolve-alert-form">
+                                <div class="form-group">
+                                    <label for="resolution-note">Resolution Note</label>
+                                    <textarea class="form-control" id="resolution-note" rows="3" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Resolve Alert</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert History Timeline -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Alert History</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline" id="alert-timeline">
+                            <!-- Timeline items will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="success-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Success</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="success-modal-message"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="error-modal" tabindex="-1" role="dialog" data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Error</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="error-modal-message"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block alert_manager_scripts %}
+{{ super() }}
+<script>
+    const currentUser = '{{ user }}';  // Only this is needed from Jinja
+</script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="{{ static_content_url }}/static/custom/js/alert-manager.js"></script>
+{% endblock %}

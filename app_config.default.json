@@ -1,0 +1,1553 @@
+{
+  "roles_and_permissions": {
+    "organization": {
+      "org_admin": [
+        "*"
+      ],
+      "org_editor": [
+        "org_user_add",
+        "org_user_delete",
+        "org_user_roles_edit",
+        "org_project_create",
+        "org_project_get",
+        "org_project_edit",
+        "org_project_delete",
+        "org_analyst_use",
+        "project_*"
+      ],
+      "org_viewer": [
+        "org_project_get",
+        "project_get",
+        "project_cloud_account_get",
+        "project_workspace_get"
+      ],
+      "org_analyst_user": [
+        "org_analyst_use",
+        "project_analyst_use",
+        "project_get",
+        "project_cloud_account_get"
+      ]
+    },
+    "project": {
+      "project_admin": [
+        "project_*"
+      ],
+      "project_editor": [
+        "project_get",
+        "project_edit",
+        "project_api_execute",
+        "project_cloud_account_*",
+        "project_workspace_*",
+        "project_git_repo_*",
+        "project_credential_*"
+      ],
+      "project_viewer": [
+        "project_get"
+      ],
+      "project_cloud_account_admin": [
+        "project_cloud_account_*",
+        "project_credential_*"
+      ],
+      "project_cloud_account_editor": [
+        "project_cloud_account_get",
+        "project_cloud_account_edit",
+        "project_cloud_account_create",
+        "project_cloud_account_delete",
+        "project_cloud_account_query_*",
+        "project_credential_*"
+      ],
+      "project_cloud_account_viewer": [
+        "project_cloud_account_get"
+      ],
+      "project_cloud_account_query_manager": [
+        "project_cloud_account_query_run",
+        "project_cloud_account_query_schedule_create",
+        "project_cloud_account_query_schedule_delete"
+      ],
+      "project_git_repo_admin": [
+        "project_git_repo_*"
+      ],
+      "project_git_repo_editor": [
+        "project_git_repo_get",
+        "project_git_repo_edit",
+        "project_git_repo_add",
+        "project_git_repo_delete"
+      ],
+      "project_git_repo_viewer": [
+        "project_git_repo_get"
+      ],
+      "project_workspace_admin": [
+        "project_workspace_*"
+      ],
+      "project_workspace_editor": [
+        "project_workspace_get",
+        "project_workspace_edit",
+        "project_workspace_create",
+        "project_workspace_delete"
+      ],
+      "project_workspace_viewer": [
+        "project_workspace_get"
+      ],
+      "project_workspace_deployment_manager": [
+        "project_workspace_execute"
+      ],
+      "project_analyst_admin": [
+        "project_analyst_*"
+      ],
+      "project_analyst_user": [
+        "project_analyst_use"
+      ],
+      "project_credential_admin": [
+        "project_credential_*"
+      ],
+      "project_credential_editor": [
+        "project_credential_get",
+        "project_credential_edit",
+        "project_credential_create",
+        "project_credential_delete"
+      ],
+      "project_credential_viewer": [
+        "project_credential_get"
+      ]
+    }
+  },
+  "task_management": {
+    "status_options": [
+      "todo",
+      "in_progress",
+      "done",
+      "blocked"
+    ],
+    "task_type_options": [
+      "bug",
+      "feature",
+      "improvement"
+    ],
+    "priority_options": [
+      "low",
+      "medium",
+      "high"
+    ]
+  },
+  "cloud_analyst": {
+    "enabled": true,
+    "llm": {
+      "provider": "openai",
+      "model": "gemini-2.5-flash",
+      "api_key_env": "LLM_API_KEY",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+      "max_tokens": 4096,
+      "temperature": 0.1
+    },
+    "session": {
+      "idle_timeout_seconds": 900,
+      "query_timeout_seconds": 120,
+      "max_result_rows": 500,
+      "max_tool_calls_per_turn": 30,
+      "max_history_messages": 50,
+      "max_stored_messages": 200,
+      "max_concurrent_chats": 3,
+      "pool_size": 1
+    },
+    "conversation_retention": {
+      "max_age_days": 30,
+      "max_per_user": 50
+    }
+  },
+  "compliance_mods": {
+    "aws": {
+      "compliance": {
+        "github_url": "github.com/turbot/steampipe-mod-aws-compliance",
+        "mod_name": "aws_compliance",
+        "benchmarks": [
+          {
+            "id": "acsc_essential_eight",
+            "display": "ACSC Essential Eight"
+          },
+          {
+            "id": "cis_compute_service_v100",
+            "display": "CIS AWS Compute Services v1.0.0"
+          },
+          {
+            "id": "cis_controls_v8_ig1",
+            "display": "CIS Controls v8 IG1"
+          },
+          {
+            "id": "cis_v120",
+            "display": "CIS v1.2.0"
+          },
+          {
+            "id": "cis_v130",
+            "display": "CIS v1.3.0"
+          },
+          {
+            "id": "cis_v140",
+            "display": "CIS v1.4.0"
+          },
+          {
+            "id": "cis_v150",
+            "display": "CIS v1.5.0"
+          },
+          {
+            "id": "cis_v200",
+            "display": "CIS v2.0.0"
+          },
+          {
+            "id": "cis_v300",
+            "display": "CIS v3.0.0"
+          },
+          {
+            "id": "cis_v400",
+            "display": "CIS v4.0.0"
+          },
+          {
+            "id": "cis_v500",
+            "display": "CIS v5.0.0"
+          },
+          {
+            "id": "cisa_cyber_essentials",
+            "display": "CISA Cyber Essentials"
+          },
+          {
+            "id": "fedramp_low_rev_4",
+            "display": "FedRAMP Low Rev 4"
+          },
+          {
+            "id": "fedramp_moderate_rev_4",
+            "display": "FedRAMP Moderate Rev 4"
+          },
+          {
+            "id": "ffiec",
+            "display": "FFIEC"
+          },
+          {
+            "id": "foundational_security",
+            "display": "AWS Foundational Security Best Practices"
+          },
+          {
+            "id": "gdpr",
+            "display": "GDPR"
+          },
+          {
+            "id": "gxp_21_cfr_part_11",
+            "display": "GxP 21 CFR Part 11"
+          },
+          {
+            "id": "gxp_eu_annex_11",
+            "display": "GxP EU Annex 11"
+          },
+          {
+            "id": "hipaa_final_omnibus_security_rule_2013",
+            "display": "HIPAA Final Omnibus 2013"
+          },
+          {
+            "id": "hipaa_security_rule_2003",
+            "display": "HIPAA Security Rule 2003"
+          },
+          {
+            "id": "nist_800_171_rev_2",
+            "display": "NIST 800-171 Rev 2"
+          },
+          {
+            "id": "nist_800_172",
+            "display": "NIST 800-172"
+          },
+          {
+            "id": "nist_800_53_rev_4",
+            "display": "NIST 800-53 Rev 4"
+          },
+          {
+            "id": "nist_800_53_rev_5",
+            "display": "NIST 800-53 Rev 5"
+          },
+          {
+            "id": "nist_csf",
+            "display": "NIST CSF v1.1"
+          },
+          {
+            "id": "nist_csf_v2",
+            "display": "NIST CSF v2.0"
+          },
+          {
+            "id": "nydfs_23",
+            "display": "NYDFS 23 NYCRR 500"
+          },
+          {
+            "id": "pci_dss_v321",
+            "display": "PCI DSS v3.2.1"
+          },
+          {
+            "id": "pci_dss_v40",
+            "display": "PCI DSS v4.0"
+          },
+          {
+            "id": "rbi_cyber_security",
+            "display": "RBI Cyber Security"
+          },
+          {
+            "id": "rbi_itf_nbfc",
+            "display": "RBI ITF NBFC"
+          },
+          {
+            "id": "soc_2",
+            "display": "SOC 2"
+          }
+        ]
+      },
+      "cost": {
+        "github_url": "github.com/turbot/steampipe-mod-aws-thrifty",
+        "mod_name": "aws_thrifty",
+        "benchmarks": [
+          {
+            "id": "api_gateway",
+            "display": "API Gateway Checks"
+          },
+          {
+            "id": "cloudfront",
+            "display": "CloudFront Checks"
+          },
+          {
+            "id": "cloudtrail",
+            "display": "CloudTrail Checks"
+          },
+          {
+            "id": "cloudwatch",
+            "display": "CloudWatch Checks"
+          },
+          {
+            "id": "cost_explorer",
+            "display": "Cost Explorer Checks"
+          },
+          {
+            "id": "dynamodb",
+            "display": "DynamoDB Checks"
+          },
+          {
+            "id": "ebs",
+            "display": "EBS Checks"
+          },
+          {
+            "id": "ec2",
+            "display": "EC2 Checks"
+          },
+          {
+            "id": "ecr",
+            "display": "ECR Checks"
+          },
+          {
+            "id": "ecs",
+            "display": "ECS Checks"
+          },
+          {
+            "id": "eks",
+            "display": "EKS Checks"
+          },
+          {
+            "id": "elasticache",
+            "display": "ElastiCache Checks"
+          },
+          {
+            "id": "emr",
+            "display": "EMR Checks"
+          },
+          {
+            "id": "lambda",
+            "display": "Lambda Checks"
+          },
+          {
+            "id": "networking",
+            "display": "Networking Checks"
+          },
+          {
+            "id": "rds",
+            "display": "RDS Checks"
+          },
+          {
+            "id": "redshift",
+            "display": "Redshift Checks"
+          },
+          {
+            "id": "route53",
+            "display": "Route 53 Checks"
+          },
+          {
+            "id": "s3",
+            "display": "S3 Checks"
+          },
+          {
+            "id": "secretsmanager",
+            "display": "Secrets Manager Checks"
+          }
+        ]
+      },
+      "public_access_risks": {
+        "github_url": "github.com/turbot/steampipe-mod-aws-perimeter",
+        "mod_name": "aws_perimeter",
+        "benchmarks": [
+          {
+            "id": "network_access",
+            "display": "Network Access"
+          },
+          {
+            "id": "public_access",
+            "display": "Public Access"
+          },
+          {
+            "id": "shared_access",
+            "display": "Shared Access"
+          },
+          {
+            "id": "public_ips",
+            "display": "Public IPs"
+          }
+        ]
+      },
+      "resource_types": {
+        "aws_accessanalyzer_analyzer": "AWS Access Analyzer",
+        "aws_accessanalyzer_finding": "AWS Access Analyzer Finding",
+        "aws_account": "AWS Account",
+        "aws_account_alternate_contact": "AWS Account Alternate Contact",
+        "aws_account_contact": "AWS Account Contact",
+        "aws_acm_certificate": "AWS ACM Certificate",
+        "aws_acmpca_certificate_authority": "AWS ACM Private Certificate Authority",
+        "aws_amplify_app": "AWS Amplify App",
+        "aws_api_gateway_account": "AWS API Gateway Account",
+        "aws_api_gateway_api_key": "AWS API Gateway API Key",
+        "aws_api_gateway_authorizer": "AWS API Gateway Authorizer",
+        "aws_api_gateway_domain_name": "AWS API Gateway Domain Name",
+        "aws_api_gateway_method": "AWS API Gateway Method",
+        "aws_api_gateway_rest_api": "AWS API Gateway Rest API",
+        "aws_api_gateway_stage": "AWS API Gateway Stage",
+        "aws_api_gateway_usage_plan": "AWS API Gateway Usage Plan",
+        "aws_api_gatewayv2_api": "AWS API Gateway Version 2 API",
+        "aws_api_gatewayv2_domain_name": "AWS API Gateway Version 2 Domain Name",
+        "aws_api_gatewayv2_integration": "AWS API Gateway Version 2 Integration",
+        "aws_api_gatewayv2_route": "AWS API Gateway Version 2 Route",
+        "aws_api_gatewayv2_stage": "AWS API Gateway Version 2 Stage",
+        "aws_app_runner_service": "AWS App Runner Service",
+        "aws_appautoscaling_policy": "AWS Application Auto Scaling Policy",
+        "aws_appautoscaling_target": "AWS Application Auto Scaling Target",
+        "aws_appconfig_application": "AWS AppConfig Application",
+        "aws_appstream_fleet": "AWS AppStream Fleet",
+        "aws_appstream_image": "AWS AppStream Image",
+        "aws_appsync_api": "AWS AppSync API",
+        "aws_appsync_graphql_api": "AWS AppSync GraphQL API",
+        "aws_athena_query_execution": "AWS Athena Query Execution",
+        "aws_athena_workgroup": "AWS Athena Workgroup",
+        "aws_auditmanager_assessment": "AWS Audit Manager Assessment",
+        "aws_auditmanager_control": "AWS Audit Manager Control",
+        "aws_auditmanager_evidence": "AWS Audit Manager Evidence",
+        "aws_auditmanager_evidence_folder": "AWS Audit Manager Evidence Folder",
+        "aws_auditmanager_framework": "AWS Audit Manager Framework",
+        "aws_availability_zone": "AWS Availability Zone",
+        "aws_backup_framework": "AWS Backup Framework",
+        "aws_backup_job": "AWS Backup Job",
+        "aws_backup_legal_hold": "AWS Backup Legal Hold",
+        "aws_backup_plan": "AWS Backup Plan",
+        "aws_backup_protected_resource": "AWS Backup Protected Resource",
+        "aws_backup_recovery_point": "AWS Backup Recovery Point",
+        "aws_backup_report_plan": "AWS Backup Report Plan",
+        "aws_backup_selection": "AWS Backup Selection",
+        "aws_backup_vault": "AWS Backup Vault",
+        "aws_batch_queue": "AWS Batch Queue",
+        "aws_bedrock_agent": "AWS Bedrock Agent",
+        "aws_bedrock_custom_model": "AWS Bedrock Custom Model",
+        "aws_bedrock_foundation_model": "AWS Bedrock Foundation Model",
+        "aws_bedrock_imported_model": "AWS Bedrock Imported Model",
+        "aws_bedrock_knowledge_base": "AWS Bedrock Knowledge Base",
+        "aws_cloudcontrol_resource": "AWS Cloud Control Resource",
+        "aws_cloudformation_stack": "AWS CloudFormation Stack",
+        "aws_cloudformation_stack_resource": "AWS CloudFormation Stack Resource",
+        "aws_cloudformation_stack_set": "AWS CloudFormation Stack Set",
+        "aws_cloudfront_cache_policy": "AWS CloudFront Cache Policy",
+        "aws_cloudfront_distribution": "AWS CloudFront Distribution",
+        "aws_cloudfront_function": "AWS CloudFront Function",
+        "aws_cloudfront_origin_access_identity": "AWS CloudFront Origin Access Identity",
+        "aws_cloudfront_origin_request_policy": "AWS CloudFront Origin Request Policy",
+        "aws_cloudfront_response_headers_policy": "AWS Cloudfront Response Headers Policy",
+        "aws_cloudsearch_domain": "AWS CloudSearch Domain",
+        "aws_cloudtrail_channel": "AWS CloudTrail Channel",
+        "aws_cloudtrail_event_data_store": "AWS CloudTrail Event Data Store",
+        "aws_cloudtrail_import": "AWS CloudTrail Import",
+        "aws_cloudtrail_lookup_event": "AWS CloudTrail Lookup Event",
+        "aws_cloudtrail_query": "AWS CloudTrail Query",
+        "aws_cloudtrail_trail": "AWS CloudTrail Trail",
+        "aws_cloudtrail_trail_event": "CloudTrail events from cloudwatch service.",
+        "aws_cloudwatch_alarm": "AWS CloudWatch Alarm",
+        "aws_cloudwatch_event_rule": "AWS CloudWatch Event Rule",
+        "aws_cloudwatch_log_delivery": "AWS CloudWatch Log Delivery",
+        "aws_cloudwatch_log_delivery_destination": "AWS CloudWatch Log Delivery Destination",
+        "aws_cloudwatch_log_delivery_source": "AWS CloudWatch Log Delivery Source",
+        "aws_cloudwatch_log_destination": "AWS CloudWatch Log Destination",
+        "aws_cloudwatch_log_event": "AWS CloudWatch Log Event",
+        "aws_cloudwatch_log_group": "AWS CloudWatch Log Group",
+        "aws_cloudwatch_log_metric_filter": "AWS CloudWatch Log Metric Filter",
+        "aws_cloudwatch_log_resource_policy": "AWS CloudWatch Log Resource Policy",
+        "aws_cloudwatch_log_stream": "AWS CloudWatch Log Stream",
+        "aws_cloudwatch_log_subscription_filter": "AWS CloudWatch Log Subscription Filter",
+        "aws_cloudwatch_metric": "AWS CloudWatch Metric",
+        "aws_cloudwatch_metric_data_point": "AWS CloudWatch Metric Data Point",
+        "aws_cloudwatch_metric_statistic_data_point": "AWS CloudWatch Metric Statistic Data Point",
+        "aws_codeartifact_domain": "AWS Code Artifact Domain",
+        "aws_codeartifact_repository": "AWS CodeArtifact Repository",
+        "aws_codebuild_build": "AWS CodeBuild Build",
+        "aws_codebuild_fleet": "AWS CodeBuild Fleet",
+        "aws_codebuild_project": "AWS CodeBuild Project",
+        "aws_codebuild_report_group": "AWS CodeBuild Report Group",
+        "aws_codebuild_source_credential": "AWS CodeBuild Source Credential",
+        "aws_codecommit_repository": "AWS CodeCommit Repository",
+        "aws_codedeploy_app": "AWS CodeDeploy Application",
+        "aws_codedeploy_deployment_config": "AWS CodeDeploy Deployment Config",
+        "aws_codedeploy_deployment_group": "AWS CodeDeploy Deployment Group",
+        "aws_codepipeline_pipeline": "AWS Codepipeline Pipeline",
+        "aws_codestar_notification_rule": "AWS CodeStar Notification Rule",
+        "aws_cognito_identity_pool": "AWS Cognito Identity Pool",
+        "aws_cognito_identity_provider": "AWS Cognito Identity Provider",
+        "aws_cognito_user_group": "AWS Cognito User Group",
+        "aws_cognito_user_pool": "AWS Cognito User Pool",
+        "aws_config_aggregate_authorization": "AWS Config Aggregate Authorization",
+        "aws_config_configuration_recorder": "AWS Config Configuration Recorder",
+        "aws_config_conformance_pack": "AWS Config Conformance Pack",
+        "aws_config_delivery_channel": "AWS Config Delivery Channel",
+        "aws_config_retention_configuration": "AWS Config Retention Configuration",
+        "aws_config_rule": "AWS Config Rule",
+        "aws_connect_instance": "AWS Connect Instance",
+        "aws_connect_instance_attribute": "AWS Connect Instance Attribute",
+        "aws_cost_by_account_daily": "AWS Cost Explorer - Cost by Linked Account (Daily)",
+        "aws_cost_by_account_monthly": "AWS Cost Explorer - Cost by Linked Account (Monthly)",
+        "aws_cost_by_record_type_daily": "AWS Cost Explorer - Cost by Record Type (Daily)",
+        "aws_cost_by_record_type_monthly": "AWS Cost Explorer - Cost by Record Type (Monthly)",
+        "aws_cost_by_region_monthly": "AWS Cost Explorer - Cost by Region (Monthly)",
+        "aws_cost_by_resource_daily": "AWS Cost Explorer - Cost by Resource (Daily)",
+        "aws_cost_by_resource_hourly": "AWS Cost Explorer - Cost by Resource (Hourly)",
+        "aws_cost_by_resource_monthly": "AWS Cost Explorer - Cost by Resource (Monthly)",
+        "aws_cost_by_service_daily": "AWS Cost Explorer - Cost by Service (Daily)",
+        "aws_cost_by_service_monthly": "AWS Cost Explorer - Cost by Service (Monthly)",
+        "aws_cost_by_service_usage_type_daily": "AWS Cost Explorer - Cost by Service and Usage Type (Daily)",
+        "aws_cost_by_service_usage_type_monthly": "AWS Cost Explorer - Cost by Service and Usage Type (Monthly)",
+        "aws_cost_by_tag": "AWS Cost Explorer - Cost By Tags",
+        "aws_cost_forecast_daily": "AWS Cost Explorer - Cost Forecast (Daily)",
+        "aws_cost_forecast_monthly": "AWS Cost Explorer - Cost Forecast (Monthly)",
+        "aws_cost_usage": "AWS Cost Explorer - Cost and Usage",
+        "aws_costoptimizationhub_recommendation": "AWS Cost Optimization Hub Recommendation",
+        "aws_datasync_task": "AWS DataSync Task",
+        "aws_dax_cluster": "AWS DAX Cluster",
+        "aws_dax_parameter": "AWS DAX Parameter",
+        "aws_dax_parameter_group": "AWS DAX Parameter Group",
+        "aws_dax_subnet_group": "AWS DAX Subnet Group",
+        "aws_directory_service_certificate": "AWS Directory Service Certificate",
+        "aws_directory_service_directory": "AWS Directory Service Directory",
+        "aws_directory_service_log_subscription": "AWS Directory Service Log Subscription",
+        "aws_dlm_lifecycle_policy": "AWS DLM Lifecycle Policy",
+        "aws_dms_certificate": "AWS DMS Certificate",
+        "aws_dms_endpoint": "AWS DMS Endpoint",
+        "aws_dms_replication_instance": "AWS DMS Replication Instance",
+        "aws_dms_replication_task": "AWS DMS Replication Task",
+        "aws_docdb_cluster": "AWS DocumentDB Cluster",
+        "aws_docdb_cluster_instance": "AWS DocumentDB Cluster Instance",
+        "aws_docdb_cluster_snapshot": "AWS DocumentDB Cluster Snapshot",
+        "aws_drs_job": "AWS DRS Job",
+        "aws_drs_recovery_instance": "AWS DRS recovery instance",
+        "aws_drs_recovery_snapshot": "AWS DRS Recovery Snapshot",
+        "aws_drs_source_server": "AWS DRS Source Server",
+        "aws_dynamodb_backup": "AWS DynamoDB Backup",
+        "aws_dynamodb_global_table": "AWS DynamoDB Global Table",
+        "aws_dynamodb_metric_account_provisioned_read_capacity_util": "AWS DynamoDB Metric Account Provisioned Read Capacity Utilization",
+        "aws_dynamodb_metric_account_provisioned_write_capacity_util": "AWS DynamoDB Metric Account Provisioned Write Capacity Utilization",
+        "aws_dynamodb_table": "AWS DynamoDB Table",
+        "aws_dynamodb_table_export": "AWS DynamoDB Table Export",
+        "aws_ebs_snapshot": "AWS EBS Snapshot",
+        "aws_ebs_volume": "AWS EBS Volume",
+        "aws_ebs_volume_metric_read_ops": "AWS EBS Volume Cloudwatch Metrics - Read Ops",
+        "aws_ebs_volume_metric_read_ops_daily": "AWS EBS Volume Cloudwatch Metrics - Read Ops (Daily)",
+        "aws_ebs_volume_metric_read_ops_hourly": "AWS EBS Volume Cloudwatch Metrics - Read Ops (Hourly)",
+        "aws_ebs_volume_metric_write_ops": "AWS EBS Volume Cloudwatch Metrics - Write Ops",
+        "aws_ebs_volume_metric_write_ops_daily": "AWS EBS Volume Cloudwatch Metrics - Write Ops (Daily)",
+        "aws_ebs_volume_metric_write_ops_hourly": "AWS EBS Volume Cloudwatch Metrics - Write Ops (Hourly)",
+        "aws_ec2_ami": "AWS EC2 AMI",
+        "aws_ec2_ami_shared": "AWS EC2 AMI - All public, private, and shared AMIs",
+        "aws_ec2_application_load_balancer": "AWS EC2 Application Load Balancer",
+        "aws_ec2_application_load_balancer_metric_request_count": "AWS EC2 Application Load Balancer Metrics - Request Count",
+        "aws_ec2_application_load_balancer_metric_request_count_daily": "AWS EC2 Application Load Balancer Metrics - Request Count (Daily)",
+        "aws_ec2_autoscaling_group": "AWS EC2 Autoscaling Group",
+        "aws_ec2_capacity_reservation": "AWS EC2 Capacity Reservation",
+        "aws_ec2_classic_load_balancer": "AWS EC2 Classic Load Balancer",
+        "aws_ec2_client_vpn_endpoint": "AWS EC2 Client VPN Endpoint",
+        "aws_ec2_gateway_load_balancer": "AWS EC2 Gateway Load Balancer",
+        "aws_ec2_instance": "AWS EC2 Instance",
+        "aws_ec2_instance_availability": "AWS EC2 Instance Availability",
+        "aws_ec2_instance_metric_cpu_utilization": "AWS EC2 Instance Cloudwatch Metrics - CPU Utilization",
+        "aws_ec2_instance_metric_cpu_utilization_daily": "AWS EC2 Instance Cloudwatch Metrics - CPU Utilization (Daily)",
+        "aws_ec2_instance_metric_cpu_utilization_hourly": "AWS EC2 Instance Cloudwatch Metrics - CPU Utilization (Hourly)",
+        "aws_ec2_instance_type": "AWS EC2 Instance Type",
+        "aws_ec2_key_pair": "AWS EC2 Key Pair",
+        "aws_ec2_launch_configuration": "AWS EC2 Launch Configuration",
+        "aws_ec2_launch_template": "AWS EC2 Launch Template",
+        "aws_ec2_launch_template_version": "AWS EC2 Launch Template Version",
+        "aws_ec2_load_balancer_listener": "AWS EC2 Load Balancer Listener",
+        "aws_ec2_load_balancer_listener_rule": "AWS EC2 Load Balancer Listener Rule",
+        "aws_ec2_managed_prefix_list": "AWS EC2 Managed Prefix List",
+        "aws_ec2_managed_prefix_list_entry": "AWS EC2 Managed Prefix List Entry",
+        "aws_ec2_network_interface": "AWS EC2 Network Interface",
+        "aws_ec2_network_load_balancer": "AWS EC2 Network Load Balancer",
+        "aws_ec2_network_load_balancer_metric_net_flow_count": "AWS EC2 Network Load Balancer Metrics - Net Flow Count",
+        "aws_ec2_network_load_balancer_metric_net_flow_count_daily": "AWS EC2 Network Load Balancer Metrics - Net Flow Count (Daily)",
+        "aws_ec2_placement_group": "AWS EC2 Placement Group",
+        "aws_ec2_regional_settings": "AWS EC2 Regional Settings",
+        "aws_ec2_reserved_instance": "AWS EC2 Reserved Instance",
+        "aws_ec2_spot_fleet_request": "AWS EC2 Spot Fleet Request",
+        "aws_ec2_spot_price": "AWS EC2 Spot Price History",
+        "aws_ec2_ssl_policy": "AWS EC2 SSL Policy",
+        "aws_ec2_target_group": "AWS EC2 Target Group",
+        "aws_ec2_transit_gateway": "AWS EC2 Transit Gateway",
+        "aws_ec2_transit_gateway_route": "AWS EC2 Transit Gateway Route",
+        "aws_ec2_transit_gateway_route_table": "AWS EC2 Transit Gateway Route Table",
+        "aws_ec2_transit_gateway_vpc_attachment": "AWS EC2 Transit Gateway VPC Attachment",
+        "aws_ecr_image": "AWS ECR Image",
+        "aws_ecr_image_scan_finding": "AWS ECR Image Scan Finding",
+        "aws_ecr_registry_scanning_configuration": "AWS ECR Registry Scanning Configuration",
+        "aws_ecr_repository": "AWS ECR Repository",
+        "aws_ecrpublic_repository": "AWS ECR Public Repository",
+        "aws_ecs_cluster": "AWS ECS Cluster",
+        "aws_ecs_cluster_metric_cpu_utilization": "AWS ECS Cluster Cloudwatch Metrics - CPU Utilization",
+        "aws_ecs_cluster_metric_cpu_utilization_daily": "AWS ECS Cluster Cloudwatch Metrics - CPU Utilization (Daily)",
+        "aws_ecs_cluster_metric_cpu_utilization_hourly": "AWS ECS Cluster Cloudwatch Metrics - CPU Utilization (Hourly)",
+        "aws_ecs_container_instance": "AWS ECS Container Instance",
+        "aws_ecs_service": "AWS ECS Service",
+        "aws_ecs_task": "AWS ECS Task",
+        "aws_ecs_task_definition": "AWS ECS Task Definition",
+        "aws_efs_access_point": "AWS EFS Access Point",
+        "aws_efs_file_system": "AWS Elastic File System",
+        "aws_efs_mount_target": "AWS EFS Mount Target",
+        "aws_eks_addon": "AWS EKS Addon",
+        "aws_eks_addon_version": "AWS EKS Addon Version",
+        "aws_eks_cluster": "AWS Elastic Kubernetes Service Cluster",
+        "aws_eks_fargate_profile": "AWS Elastic Kubernetes Service Fargate Profile",
+        "aws_eks_identity_provider_config": "AWS EKS Identity Provider Config",
+        "aws_eks_node_group": "AWS EKS Node Group",
+        "aws_elastic_beanstalk_application": "AWS Elastic Beanstalk Application",
+        "aws_elastic_beanstalk_application_version": "AWS Elastic Beanstalk Application Version",
+        "aws_elastic_beanstalk_environment": "AWS ElasticBeanstalk Environment",
+        "aws_elasticache_cluster": "AWS ElastiCache Cluster",
+        "aws_elasticache_parameter_group": "AWS ElastiCache Parameter Group",
+        "aws_elasticache_redis_metric_cache_hits_hourly": "AWS Elasticache Redis CacheHits metric (Hourly)",
+        "aws_elasticache_redis_metric_curr_connections_hourly": "AWS Elasticache Redis CurrConnections metric (Hourly)",
+        "aws_elasticache_redis_metric_engine_cpu_utilization_daily": "AWS Elasticache Redis EngineCPUUtilization metric (Daily)",
+        "aws_elasticache_redis_metric_engine_cpu_utilization_hourly": "AWS Elasticache Redis EngineCPUUtilization metric (Hourly)",
+        "aws_elasticache_redis_metric_get_type_cmds_hourly": "AWS Elasticache Redis GetTypeCmds metric(Hourly)",
+        "aws_elasticache_redis_metric_list_based_cmds_hourly": "AWS Elasticache Redis ListBasedCmds metric (Hourly)",
+        "aws_elasticache_redis_metric_new_connections_hourly": "AWS Elasticache Redis NewConnections metric (Hourly)",
+        "aws_elasticache_replication_group": "AWS ElastiCache Replication Group",
+        "aws_elasticache_reserved_cache_node": "AWS ElastiCache Reserved Cache Node",
+        "aws_elasticache_serverless_cache": "AWS ElastiCache Serverless Cache",
+        "aws_elasticache_subnet_group": "AWS ElastiCache Subnet Group",
+        "aws_elasticache_update_action": "AWS ElastiCache Update Action",
+        "aws_elasticsearch_domain": "AWS Elasticsearch Domain",
+        "aws_emr_block_public_access_configuration": "AWS EMR Block Public Access Configuration",
+        "aws_emr_cluster": "AWS EMR Cluster",
+        "aws_emr_cluster_metric_is_idle": "AWS EMR Cluster Cloudwatch Metrics - IsIdle",
+        "aws_emr_instance": "AWS EMR Instance",
+        "aws_emr_instance_fleet": "AWS EMR Instance Fleet",
+        "aws_emr_instance_group": "AWS EMR Instance Group",
+        "aws_emr_security_configuration": "AWS EMR Security Configuration",
+        "aws_emr_studio": "AWS EMR Studio",
+        "aws_eventbridge_bus": "AWS EventBridge Bus",
+        "aws_eventbridge_rule": "AWS EventBridge Rule",
+        "aws_fms_app_list": "AWS FMS App List",
+        "aws_fms_policy": "AWS FMS Policy",
+        "aws_fsx_file_system": "AWS FSx File System",
+        "aws_glacier_vault": "AWS Glacier Vault",
+        "aws_globalaccelerator_accelerator": "AWS Global Accelerator Accelerator",
+        "aws_globalaccelerator_endpoint_group": "AWS Global Accelerator Endpoint Group",
+        "aws_globalaccelerator_listener": "AWS Global Accelerator Listener",
+        "aws_glue_catalog_database": "AWS Glue Catalog Database",
+        "aws_glue_catalog_table": "AWS Glue Catalog Table",
+        "aws_glue_connection": "AWS Glue Connection",
+        "aws_glue_crawler": "AWS Glue Crawler",
+        "aws_glue_data_catalog_encryption_settings": "AWS Glue Data Catalog Encryption Settings",
+        "aws_glue_data_quality_ruleset": "AWS Glue Data Quality Ruleset",
+        "aws_glue_dev_endpoint": "AWS Glue Dev Endpoint",
+        "aws_glue_job": "AWS Glue Job",
+        "aws_glue_ml_transform": "AWS Glue ML Transform",
+        "aws_glue_security_configuration": "AWS Glue Security Configuration",
+        "aws_guardduty_detector": "AWS GuardDuty Detector",
+        "aws_guardduty_filter": "AWS GuardDuty Filter",
+        "aws_guardduty_finding": "AWS GuardDuty Finding",
+        "aws_guardduty_ipset": "AWS GuardDuty IPSet",
+        "aws_guardduty_member": "AWS GuardDuty Member",
+        "aws_guardduty_publishing_destination": "AWS GuardDuty Publishing Destination",
+        "aws_guardduty_threat_intel_set": "AWS GuardDuty ThreatIntelSet",
+        "aws_health_affected_entity": "AWS Health Affected Entity",
+        "aws_health_event": "AWS Health Event",
+        "aws_iam_access_advisor": "AWS IAM Access Advisor",
+        "aws_iam_access_key": "AWS IAM User Access Key",
+        "aws_iam_account_password_policy": "AWS IAM Account Password Policy",
+        "aws_iam_account_summary": "AWS IAM Account Summary",
+        "aws_iam_action": "AWS IAM Action",
+        "aws_iam_credential_report": "AWS IAM Credential Report",
+        "aws_iam_group": "AWS IAM Group",
+        "aws_iam_instance_profile": "AWS IAM Instance Profile",
+        "aws_iam_open_id_connect_provider": "AWS IAM OpenID Connect Provider",
+        "aws_iam_policy": "AWS IAM Policy",
+        "aws_iam_policy_attachment": "AWS IAM Policy Attachment",
+        "aws_iam_policy_simulator": "AWS IAM Policy Simulator",
+        "aws_iam_role": "AWS IAM Role",
+        "aws_iam_saml_provider": "AWS IAM Saml Provider",
+        "aws_iam_server_certificate": "AWS IAM Server Certificate",
+        "aws_iam_service_specific_credential": "AWS IAM User Service Specific Credential",
+        "aws_iam_user": "AWS IAM User",
+        "aws_iam_virtual_mfa_device": "AWS IAM Virtual MFA device",
+        "aws_identitystore_group": "AWS Identity Store Group",
+        "aws_identitystore_group_membership": "AWS Identity Store Group Membership",
+        "aws_identitystore_user": "AWS Identity Store User",
+        "aws_inspector2_coverage": "AWS Inspector2 Coverage",
+        "aws_inspector2_coverage_statistics": "AWS Inspector2 Coverage Statistics",
+        "aws_inspector2_finding": "AWS Inspector2 Finding",
+        "aws_inspector2_member": "AWS Inspector2 Member",
+        "aws_inspector2_organization_configuration": "AWS Inspector2 Organization Configuration",
+        "aws_inspector_assessment_run": "AWS Inspector Assessment Run",
+        "aws_inspector_assessment_target": "AWS Inspector Assessment Target",
+        "aws_inspector_assessment_template": "AWS Inspector Assessment Template",
+        "aws_inspector_exclusion": "AWS Inspector Exclusion",
+        "aws_inspector_finding": "AWS Inspector Finding",
+        "aws_iot_fleet_metric": "AWS IoT Fleet Metric",
+        "aws_iot_thing": "AWS IoT Thing",
+        "aws_iot_thing_group": "AWS IoT Thing Group",
+        "aws_iot_thing_type": "AWS IoT Thing Type",
+        "aws_keyspaces_keyspace": "AWS Keyspaces Keyspace",
+        "aws_keyspaces_table": "AWS Keyspaces Table",
+        "aws_kinesis_consumer": "AWS Kinesis Consumer",
+        "aws_kinesis_firehose_delivery_stream": "AWS Kinesis Firehose Delivery Stream",
+        "aws_kinesis_stream": "AWS Kinesis Stream",
+        "aws_kinesis_video_stream": "AWS Kinesis Video Stream",
+        "aws_kinesisanalyticsv2_application": "AWS Kinesis Analytics V2 Application",
+        "aws_kms_alias": "AWS KMS Alias",
+        "aws_kms_key": "AWS KMS Key",
+        "aws_kms_key_rotation": "AWS KMS Key Rotation",
+        "aws_lakeformation_permission": "AWS Lake Formation Permission",
+        "aws_lakeformation_resource": "AWS Lake Formation Resource",
+        "aws_lakeformation_tag": "AWS Lake Formation Tag",
+        "aws_lambda_alias": "AWS Lambda Alias",
+        "aws_lambda_event_source_mapping": "AWS Lambda Event Source Mapping",
+        "aws_lambda_function": "AWS Lambda Function",
+        "aws_lambda_function_metric_duration_daily": "AWS Lambda Function Cloudwatch Metrics - Duration (Daily)",
+        "aws_lambda_function_metric_errors_daily": "AWS Lambda Function Cloudwatch Metrics - Errors (Daily)",
+        "aws_lambda_function_metric_invocations_daily": "AWS Lambda Function Cloudwatch Metrics - Invocations (Daily)",
+        "aws_lambda_layer": "AWS Lambda Layer",
+        "aws_lambda_layer_version": "AWS Lambda Layer Version",
+        "aws_lambda_version": "AWS Lambda Version",
+        "aws_lightsail_bucket": "AWS Lightsail Bucket",
+        "aws_lightsail_instance": "AWS Lightsail Instance",
+        "aws_macie2_classification_job": "AWS Macie2 Classification Job",
+        "aws_macie2_finding": "AWS Macie2 Finding",
+        "aws_media_store_container": "AWS Media Store Container",
+        "aws_memorydb_cluster": "AWS MemoryDB Cluster",
+        "aws_mgn_application": "AWS MGN Application",
+        "aws_mq_broker": "AWS MQ Broker",
+        "aws_msk_cluster": "AWS Managed Streaming for Apache Kafka",
+        "aws_msk_serverless_cluster": "AWS Serverless Managed Streaming for Apache Kafka",
+        "aws_mskconnect_connector": "AWS MSK Connect Connector",
+        "aws_neptune_db_cluster": "AWS Neptune DB Cluster",
+        "aws_neptune_db_cluster_snapshot": "AWS Neptune DB Cluster Snapshot",
+        "aws_networkfirewall_firewall": "AWS Network Firewall Firewall",
+        "aws_networkfirewall_firewall_policy": "AWS Network Firewall Policy",
+        "aws_networkfirewall_rule_group": "AWS Network Firewall Rule Group",
+        "aws_oam_link": "AWS OAM Link",
+        "aws_oam_sink": "AWS OAM Sink",
+        "aws_opensearch_domain": "AWS OpenSearch Domain",
+        "aws_organizations_account": "AWS Organizations Account",
+        "aws_organizations_delegated_administrator": "AWS Organizations Delegated Administrator",
+        "aws_organizations_delegated_services_for_account": "AWS Organizations Delegated Services For Account",
+        "aws_organizations_organizational_unit": "AWS Organizations Organizational Unit",
+        "aws_organizations_policy": "AWS Organizations Policy",
+        "aws_organizations_policy_target": "AWS Organizations Policy Target",
+        "aws_organizations_root": "AWS Organizations Root",
+        "aws_pinpoint_app": "AWS Pinpoint App",
+        "aws_pipes_pipe": "AWS Pipes Pipe",
+        "aws_pricing_product": "AWS Pricing Product",
+        "aws_pricing_service_attribute": "AWS Pricing Service Attribute",
+        "aws_quicksight_account_setting": "AWS QuickSight Account Setting",
+        "aws_quicksight_data_set": "AWS QuickSight Dataset",
+        "aws_quicksight_data_source": "AWS QuickSight Data Source",
+        "aws_quicksight_group": "AWS QuickSight Group",
+        "aws_quicksight_namespace": "AWS QuickSight Namespace",
+        "aws_quicksight_user": "AWS QuickSight User",
+        "aws_quicksight_vpc_connection": "AWS QuickSight VPC Connection",
+        "aws_ram_principal_association": "AWS RAM Principal Association",
+        "aws_ram_resource_association": "AWS RAM Resource Association",
+        "aws_rds_db_cluster": "AWS RDS DB Cluster",
+        "aws_rds_db_cluster_parameter_group": "AWS RDS DB Cluster Parameter Group",
+        "aws_rds_db_cluster_snapshot": "AWS RDS DB Cluster Snapshot",
+        "aws_rds_db_engine_version": "AWS RDS DB Engine Version",
+        "aws_rds_db_event_subscription": "AWS RDS DB Event Subscription",
+        "aws_rds_db_instance": "AWS RDS DB Instance",
+        "aws_rds_db_instance_automated_backup": "AWS RDS DB Instance Automated Backup",
+        "aws_rds_db_instance_metric_connections": "AWS RDS DB Instance Cloudwatch Metrics - DB Connections",
+        "aws_rds_db_instance_metric_connections_daily": "AWS RDS DB Instance Cloudwatch Metrics - DB Connections (Daily)",
+        "aws_rds_db_instance_metric_connections_hourly": "AWS RDS DB Instance Cloudwatch Metrics - DB Connections (Hourly)",
+        "aws_rds_db_instance_metric_cpu_utilization": "AWS RDS DB Instance Cloudwatch Metrics - CPU Utilization",
+        "aws_rds_db_instance_metric_cpu_utilization_daily": "AWS RDS DB Instance Cloudwatch Metrics - CPU Utilization (Daily)",
+        "aws_rds_db_instance_metric_cpu_utilization_hourly": "AWS RDS DB Instance Cloudwatch Metrics - CPU Utilization (Hourly)",
+        "aws_rds_db_instance_metric_read_iops": "AWS RDS DB Instance Cloudwatch Metrics - Read IOPS",
+        "aws_rds_db_instance_metric_read_iops_daily": "AWS RDS DB Instance Cloudwatch Metrics - Read IOPS (Daily)",
+        "aws_rds_db_instance_metric_read_iops_hourly": "AWS RDS DB Instance Cloudwatch Metrics - Read IOPS (Hourly)",
+        "aws_rds_db_instance_metric_write_iops": "AWS RDS DB Instance Cloudwatch Metrics - Write IOPS",
+        "aws_rds_db_instance_metric_write_iops_daily": "AWS RDS DB Instance Cloudwatch Metrics - Write IOPS (Daily)",
+        "aws_rds_db_instance_metric_write_iops_hourly": "AWS RDS DB Instance Cloudwatch Metrics - Write IOPS (Hourly)",
+        "aws_rds_db_option_group": "AWS RDS DB Option Group",
+        "aws_rds_db_parameter_group": "AWS RDS DB Parameter Group",
+        "aws_rds_db_proxy": "AWS RDS DB Proxy",
+        "aws_rds_db_recommendation": "AWS RDS DB Recommendation",
+        "aws_rds_db_snapshot": "AWS RDS DB Snapshot",
+        "aws_rds_db_subnet_group": "AWS RDS DB Subnet Group",
+        "aws_rds_pending_maintenance_action": "AWS RDS Pending Maintenance Action",
+        "aws_rds_reserved_db_instance": "AWS RDS Reserved DB Instance",
+        "aws_redshift_cluster": "AWS Redshift Cluster",
+        "aws_redshift_cluster_metric_cpu_utilization_daily": "AWS Redshift Cluster Cloudwatch Metrics - CPU Utilization (Daily)",
+        "aws_redshift_event_subscription": "AWS Redshift Event Subscription",
+        "aws_redshift_parameter_group": "AWS Redshift Parameter Group",
+        "aws_redshift_snapshot": "AWS Redshift Snapshot",
+        "aws_redshift_subnet_group": "AWS Redshift Subnet Group",
+        "aws_redshiftserverless_namespace": "AWS Redshift Serverless Namespace",
+        "aws_redshiftserverless_workgroup": "AWS Redshift Serverless Workgroup",
+        "aws_region": "AWS Region",
+        "aws_resource_explorer_index": "AWS Resource Explorer Index",
+        "aws_resource_explorer_resource": "AWS Resource Explorer Resource.",
+        "aws_resource_explorer_search": "AWS Resource Explorer Search",
+        "aws_resource_explorer_supported_resource_type": "AWS Resource Explorer Supported Resource Type",
+        "aws_rolesanywhere_profile": "AWS Roles Anywhere Profile",
+        "aws_rolesanywhere_trust_anchor": "AWS Roles Anywhere Trust Anchor",
+        "aws_route53_domain": "AWS Route53 Domain",
+        "aws_route53_health_check": "AWS Route53 Health Check",
+        "aws_route53_query_log": "AWS Route53 Query Logging Configuration",
+        "aws_route53_record": "AWS Route53 Record",
+        "aws_route53_resolver_endpoint": "AWS Route53 Resolver Endpoint",
+        "aws_route53_resolver_query_log_config": "AWS Route53 Resolver Query Logging Configuration",
+        "aws_route53_resolver_rule": "AWS Route53 Resolver Rule",
+        "aws_route53_traffic_policy": "AWS Route53 Traffic Policy",
+        "aws_route53_traffic_policy_instance": "AWS Route53 Traffic Policy Instance",
+        "aws_route53_vpc_association_authorization": "AWS Route53 VPC Association Authorization",
+        "aws_route53_zone": "AWS Route53 Zone",
+        "aws_s3_access_point": "AWS S3 Access Point",
+        "aws_s3_account_settings": "AWS S3 Account Block Public Access Settings",
+        "aws_s3_bucket": "AWS S3 Bucket",
+        "aws_s3_bucket_intelligent_tiering_configuration": "AWS S3 Bucket Intelligent Tiering Configuration",
+        "aws_s3_directory_bucket": "AWS S3 Directory Bucket",
+        "aws_s3_multi_region_access_point": "AWS S3 Multi Region Access Point",
+        "aws_s3_multipart_upload": "AWS S3 Multipart Upload",
+        "aws_s3_object": "List AWS S3 Objects in S3 buckets by bucket name.",
+        "aws_s3_object_version": "AWS S3 Object Version",
+        "aws_s3tables_namespace": "AWS S3Tables Namespace",
+        "aws_s3tables_table": "AWS S3Tables Table",
+        "aws_s3tables_table_bucket": "AWS S3Tables Table Bucket",
+        "aws_sagemaker_app": "AWS Sagemaker App",
+        "aws_sagemaker_domain": "AWS Sagemaker Domain",
+        "aws_sagemaker_endpoint_configuration": "AWS Sagemaker Endpoint Configuration",
+        "aws_sagemaker_model": "AWS Sagemaker Model",
+        "aws_sagemaker_notebook_instance": "AWS Sagemaker Notebook Instance",
+        "aws_sagemaker_training_job": "AWS SageMaker Training Job",
+        "aws_savingsplans_savings_plan": "AWS Savings Plans Savings Plan",
+        "aws_scheduler_schedule": "AWS EventBridge Scheduler Schedule",
+        "aws_secretsmanager_secret": "AWS Secrets Manager Secret",
+        "aws_securityhub_action_target": "AWS Security Hub Action Target",
+        "aws_securityhub_enabled_product_subscription": "AWS Securityhub Enabled Product Subscription",
+        "aws_securityhub_finding": "AWS Security Hub Finding",
+        "aws_securityhub_finding_aggregator": "AWS Security Hub Finding Aggregator",
+        "aws_securityhub_hub": "AWS Security Hub",
+        "aws_securityhub_insight": "AWS Securityhub Insight",
+        "aws_securityhub_member": "AWS Securityhub Member",
+        "aws_securityhub_product": "AWS Securityhub Product",
+        "aws_securityhub_standards_control": "AWS Security Hub Standards Control",
+        "aws_securityhub_standards_subscription": "AWS Security Hub Standards Subscription",
+        "aws_securitylake_data_lake": "AWS Security Lake Data Lake",
+        "aws_securitylake_subscriber": "AWS Security Lake Subscriber",
+        "aws_serverlessapplicationrepository_application": "AWS Serverless Application Repository Application",
+        "aws_service_discovery_instance": "AWS Service Discovery Instance",
+        "aws_service_discovery_namespace": "AWS Service Discovery Namespace",
+        "aws_service_discovery_service": "AWS Service Discovery Service",
+        "aws_servicecatalog_portfolio": "AWS Service Catalog Portfolio",
+        "aws_servicecatalog_portfolio_share": "AWS Service Catalog Portfolio Share",
+        "aws_servicecatalog_product": "AWS Service Catalog Product",
+        "aws_servicecatalog_provisioned_product": "AWS Service Catalog Provisioned Product",
+        "aws_servicequotas_default_service_quota": "AWS Service Quotas Default Service Quota",
+        "aws_servicequotas_service": "AWS Service Quotas Service",
+        "aws_servicequotas_service_quota": "AWS Service Quotas Service Quota",
+        "aws_servicequotas_service_quota_change_request": "AWS Service Quotas Service Quota Change Request",
+        "aws_ses_domain_identity": "AWS SES Domain Identity",
+        "aws_ses_email_identity": "AWS SES Email Identity",
+        "aws_ses_template": "AWS SES Template",
+        "aws_sfn_state_machine": "AWS Step Functions State Machine",
+        "aws_sfn_state_machine_execution": "AWS Step Functions State Machine Execution",
+        "aws_sfn_state_machine_execution_history": "AWS Step Functions State Machine Execution History",
+        "aws_shield_attack": "AWS Shield Attack",
+        "aws_shield_attack_statistic": "AWS Shield Attack Statistic",
+        "aws_shield_drt_access": "AWS Shield DRT Access",
+        "aws_shield_emergency_contact": "AWS Shield Emergency Contact",
+        "aws_shield_protection": "AWS Shield Protection",
+        "aws_shield_protection_group": "AWS Shield Protection Group",
+        "aws_shield_subscription": "AWS Shield Subscription",
+        "aws_simspaceweaver_simulation": "AWS SimSpace Weaver Simulation",
+        "aws_sns_subscription": "AWS SNS Subscription",
+        "aws_sns_topic": "AWS SNS Topic",
+        "aws_sns_topic_subscription": "AWS SNS Topic Subscription",
+        "aws_sqs_queue": "AWS SQS Queue",
+        "aws_ssm_association": "AWS SSM Association",
+        "aws_ssm_document": "AWS SSM Document",
+        "aws_ssm_document_permission": "AWS SSM Document Permission",
+        "aws_ssm_inventory": "AWS SSM Inventory",
+        "aws_ssm_inventory_entry": "AWS SSM Inventory Entry",
+        "aws_ssm_maintenance_window": "AWS SSM Maintenance Window",
+        "aws_ssm_managed_instance": "AWS SSM Managed Instance",
+        "aws_ssm_managed_instance_compliance": "AWS SSM Managed Instance Compliance",
+        "aws_ssm_managed_instance_patch_state": "AWS SSM Managed Instance Patch State",
+        "aws_ssm_parameter": "AWS SSM Parameter",
+        "aws_ssm_patch_baseline": "AWS SSM Patch Baseline",
+        "aws_ssm_service_setting": "AWS SSM Service Setting",
+        "aws_ssmincidents_response_plan": "AWS SSMIncidents Response Plan",
+        "aws_ssoadmin_account_assignment": "AWS SSO Account Assignment",
+        "aws_ssoadmin_instance": "AWS SSO Instance",
+        "aws_ssoadmin_managed_policy_attachment": "AWS SSO Managed Policy Attachment",
+        "aws_ssoadmin_permission_set": "AWS SSO Permission Set",
+        "aws_sts_caller_identity": "AWS STS Caller Identity",
+        "aws_tagging_resource": "AWS Tagging Resource",
+        "aws_timestreamwrite_database": "AWS Timestreamwrite Database",
+        "aws_timestreamwrite_table": "AWS Timestreamwrite Table",
+        "aws_transfer_connector": "AWS Transfer Connector",
+        "aws_transfer_server": "AWS Transfer Server",
+        "aws_transfer_user": "AWS Transfer User",
+        "aws_trusted_advisor_check_result": "AWS Trusted Advisor Check Result",
+        "aws_trusted_advisor_check_summary": "AWS Trusted Advisor Check Summary",
+        "aws_vpc": "AWS VPC",
+        "aws_vpc_block_public_access_options": "AWS VPC Block Public Access Options",
+        "aws_vpc_customer_gateway": "AWS VPC Customer Gateway",
+        "aws_vpc_dhcp_options": "AWS VPC DHCP Options",
+        "aws_vpc_egress_only_internet_gateway": "AWS VPC Egress Only Internet Gateway",
+        "aws_vpc_eip": "AWS VPC Elastic IP",
+        "aws_vpc_eip_address_transfer": "AWS VPC Elastic IP Address Transfer",
+        "aws_vpc_endpoint": "AWS VPC Endpoint",
+        "aws_vpc_endpoint_service": "AWS VPC Endpoint Service",
+        "aws_vpc_flow_log": "AWS VPC Flowlog",
+        "aws_vpc_flow_log_event": "AWS VPC Flow Log events from CloudWatch Logs",
+        "aws_vpc_internet_gateway": "AWS VPC Internet Gateway",
+        "aws_vpc_nat_gateway": "AWS VPC Network Address Translation Gateway",
+        "aws_vpc_nat_gateway_metric_bytes_out_to_destination": "AWS VPC Nat Gateway Cloudwatch Metrics - BytesOutToDestination",
+        "aws_vpc_network_acl": "AWS VPC Network ACL",
+        "aws_vpc_peering_connection": "AWS VPC Peering Connection",
+        "aws_vpc_route": "AWS VPC Route",
+        "aws_vpc_route_table": "AWS VPC Route table",
+        "aws_vpc_security_group": "AWS VPC Security Group",
+        "aws_vpc_security_group_rule": "AWS VPC Security Group Rule",
+        "aws_vpc_security_group_vpc_association": "AWS VPC Security Group VPC Association",
+        "aws_vpc_subnet": "AWS VPC Subnet",
+        "aws_vpc_verified_access_endpoint": "AWS VPC verified access Endpoint",
+        "aws_vpc_verified_access_group": "AWS VPC Verified Access Group",
+        "aws_vpc_verified_access_instance": "AWS VPC Verified Access Instance",
+        "aws_vpc_verified_access_trust_provider": "AWS VPC Verified Access Trust Provider",
+        "aws_vpc_vpn_connection": "AWS VPC VPN Connection",
+        "aws_vpc_vpn_gateway": "AWS VPC VPN Gateway",
+        "aws_waf_rate_based_rule": "AWS WAF Rate Based Rule",
+        "aws_waf_rule": "AWS WAF Rule",
+        "aws_waf_rule_group": "AWS WAF Rule Group",
+        "aws_waf_web_acl": "AWS WAF Web ACL",
+        "aws_wafregional_rule": "AWS WAF Regional Rule",
+        "aws_wafregional_rule_group": "AWS WAF Regional Rule Group",
+        "aws_wafregional_web_acl": "AWS WAF Regional Web ACL",
+        "aws_wafv2_ip_set": "AWS WAFv2 IP Set",
+        "aws_wafv2_regex_pattern_set": "AWS WAFv2 Regex Pattern Set",
+        "aws_wafv2_rule_group": "AWS WAFv2 Rule Group",
+        "aws_wafv2_web_acl": "AWS WAFv2 Web ACL",
+        "aws_wellarchitected_answer": "AWS Well-Architected Answer",
+        "aws_wellarchitected_check_detail": "AWS Well-Architected Check Detail",
+        "aws_wellarchitected_check_summary": "AWS Well-Architected Check Summary",
+        "aws_wellarchitected_consolidated_report": "AWS Well-Architected Consolidated Report",
+        "aws_wellarchitected_lens": "AWS Well-Architected Lens",
+        "aws_wellarchitected_lens_review": "AWS Well-Architected Lens Review",
+        "aws_wellarchitected_lens_review_improvement": "AWS Well-Architected Lens Review Improvement",
+        "aws_wellarchitected_lens_review_report": "AWS Well-Architected Lens Review Report",
+        "aws_wellarchitected_lens_share": "AWS Well-Architected Lens Share",
+        "aws_wellarchitected_milestone": "AWS Well-Architected Milestone",
+        "aws_wellarchitected_notification": "AWS Well-Architected Notification",
+        "aws_wellarchitected_share_invitation": "AWS Well-Architected Share Invitation",
+        "aws_wellarchitected_workload": "AWS Well-Architected Workload",
+        "aws_wellarchitected_workload_share": "AWS Well-Architected Workload Share",
+        "aws_workspaces_directory": "AWS Workspaces Directory",
+        "aws_workspaces_workspace": "AWS Workspaces"
+      }
+    },
+    "azure": {
+      "compliance": {
+        "github_url": "github.com/turbot/steampipe-mod-azure-compliance",
+        "mod_name": "azure_compliance",
+        "benchmarks": [
+          {
+            "id": "cis_v130",
+            "display": "CIS v1.3.0"
+          },
+          {
+            "id": "cis_v140",
+            "display": "CIS v1.4.0"
+          },
+          {
+            "id": "cis_v150",
+            "display": "CIS v1.5.0"
+          },
+          {
+            "id": "cis_v200",
+            "display": "CIS v2.0.0"
+          },
+          {
+            "id": "cis_v210",
+            "display": "CIS v2.1.0"
+          },
+          {
+            "id": "cis_v300",
+            "display": "CIS v3.0.0"
+          },
+          {
+            "id": "cis_v400",
+            "display": "CIS v4.0.0"
+          },
+          {
+            "id": "fedramp_high",
+            "display": "FedRAMP High"
+          },
+          {
+            "id": "hipaa_hitrust_v92",
+            "display": "HIPAA HITRUST v9.2"
+          },
+          {
+            "id": "nist_csf_v2",
+            "display": "NIST CSF v2.0"
+          },
+          {
+            "id": "nist_sp_800_171_rev_2",
+            "display": "NIST SP 800-171 Rev 2"
+          },
+          {
+            "id": "nist_sp_800_53_rev_5",
+            "display": "NIST SP 800-53 Rev 5"
+          },
+          {
+            "id": "pci_dss_v321",
+            "display": "PCI DSS v3.2.1"
+          },
+          {
+            "id": "rbi_itf_nbfc_v2017",
+            "display": "RBI ITF NBFC v2017"
+          },
+          {
+            "id": "regulatory_compliance",
+            "display": "Regulatory Compliance"
+          }
+        ]
+      },
+      "cost": {
+        "github_url": "github.com/turbot/steampipe-mod-azure-thrifty",
+        "mod_name": "azure_thrifty",
+        "benchmarks": [
+          {
+            "id": "compute",
+            "display": "Compute Checks"
+          },
+          {
+            "id": "network",
+            "display": "Network Checks"
+          },
+          {
+            "id": "sql",
+            "display": "SQL Checks"
+          },
+          {
+            "id": "storage",
+            "display": "Storage Checks"
+          }
+        ]
+      },
+      "public_access_risks": {
+        "github_url": "github.com/turbot/steampipe-mod-aws-perimeter",
+        "mod_name": "aws_perimeter",
+        "benchmarks": [
+          {
+            "id": "network_access",
+            "display": "Network Access"
+          },
+          {
+            "id": "security_group_access",
+            "display": "Security Group Access"
+          },
+          {
+            "id": "public_access_settings",
+            "display": "Public Access Settings"
+          },
+          {
+            "id": "cors_policy_public_access",
+            "display": "CORS Policy Public Access"
+          }
+        ]
+      },
+      "resource_types": {
+        "azure_alert_management": "Azure Alert Management Service",
+        "azure_api_management": "Azure API Management Service",
+        "azure_api_management_backend": "Azure API Management Backend",
+        "azure_app_configuration": "Azure App Configuration",
+        "azure_app_service_environment": "Azure App Service Environment",
+        "azure_app_service_function_app": "Azure App Service Function App",
+        "azure_app_service_plan": "Azure App Service Plan",
+        "azure_app_service_web_app": "Azure App Service Web App",
+        "azure_app_service_web_app_slot": "Azure App Service Web App Slot",
+        "azure_application_gateway": "Azure Application Gateway",
+        "azure_application_insight": "Azure Application Insight",
+        "azure_application_security_group": "Azure Application Security Group",
+        "azure_automation_account": "Azure Automation Account",
+        "azure_automation_variable": "Azure Automation Variable",
+        "azure_backup_policy": "Azure Backup Policy",
+        "azure_bastion_host": "Azure Bastion Host",
+        "azure_batch_account": "Azure Batch Account",
+        "azure_cdn_frontdoor_profile": "Azure CDN Front Door Profile",
+        "azure_cognitive_account": "Azure Cognitive Account",
+        "azure_compute_availability_set": "Azure Compute Availability Set",
+        "azure_compute_disk": "Azure Compute Disk",
+        "azure_compute_disk_access": "Azure Compute Disk Access",
+        "azure_compute_disk_encryption_set": "Azure Compute Disk Encryption Set",
+        "azure_compute_disk_metric_read_ops": "Azure Compute Disk Metrics - Read Ops",
+        "azure_compute_disk_metric_read_ops_daily": "Azure Compute Disk Metrics - Read Ops (Daily)",
+        "azure_compute_disk_metric_read_ops_hourly": "Azure Compute Disk Metrics - Read Ops (Hourly)",
+        "azure_compute_disk_metric_write_ops": "Azure Compute Disk Metrics - Write Ops",
+        "azure_compute_disk_metric_write_ops_daily": "Azure Compute Disk Metrics - Write Ops (Daily)",
+        "azure_compute_disk_metric_write_ops_hourly": "Azure Compute Disk Metrics - Write Ops (Hourly)",
+        "azure_compute_image": "Azure Compute Image",
+        "azure_compute_resource_sku": "Azure Compute Resource SKU",
+        "azure_compute_snapshot": "Azure Compute Snapshot",
+        "azure_compute_ssh_key": "Azure Compute SSH Key",
+        "azure_compute_virtual_machine": "Azure Compute Virtual Machine",
+        "azure_compute_virtual_machine_metric_available_memory": "Azure Compute Virtual Machine Metrics - Memory Available Utilization",
+        "azure_compute_virtual_machine_metric_available_memory_daily": "Azure Compute Virtual Machine Metrics - Memory Available Utilization (Daily)",
+        "azure_compute_virtual_machine_metric_available_memory_hourly": "Azure Compute Virtual Machine Metrics - Memory Available Utilization (Hourly)",
+        "azure_compute_virtual_machine_metric_cpu_utilization": "Azure Compute Virtual Machine Metrics - CPU Utilization",
+        "azure_compute_virtual_machine_metric_cpu_utilization_daily": "Azure Compute Virtual Machine Metrics - CPU Utilization (Daily)",
+        "azure_compute_virtual_machine_metric_cpu_utilization_hourly": "Azure Compute Virtual Machine Metrics - CPU Utilization (Hourly)",
+        "azure_compute_virtual_machine_scale_set": "Azure Compute Virtual Machine Scale Set",
+        "azure_compute_virtual_machine_scale_set_network_interface": "Azure Compute Virtual Machine Scale Set Network Interface",
+        "azure_compute_virtual_machine_scale_set_vm": "Azure Compute Virtual Machine Scale Set VM",
+        "azure_compute_virtual_machine_size": "Azure Compute Virtual Machine Size",
+        "azure_consumption_usage": "Azure Consumption Usage",
+        "azure_container_group": "Azure Container Group",
+        "azure_container_registry": "Azure Container Registry",
+        "azure_cosmosdb_account": "Azure Cosmos DB Account",
+        "azure_cosmosdb_mongo_collection": "Azure Cosmos DB Mongo Collection",
+        "azure_cosmosdb_mongo_database": "Azure Cosmos DB Mongo Database",
+        "azure_cosmosdb_restorable_database_account": "Azure Cosmos DB Restorable Database Account",
+        "azure_cosmosdb_sql_database": "Azure Cosmos DB SQL Database",
+        "azure_cost_by_resource_group_daily": "Azure Cost Management - Daily cost by resource group",
+        "azure_cost_by_resource_group_monthly": "Azure Cost Management - Cost by Resource Group (Monthly)",
+        "azure_cost_by_service_daily": "Azure Cost Management - Daily cost by service",
+        "azure_cost_by_service_monthly": "Azure Cost Management - Cost by Service (Monthly)",
+        "azure_cost_forecast_daily": "Azure Cost Management - Daily cost forecast",
+        "azure_cost_forecast_monthly": "Azure Cost Management - Monthly cost forecast",
+        "azure_cost_usage": "Azure Cost Management - Cost and Usage with flexible dimensions",
+        "azure_data_factory": "Azure Data Factory",
+        "azure_data_factory_dataset": "Azure Data Factory Dataset",
+        "azure_data_factory_pipeline": "Azure Data Factory Pipeline",
+        "azure_data_lake_analytics_account": "Azure Data Lake Analytics Account",
+        "azure_data_lake_store": "Azure Data Lake Store",
+        "azure_data_protection_backup_job": "Azure Data Protection Backup Job",
+        "azure_data_protection_backup_vault": "Azure Data Protection Backup Vault",
+        "azure_databox_edge_device": "Azure Data Box Edge Device",
+        "azure_databricks_workspace": "Azure Databricks Workspace",
+        "azure_diagnostic_setting": "Azure Diagnostic Setting",
+        "azure_dns_zone": "Azure DNS Zone",
+        "azure_eventgrid_domain": "Azure Event Grid Domain",
+        "azure_eventgrid_topic": "Azure Event Grid Topic",
+        "azure_eventhub_namespace": "Azure Event Hub Namespace",
+        "azure_express_route_circuit": "Azure Express Route Circuit",
+        "azure_firewall": "Azure Firewall",
+        "azure_firewall_policy": "Azure Firewall Policy",
+        "azure_frontdoor": "Azure Front Door",
+        "azure_hdinsight_cluster": "Azure HDInsight Cluster",
+        "azure_healthcare_service": "Azure Healthcare Service",
+        "azure_hpc_cache": "Azure HPC Cache",
+        "azure_hybrid_compute_machine": "Azure Hybrid Compute Machine",
+        "azure_hybrid_kubernetes_connected_cluster": "Azure Hybrid Kubernetes Connected Cluster",
+        "azure_iothub": "Azure Iot Hub",
+        "azure_iothub_dps": "Azure IoT Hub Device Provisioning Service",
+        "azure_key_vault": "Azure Key Vault",
+        "azure_key_vault_certificate": "Azure Key Vault Certificate",
+        "azure_key_vault_deleted_vault": "Azure Key Vault Deleted Vault",
+        "azure_key_vault_key": "Azure Key Vault Key",
+        "azure_key_vault_key_version": "Azure Key Vault Key Version",
+        "azure_key_vault_managed_hardware_security_module": "Azure Key Vault Managed Hardware Security Module",
+        "azure_key_vault_secret": "Azure Key Vault Secret",
+        "azure_kubernetes_cluster": "Azure Kubernetes Cluster",
+        "azure_kubernetes_service_version": "Azure Kubernetes Service Version",
+        "azure_kusto_cluster": "Azure Kusto Cluster",
+        "azure_lb": "Azure Load Balancer",
+        "azure_lb_backend_address_pool": "Azure Load Balancer Backend Address Pool",
+        "azure_lb_nat_rule": "Azure Load Balancer Nat Rule",
+        "azure_lb_outbound_rule": "Azure Load Balancer Outbound Rule",
+        "azure_lb_probe": "Azure Load Balancer Probe",
+        "azure_lb_rule": "Azure Load Balancer Rule",
+        "azure_lighthouse_assignment": "Azure Lighthouse Assignment",
+        "azure_lighthouse_definition": "Azure Lighthouse Definition",
+        "azure_location": "Azure Location",
+        "azure_log_alert": "Azure Log Alert",
+        "azure_log_analytics_workspace": "Azure Log Analytics Workspace",
+        "azure_log_profile": "Azure Log Profile",
+        "azure_logic_app_workflow": "Azure Logic App Workflow",
+        "azure_machine_learning_workspace": "Azure Machine Learning Workspace",
+        "azure_maintenance_configuration": "Azure Maintenance Configuration",
+        "azure_management_group": "Azure Management Group.",
+        "azure_management_lock": "Azure Management Lock",
+        "azure_mariadb_server": "Azure MariaDB Server",
+        "azure_monitor_activity_log_event": "Azure Monitor Activity Log Event",
+        "azure_monitor_log_profile": "Azure Monitor Log Profile",
+        "azure_mssql_elasticpool": "Azure Microsoft SQL Elastic Pool",
+        "azure_mssql_managed_instance": "Azure Microsoft SQL Managed Instance",
+        "azure_mssql_virtual_machine": "Azure MS SQL Virtual Machine",
+        "azure_mysql_flexible_server": "Azure MySQL Flexible Server",
+        "azure_mysql_server": "Azure MySQL Server",
+        "azure_nat_gateway": "Azure NAT Gateway",
+        "azure_network_interface": "Azure Network Interface",
+        "azure_network_profile": "Azure Network Profile",
+        "azure_network_security_group": "Azure Network Security Group",
+        "azure_network_watcher": "Azure Network Watcher",
+        "azure_network_watcher_flow_log": "Azure Network Watcher Flow Log",
+        "azure_policy_assignment": "Azure Policy Assignment",
+        "azure_policy_definition": "Azure Policy Definition",
+        "azure_postgresql_flexible_server": "Azure PostgreSQL Flexible Server",
+        "azure_postgresql_server": "Azure PostgreSQL Server",
+        "azure_private_dns_zone": "Azure Private DNS Zone",
+        "azure_private_endpoint": "Azure Private Endpoint",
+        "azure_provider": "Azure Provider",
+        "azure_public_ip": "Azure Public IP",
+        "azure_recovery_services_backup_job": "Azure Recovery Services Backup Job",
+        "azure_recovery_services_vault": "Azure Recovery Services Vault",
+        "azure_redis_cache": "Azure Redis Cache",
+        "azure_resource": "Azure Resource",
+        "azure_resource_group": "Azure Resource Group",
+        "azure_resource_link": "Azure Resource Link",
+        "azure_role_assignment": "Azure Role Assignment",
+        "azure_role_definition": "Azure Role Definition",
+        "azure_route_table": "Azure Route Table",
+        "azure_search_service": "Azure Search Service",
+        "azure_security_center_auto_provisioning": "Azure Security Center Auto Provisioning",
+        "azure_security_center_automation": "Azure Security Center Automation",
+        "azure_security_center_contact": "Azure Security Center Contact",
+        "azure_security_center_jit_network_access_policy": "Azure Security Center JIT Network Access Policy",
+        "azure_security_center_setting": "Azure Security Center Setting",
+        "azure_security_center_sub_assessment": "Azure Security Center Sub Assessment",
+        "azure_security_center_subscription_pricing": "Azure Security Center Subscription Pricing",
+        "azure_service_fabric_cluster": "Azure Service Fabric Cluster",
+        "azure_servicebus_namespace": "Azure ServiceBus Namespace",
+        "azure_signalr_service": "Azure SignalR Service",
+        "azure_spring_cloud_service": "Azure Spring Cloud Service",
+        "azure_sql_database": "Azure SQL Database",
+        "azure_sql_server": "Azure SQL Server",
+        "azure_storage_account": "Azure Storage Account",
+        "azure_storage_blob": "Azure Storage Blob",
+        "azure_storage_blob_service": "Azure Storage Blob Service",
+        "azure_storage_container": "Azure Storage Container",
+        "azure_storage_queue": "Azure Storage Queue",
+        "azure_storage_share_file": "Azure Storage Share File",
+        "azure_storage_sync": "Azure Storage Sync",
+        "azure_storage_table": "Azure Storage Table",
+        "azure_storage_table_service": "Azure Storage Table Service",
+        "azure_stream_analytics_job": "Azure Stream Analytics Job",
+        "azure_subnet": "Azure Subnet",
+        "azure_subscription": "Azure Subscription",
+        "azure_synapse_workspace": "Azure Synapse Workspace",
+        "azure_tenant": "Azure Tenant",
+        "azure_virtual_network": "Azure Virtual Network",
+        "azure_virtual_network_gateway": "Azure Virtual Network Gateway",
+        "azure_web_application_firewall_policy": "Azure Web Application Firewall Policy"
+      }
+    },
+    "gcp": {
+      "compliance": {
+        "github_url": "github.com/turbot/steampipe-mod-gcp-compliance",
+        "mod_name": "gcp_compliance",
+        "benchmarks": [
+          {
+            "id": "cis_v400",
+            "display": "CIS v4.0.0"
+          },
+          {
+            "id": "cis_v300",
+            "display": "CIS v3.0.0"
+          },
+          {
+            "id": "cis_v200",
+            "display": "CIS v2.0.0"
+          },
+          {
+            "id": "cis_v130",
+            "display": "CIS v1.3.0"
+          },
+          {
+            "id": "cis_v120",
+            "display": "CIS v1.2.0"
+          },
+          {
+            "id": "forseti_security_v226",
+            "display": "Forseti Security v2.26"
+          },
+          {
+            "id": "hipaa",
+            "display": "HIPAA"
+          },
+          {
+            "id": "nist_800_53_rev_5",
+            "display": "NIST 800-53 Rev 5"
+          },
+          {
+            "id": "nist_csf_v10",
+            "display": "NIST CSF v1.0"
+          },
+          {
+            "id": "nist_csf_v2",
+            "display": "NIST CSF v2.0"
+          },
+          {
+            "id": "pci_dss_v321",
+            "display": "PCI DSS v3.2.1"
+          },
+          {
+            "id": "soc_2_2017",
+            "display": "SOC 2 (2017)"
+          }
+        ]
+      },
+      "cost": {
+        "github_url": "github.com/turbot/steampipe-mod-gcp-thrifty",
+        "mod_name": "gcp_thrifty",
+        "benchmarks": [
+          {
+            "id": "ai_platform",
+            "display": "AI Platform Checks"
+          },
+          {
+            "id": "apigateway",
+            "display": "API Gateway Checks"
+          },
+          {
+            "id": "bigquery",
+            "display": "BigQuery Checks"
+          },
+          {
+            "id": "bigtable",
+            "display": "Bigtable Checks"
+          },
+          {
+            "id": "cloud_functions",
+            "display": "Cloud Functions Checks"
+          },
+          {
+            "id": "cloud_run",
+            "display": "Cloud Run Checks"
+          },
+          {
+            "id": "cloud_sql",
+            "display": "Cloud SQL Checks"
+          },
+          {
+            "id": "compute_engine",
+            "display": "Compute Engine Checks"
+          },
+          {
+            "id": "dataproc",
+            "display": "Dataproc Checks"
+          },
+          {
+            "id": "filestore",
+            "display": "Filestore Checks"
+          },
+          {
+            "id": "gke",
+            "display": "GKE Checks"
+          },
+          {
+            "id": "gcs",
+            "display": "GCS Checks"
+          },
+          {
+            "id": "memorystore",
+            "display": "Memorystore Checks"
+          },
+          {
+            "id": "pubsub",
+            "display": "Pub/Sub Checks"
+          }
+        ]
+      },
+      "public_access_risks": {
+        "github_url": "github.com/turbot/steampipe-mod-aws-perimeter",
+        "mod_name": "aws_perimeter",
+        "benchmarks": [
+          {
+            "id": "network_access",
+            "display": "Network Access"
+          },
+          {
+            "id": "public_access",
+            "display": "Public Access"
+          },
+          {
+            "id": "shared_access",
+            "display": "Shared Access"
+          }
+        ]
+      },
+      "resource_types": {
+        "gcp_alloydb_cluster": "GCP Alloydb Cluster",
+        "gcp_alloydb_instance": "GCP Alloydb Instance",
+        "gcp_apikeys_key": "GCP Apikeys Key",
+        "gcp_app_engine_application": "GCP App Engine Application",
+        "gcp_artifact_registry_repository": "GCP Artifact Registry Repository",
+        "gcp_audit_policy": "GCP Audit Policy",
+        "gcp_bigquery_dataset": "GCP Bigquery Dataset",
+        "gcp_bigquery_job": "GCP Bigquery Job",
+        "gcp_bigquery_table": "GCP Bigquery Table",
+        "gcp_bigtable_instance": "GCP Bigtable Instance",
+        "gcp_billing_account": "GCP Billing Account",
+        "gcp_billing_budget": "GCP Billing Budget",
+        "gcp_cloud_asset": "GCP Cloud Asset",
+        "gcp_cloud_identity_group": "GCP Cloud Identity Group",
+        "gcp_cloud_identity_group_membership": "GCP Cloud Identity Group Membership",
+        "gcp_cloud_run_service": "GCP Cloud Run Service",
+        "gcp_cloudfunctions_function": "GCP Cloudfunctions Function",
+        "gcp_composer_environment": "GCP Composer Environment",
+        "gcp_compute_address": "GCP Compute Address",
+        "gcp_compute_autoscaler": "GCP Compute Autoscaler",
+        "gcp_compute_backend_bucket": "GCP Compute Backend Bucket",
+        "gcp_compute_backend_service": "GCP Compute Backend Service",
+        "gcp_compute_disk": "GCP Compute Disk",
+        "gcp_compute_disk_metric_read_ops": "GCP Compute Disk Metric Read Ops",
+        "gcp_compute_disk_metric_read_ops_daily": "GCP Compute Disk Metric Read Ops Daily",
+        "gcp_compute_disk_metric_read_ops_hourly": "GCP Compute Disk Metric Read Ops Hourly",
+        "gcp_compute_disk_metric_write_ops": "GCP Compute Disk Metric Write Ops",
+        "gcp_compute_disk_metric_write_ops_daily": "GCP Compute Disk Metric Write Ops Daily",
+        "gcp_compute_disk_metric_write_ops_hourly": "GCP Compute Disk Metric Write Ops Hourly",
+        "gcp_compute_firewall": "GCP Compute Firewall",
+        "gcp_compute_forwarding_rule": "GCP Compute Forwarding Rule",
+        "gcp_compute_global_address": "GCP Compute Global Address",
+        "gcp_compute_global_forwarding_rule": "GCP Compute Global Forwarding Rule",
+        "gcp_compute_ha_vpn_gateway": "GCP Compute Ha VPN Gateway",
+        "gcp_compute_image": "GCP Compute Image",
+        "gcp_compute_instance": "GCP Compute Instance",
+        "gcp_compute_instance_group": "GCP Compute Instance Group",
+        "gcp_compute_instance_group_manager": "GCP Compute Instance Group Manager",
+        "gcp_compute_instance_metric_cpu_utilization": "GCP Compute Instance Metric CPU Utilization",
+        "gcp_compute_instance_metric_cpu_utilization_daily": "GCP Compute Instance Metric CPU Utilization Daily",
+        "gcp_compute_instance_metric_cpu_utilization_hourly": "GCP Compute Instance Metric CPU Utilization Hourly",
+        "gcp_compute_instance_template": "GCP Compute Instance Template",
+        "gcp_compute_machine_image": "GCP Compute Machine Image",
+        "gcp_compute_machine_type": "GCP Compute Machine Type",
+        "gcp_compute_network": "GCP Compute Network",
+        "gcp_compute_node_group": "GCP Compute Node Group",
+        "gcp_compute_node_template": "GCP Compute Node Template",
+        "gcp_compute_project_metadata": "GCP Compute Project Metadata",
+        "gcp_compute_region": "GCP Compute Region",
+        "gcp_compute_resource_policy": "GCP Compute Resource Policy",
+        "gcp_compute_router": "GCP Compute Router",
+        "gcp_compute_snapshot": "GCP Compute Snapshot",
+        "gcp_compute_ssl_policy": "GCP Compute SSL Policy",
+        "gcp_compute_subnetwork": "GCP Compute Subnetwork",
+        "gcp_compute_target_https_proxy": "GCP Compute Target Https Proxy",
+        "gcp_compute_target_pool": "GCP Compute Target Pool",
+        "gcp_compute_target_ssl_proxy": "GCP Compute Target SSL Proxy",
+        "gcp_compute_target_vpn_gateway": "GCP Compute Target VPN Gateway",
+        "gcp_compute_url_map": "GCP Compute Url Map",
+        "gcp_compute_vpn_tunnel": "GCP Compute VPN Tunnel",
+        "gcp_compute_zone": "GCP Compute Zone",
+        "gcp_dataplex_asset": "GCP Dataplex Asset",
+        "gcp_dataplex_lake": "GCP Dataplex Lake",
+        "gcp_dataplex_task": "GCP Dataplex Task",
+        "gcp_dataplex_zone": "GCP Dataplex Zone",
+        "gcp_dataproc_cluster": "GCP Dataproc Cluster",
+        "gcp_dataproc_metastore_service": "GCP Dataproc Metastore Service",
+        "gcp_dns_managed_zone": "GCP DNS Managed Zone",
+        "gcp_dns_policy": "GCP DNS Policy",
+        "gcp_dns_record_set": "GCP DNS Record Set",
+        "gcp_iam_policy": "GCP IAM Policy",
+        "gcp_iam_role": "GCP IAM Role",
+        "gcp_kms_key": "GCP Kms Key",
+        "gcp_kms_key_ring": "GCP Kms Key Ring",
+        "gcp_kms_key_version": "GCP Kms Key Version",
+        "gcp_kubernetes_cluster": "GCP Kubernetes Cluster",
+        "gcp_kubernetes_node_pool": "GCP Kubernetes Node Pool",
+        "gcp_logging_bucket": "GCP Logging Bucket",
+        "gcp_logging_exclusion": "GCP Logging Exclusion",
+        "gcp_logging_log_entry": "GCP Logging Log Entry",
+        "gcp_logging_metric": "GCP Logging Metric",
+        "gcp_logging_sink": "GCP Logging Sink",
+        "gcp_monitoring_alert_policy": "GCP Monitoring Alert Policy",
+        "gcp_monitoring_group": "GCP Monitoring Group",
+        "gcp_monitoring_notification_channel": "GCP Monitoring Notification Channel",
+        "gcp_organization": "GCP Organization",
+        "gcp_project": "GCP Project",
+        "gcp_project_organization_policy": "GCP Project Organization Policy",
+        "gcp_project_service": "GCP Project Service",
+        "gcp_pubsub_snapshot": "GCP Pubsub Snapshot",
+        "gcp_pubsub_subscription": "GCP Pubsub Subscription",
+        "gcp_pubsub_topic": "GCP Pubsub Topic",
+        "gcp_redis_instance": "GCP Redis Instance",
+        "gcp_secret_manager_secret": "GCP Secret Manager Secret",
+        "gcp_service_account": "GCP Service Account",
+        "gcp_service_account_key": "GCP Service Account Key",
+        "gcp_sql_backup": "GCP SQL Backup",
+        "gcp_sql_database": "GCP SQL Database",
+        "gcp_sql_database_instance": "GCP SQL Database Instance",
+        "gcp_sql_database_instance_metric_connections": "GCP SQL Database Instance Metric Connections",
+        "gcp_sql_database_instance_metric_connections_daily": "GCP SQL Database Instance Metric Connections Daily",
+        "gcp_sql_database_instance_metric_connections_hourly": "GCP SQL Database Instance Metric Connections Hourly",
+        "gcp_sql_database_instance_metric_cpu_utilization": "GCP SQL Database Instance Metric CPU Utilization",
+        "gcp_sql_database_instance_metric_cpu_utilization_daily": "GCP SQL Database Instance Metric CPU Utilization Daily",
+        "gcp_sql_database_instance_metric_cpu_utilization_hourly": "GCP SQL Database Instance Metric CPU Utilization Hourly",
+        "gcp_storage_bucket": "GCP Storage Bucket",
+        "gcp_storage_object": "GCP Storage Object",
+        "gcp_tag_binding": "GCP Tag Binding",
+        "gcp_vertex_ai_endpoint": "GCP Vertex AI Endpoint",
+        "gcp_vertex_ai_model": "GCP Vertex AI Model",
+        "gcp_vertex_ai_notebook_runtime_template": "GCP Vertex AI Notebook Runtime Template",
+        "gcp_vpc_access_connector": "GCP VPC Access Connector"
+      }
+    }
+  },
+  "runner_pools": {
+    "iac": {
+      "enabled": false,
+      "pool_size": 1,
+      "pod_timeout_seconds": 1800,
+      "execution_mode": "pool_with_fallback"
+    },
+    "discovery": {
+      "enabled": false,
+      "pool_size": 1,
+      "pod_timeout_seconds": 1800,
+      "stale_threshold_seconds": 900,
+      "execution_mode": "pool_with_fallback"
+    },
+    "quotas": {
+      "max_concurrent_per_project": 0
+    }
+  },
+  "terraform": {
+    "engine": "tofu",
+    "engine_download_urls": {
+      "tofu": "https://github.com/opentofu/opentofu/releases/download/v{version}/tofu_{version}_linux_amd64.zip",
+      "terraform": "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_linux_amd64.zip"
+    }
+  },
+  "query_engine_versions": {
+    "query_engine_version": "v2.1.0",
+    "compliance_engine_version": "v1.3.0",
+    "plugin_versions": {
+      "aws": "1.23.0",
+      "azure": "1.8.0",
+      "gcp": "0.52.0"
+    }
+  },
+  "system": {
+    "version": "1.0.0",
+    "last_updated": "2024-02-05"
+  }
+}

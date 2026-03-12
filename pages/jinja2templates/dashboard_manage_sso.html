@@ -1,0 +1,350 @@
+{% extends "dashboard_base.html" %}
+
+{% block manage_sso_styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/manage_sso.css">
+{% endblock %}
+
+{% block title %}Manage SSO - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div id="manage-sso">
+  <div class="row mb-2">
+    <div class="col-sm-6">
+      <h4></h4>
+    </div>
+  </div>
+  
+  <div class="card-header card-secondary">
+    <div class="info-box bg-docs">
+      <span class="info-box-icon"><i class="fas fa-book"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Configure SAML-based Single Sign-On (SSO) for your organization. Users will be able to authenticate using your Identity Provider (IdP) such as Azure AD, Google Workspace, or Okta. Provide your IdP's metadata URL or configure manually.</span>
+      </div>
+    </div>
+    <h5 class="page-title">Manage Single Sign-On</h5>
+  </div>
+
+  <div class="card-body">
+    <form id="sso-config-form" autocomplete="off">
+      
+      <!-- Enable/Disable SSO -->
+      <div class="form-group">
+        <div class="custom-control custom-switch">
+          <input type="checkbox" class="custom-control-input" id="sso-enabled">
+          <label class="custom-control-label" for="sso-enabled">
+            <strong>Enable SSO</strong>
+          </label>
+        </div>
+        <small class="form-text text-muted">When enabled, users can log in using your organization's Identity Provider.</small>
+      </div>
+
+      <hr>
+
+      <!-- IdP Metadata URL (Recommended) -->
+      <div class="form-group">
+        <label for="idp-metadata-url">
+          <i class="fas fa-link"></i> IdP Metadata URL <span class="text-danger">*</span>
+        </label>
+        <input type="url" 
+               class="form-control" 
+               id="idp-metadata-url" 
+               placeholder="https://login.microsoftonline.com/{tenant-id}/federationmetadata/2007-06/federationmetadata.xml"
+               required>
+        <small class="form-text text-muted">
+          Provide your Identity Provider's metadata URL. This is the recommended method as it automatically configures SAML settings.
+        </small>
+      </div>
+
+      <!-- Manual Configuration (Collapsed by default) -->
+      <div class="form-group">
+        <a data-toggle="collapse" href="#manual-config" role="button" aria-expanded="false" aria-controls="manual-config">
+          <i class="fas fa-cog"></i> Or configure manually
+        </a>
+        <span class="badge badge-secondary ml-1">Only if metadata URL is unavailable</span>
+        <div class="collapse mt-2" id="manual-config">
+          <div class="card card-body">
+            <div class="form-group">
+              <label for="idp-entity-id">IdP Entity ID</label>
+              <input type="text" class="form-control" id="idp-entity-id" placeholder="e.g. https://accounts.google.com/o/saml2?idpid=...">
+            </div>
+            <div class="form-group">
+              <label for="idp-sso-url">IdP SSO URL</label>
+              <input type="url" class="form-control" id="idp-sso-url" placeholder="e.g. https://accounts.google.com/o/saml2/idp?idpid=...">
+            </div>
+            <div class="form-group">
+              <label for="idp-slo-url">IdP SLO URL (optional)</label>
+              <input type="url" class="form-control" id="idp-slo-url" placeholder="Single Logout URL (leave empty if not supported)">
+            </div>
+            <div class="form-group">
+              <label for="idp-cert">IdP Certificate (X.509)</label>
+              <textarea class="form-control" id="idp-cert" rows="5" placeholder="-----BEGIN CERTIFICATE-----&#10;MIIDdTC...&#10;-----END CERTIFICATE-----&#10;&#10;Paste the PEM-encoded certificate from your IdP"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- FIXED: Default Roles - Allow empty selection -->
+      <div class="form-group">
+        <label for="default-roles">
+          <i class="fas fa-user-tag"></i> Default Roles for New SSO Users
+        </label>
+        <select class="form-control" id="default-roles" multiple data-placeholder="Select default roles (optional - leave empty for no roles)">
+          <!-- Will be populated by JavaScript -->
+        </select>
+        <small class="form-text text-muted">
+          Select the default organization roles assigned to new users when they first log in via SSO. 
+          <strong>Leave empty to assign no roles by default.</strong>
+        </small>
+      </div>
+
+      <!-- Auto-Provisioning -->
+      <div class="form-group">
+        <div class="custom-control custom-checkbox">
+          <input type="checkbox" class="custom-control-input" id="auto-provision" checked>
+          <label class="custom-control-label" for="auto-provision">
+            Auto-provision new users
+          </label>
+        </div>
+        <small class="form-text text-muted">If enabled, new users will be automatically created when they log in via SSO. If disabled, only existing users can use SSO.</small>
+      </div>
+
+      <hr>
+
+      <!-- Access Control -->
+      <div class="form-group">
+        <label><i class="fas fa-shield-alt"></i> Access Control</label>
+        <small class="form-text text-muted mb-2">Controls <strong>who can log in</strong>. Group Mapping (in Advanced Settings) controls <strong>what roles they get</strong>.</small>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="access-control-mode" id="access-open" value="open" checked>
+          <label class="form-check-label" for="access-open">
+            <strong>Open</strong> - Allow all users from the IdP
+          </label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="access-control-mode" id="access-domain" value="email_domain">
+          <label class="form-check-label" for="access-domain">
+            <strong>Email Domain</strong> - Only allow specific email domains
+          </label>
+        </div>
+        <div class="collapse" id="domain-whitelist">
+          <input type="text" class="form-control mt-2" id="allowed-domains" placeholder="example.com, company.com (comma-separated)">
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="access-control-mode" id="access-groups" value="group_whitelist">
+          <label class="form-check-label" for="access-groups">
+            <strong>Group Whitelist</strong> - Only allow users in specific SAML groups
+          </label>
+        </div>
+        <div class="collapse" id="group-whitelist">
+          <input type="text" class="form-control mt-2" id="allowed-groups" placeholder="Engineering, DevOps, Admins (comma-separated)">
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Advanced Settings (Collapsed) -->
+      <div class="form-group">
+        <a data-toggle="collapse" href="#advanced-settings" role="button" aria-expanded="false" aria-controls="advanced-settings">
+          <i class="fas fa-cogs"></i> Advanced Settings
+        </a>
+        <div class="collapse mt-2" id="advanced-settings">
+          <div class="card card-body">
+            
+            <!-- Attribute Mapping -->
+            <h6>SAML Attribute Mapping</h6>
+            <div class="form-group">
+              <label for="attr-email">Email Attribute Name</label>
+              <input type="text" class="form-control" id="attr-email" value="email" placeholder="email">
+              <small class="form-text text-muted">The SAML attribute that contains the user's email address.</small>
+            </div>
+            <div class="form-group">
+              <label for="attr-groups">Groups Attribute Name (optional)</label>
+              <input type="text" class="form-control" id="attr-groups" value="groups" placeholder="groups or memberOf">
+              <small class="form-text text-muted">The SAML attribute that contains the user's group memberships.</small>
+            </div>
+
+            <hr>
+
+            <!-- Group Mapping -->
+            <div class="form-group">
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="group-mapping-enabled">
+                <label class="custom-control-label" for="group-mapping-enabled">
+                  Enable Group Mapping
+                </label>
+              </div>
+              <small class="form-text text-muted">Map SAML groups to Qubiva organization roles.</small>
+            </div>
+
+            <div class="collapse" id="group-mapping-config">
+              <small class="form-text text-muted mb-2">
+                <i class="fas fa-info-circle"></i> Map your IdP groups to Qubiva roles. For example, map "Engineering" group to "org_editor" role.
+              </small>
+              <div id="group-mapping-container">
+                <!-- Group mappings will be added here dynamically -->
+              </div>
+              <button type="button" class="btn btn-sm btn-secondary" id="add-group-mapping">
+                <i class="fas fa-plus"></i> Add Mapping
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Service Provider Metadata -->
+      <div class="form-group">
+        <label><i class="fas fa-info-circle"></i> Service Provider (SP) Metadata</label>
+        <p class="text-muted">Provide this URL to your Identity Provider when configuring the SAML trust:</p>
+        <div class="input-group">
+          <input type="text" class="form-control" id="sp-metadata-url" readonly>
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button" id="copy-sp-metadata">
+              <i class="fas fa-copy"></i> Copy
+            </button>
+          </div>
+        </div>
+        <small class="form-text text-muted mt-2">
+          <strong>Assertion Consumer Service (ACS) URL:</strong>
+          <code id="acs-url"></code>
+          <button type="button" class="btn btn-sm btn-link p-0 ml-1" id="copy-acs-url" title="Copy ACS URL">
+            <i class="fas fa-copy"></i>
+          </button>
+        </small>
+      </div>
+
+      <hr>
+
+      <!-- Action Buttons -->
+      <div class="form-group">
+        <div class="d-flex flex-wrap">
+          <button type="submit" class="btn btn-primary mb-2 mr-2" id="save-sso-config">
+            <i class="fas fa-save"></i> Save Configuration
+          </button>
+          <button type="button" class="btn btn-outline-secondary mb-2 mr-2" id="reset-sso-config">
+            <i class="fas fa-undo"></i> Reset Form
+          </button>
+          <button type="button" class="btn btn-outline-primary mb-2 mr-2" id="check-sso-status">
+            <i class="fas fa-check-circle"></i> Check Status
+          </button>
+          <button type="button" class="btn btn-outline-primary mb-2 mr-2" id="reparse-metadata">
+            <i class="fas fa-sync"></i> Re-parse Metadata
+          </button>
+          <button type="button" class="btn btn-outline-primary mb-2 mr-2" id="test-sso-login">
+            <i class="fas fa-vial"></i> Test SSO Login
+          </button>
+          <button type="button" class="btn btn-outline-danger mb-2" id="delete-sso-config">
+            <i class="fas fa-trash"></i> Delete Config
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete SSO Configuration</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p><strong>WARNING:</strong> This will completely delete your SSO configuration.</p>
+        <p>Users will no longer be able to login via SSO.</p>
+        <p>Are you sure you want to proceed?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+          <i class="fas fa-trash"></i> Delete Configuration
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reset Form Confirm Modal -->
+<div class="modal fade" id="resetFormModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reset Form</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to reset the form? Unsaved changes will be lost.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmResetBtn">Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Re-parse Metadata Confirm Modal -->
+<div class="modal fade" id="reparseConfirmModal" tabindex="-1" role="dialog" aria-labelledby="reparseConfirmTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reparseConfirmTitle">Re-parse IdP Metadata?</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        This will re-fetch and re-parse the IdP metadata from the configured URL. Continue?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" id="confirmReparseBtn" class="btn btn-primary">Re-parse</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Test SSO Modal -->
+<div class="modal fade" id="testSSOModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Test SSO Login</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p><strong>This will test your SSO configuration.</strong></p>
+        <p>You will be redirected to your Identity Provider to authenticate.</p>
+        <p>After successful authentication, you'll land on the Qubiva dashboard.</p>
+        <p class="alert alert-warning">
+          <i class="fas fa-exclamation-circle"></i> <strong>Note:</strong> This will leave the SSO configuration page. Save any unsaved changes first.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <a href="/api/v1/sso/login" class="btn btn-primary">
+          <i class="fas fa-sign-in-alt"></i> Proceed with Test
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block manage_sso_scripts %}
+{{ super() }}
+<script>window.APP_BASE_URL = "{{ app_base_url }}";</script>
+<script src="{{ static_content_url }}/static/custom/js/manage-sso.js"></script>
+{% endblock %}

@@ -1,0 +1,156 @@
+# Qubiva Helm Chart — Default Values
+# Override any of these in your own values file or via --set flags.
+
+# -- Container image configuration
+image:
+  repository: ghcr.io/qubiva/qubiva
+  tag: ""  # Defaults to Chart.appVersion
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# -- Number of Qubiva app replicas
+replicaCount: 1
+
+# -- Service account for the Qubiva app pod
+serviceAccount:
+  name: qubiva-app
+
+# -- Service account for runner jobs (Terraform, discovery, compliance)
+runnerServiceAccount:
+  name: qubiva-runner
+
+# -- Kubernetes Service
+service:
+  type: ClusterIP
+  port: 80
+
+# -- Ingress configuration
+ingress:
+  enabled: false
+  className: nginx
+  host: qubiva.local
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+  tls: []
+
+# -- Qubiva app resource limits
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# -- Artifacts PVC (stores run outputs)
+artifacts:
+  storageSize: 10Gi
+  # For multi-node clusters, change to ReadWriteMany (requires NFS/EFS/Azure Files CSI)
+  accessMode: ReadWriteOnce
+  storageClassName: ""
+
+# -- Runner images (IaC and discovery/compliance runners)
+runners:
+  iac:
+    image: ghcr.io/qubiva/qubiva-iac-runner
+    tag: ""  # Defaults to Chart.appVersion
+  discovery:
+    image: ghcr.io/qubiva/qubiva-discovery-runner
+    tag: ""  # Defaults to Chart.appVersion
+
+# -- IaC engine: "tofu" (default, OpenTofu) or "terraform"
+iacEngine: tofu
+
+# -- Runner pool configuration
+runnerPools:
+  iac:
+    enabled: true
+    poolSize: 1
+    podTimeoutSeconds: 1800
+    executionMode: pool_with_fallback
+  discovery:
+    enabled: true
+    poolSize: 2
+    podTimeoutSeconds: 1800
+    staleThresholdSeconds: 900
+    executionMode: pool_with_fallback
+  quotas:
+    maxConcurrentPerProject: 0
+
+# -- Cloud Analyst (AI chat) LLM configuration
+# Set provider + model + baseUrl + llmApiKey to enable AI-powered cloud analysis.
+# Any OpenAI-compatible API endpoint is supported (OpenAI, Groq, Azure OpenAI, etc.)
+cloudAnalyst:
+  llm:
+    provider: ""
+    model: ""
+    baseUrl: ""
+    apiKeyEnv: LLM_API_KEY
+
+# -- Application environment variables (non-sensitive)
+env:
+  LOG_LEVEL: INFO
+  INTERNAL_CIDR: "10.0.0.0/8"
+  TF_BACKEND_TYPE: kubernetes
+  MASTER_ADMIN_USER: admin@qubiva.local
+  JOB_TTL_SECONDS_AFTER_FINISHED: "3600"
+  LOG_RETENTION_DAYS_TERRAFORM: "90"
+  LOG_RETENTION_DAYS_DISCOVERY: "30"
+
+# -- Secrets (sensitive values — override these!)
+secrets:
+  # MongoDB connection string (replica set required for change streams)
+  databaseUrl: ""
+  # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+  localEncryptionKey: ""
+  # Any random string — used to derive RSA key pair
+  localSigningKey: ""
+  # Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+  jwtSecret: ""
+  # Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+  internalApiKey: ""
+  # LLM provider API key (OpenAI, Groq, Anthropic, etc.)
+  llmApiKey: ""
+  # SMTP (optional)
+  smtpHost: ""
+  smtpPort: "587"
+  smtpUsername: ""
+  smtpPassword: ""
+  smtpFromEmail: ""
+  # GitHub token (optional, for template repos)
+  githubToken: ""
+
+# -- Use an existing secret instead of creating one from values above
+existingSecret: ""
+
+# -- MongoDB (bundled single-node replica set for development)
+mongodb:
+  enabled: true
+  image: mongo:7
+  storageSize: 10Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+# -- Loki log aggregation (required for log persistence and audit trail)
+loki:
+  image: grafana/loki:3.3.2
+  storageSize: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi

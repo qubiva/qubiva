@@ -1,0 +1,19 @@
+<!-- templates/dashboard.html -->
+{% extends "dashboard_base.html" %}
+
+{% block title %}Page Not Found - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-2">
+    <div class="col-sm-6">
+    <h4></h4> <!-- create a neat space near header-->
+    </div>
+</div>
+
+<div style="display: flex; color: #ac0725; flex-direction: column; justify-content: center; align-items: center; height: 50vh; text-align: center;">
+    <i class="fas fa-exclamation-triangle fa-4x"></i><br/>
+    <h4>Access Deined!</h4>
+    <span style="font-size: 18px; font-weight: bold;">{{ message }}</span>
+</div>
+
+{% endblock %}

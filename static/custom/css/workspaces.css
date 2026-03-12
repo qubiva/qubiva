@@ -1,0 +1,186 @@
+/* Card Styles for Grid Layout */
+.workspace-card {
+    border: 1px solid #ddd;
+    position: relative;
+    background-color: #fff;
+    border-left: 2px solid #276DA3;
+    border-radius: 0;
+    transition: background-color 0.3s ease, border-left-color 0.3s ease;
+}
+
+.workspace-card-body {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.workspace-title-container,
+.workspace-description-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.workspace-icon {
+    width: 20px;
+    text-align: center;
+}
+
+.workspace-title,
+.workspace-description {
+    margin-left: 8px;
+    font-weight: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.workspace-footer {
+    background-color: #F8F9FA;
+    padding: 8px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: auto;
+    width: 100%;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* List Item Styles */
+.workspace-list-item {
+    border: 1px solid #ddd;
+    border-left: 2px solid #276DA3;
+    border-radius: 0;
+    margin-bottom: 10px;
+    padding: 15px;
+    background-color: #fff;
+    transition: background-color 0.3s ease, border-left-color 0.3s ease;
+}
+
+.workspace-actions-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Hover Effect for Consistency */
+.workspace-card:hover,
+.workspace-list-item:hover,
+.hover-effect {
+    background-color: #ECECEC !important;
+    border-left-color: #3A8DC1 !important;
+}
+
+/* Action Button Styles */
+.workspace-action {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 16px;
+    transition: opacity 0.2s ease;
+}
+
+.workspace-action.view-action {
+    color: #28a745; /* Green color for view action */
+}
+
+.workspace-action.edit-action {
+    color: #007bff; /* Blue color for edit action */
+}
+
+.workspace-action.delete-action {
+    color: #dc3545; /* Red color for delete action */
+}
+
+.workspace-action:hover {
+    opacity: 0.7;
+}
+
+/* Pagination Styles */
+.pagination .page-item.active .page-link {
+    background-color: #276DA3;
+    border-color: #276DA3;
+}
+
+.pagination .page-link {
+    color: #276DA3;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.pagination .page-link:hover {
+    background-color: #3A8DC1;
+    border-color: #3A8DC1;
+    color: #fff;
+}
+
+/* Items Per Page Dropdown */
+#itemsPerPageSelect {
+    width: auto;
+    display: inline-block;
+    margin-left: 5px;
+}
+
+/* Additional styles for better responsiveness */
+@media (max-width: 768px) {
+    .workspace-card {
+        margin-bottom: 15px;
+    }
+
+    .workspace-list-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .workspace-actions-container {
+        margin-top: 10px;
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+/* Search box and button styles */
+#workspace-search-box {
+    border-right: none;
+}
+
+#workspace-search-button {
+    border-left: none;
+    background-color: #fff;
+    color: #6c757d;
+}
+
+#workspace-search-button:hover {
+    color: #276DA3;
+}
+
+/* New Workspace button style */
+#newWorkspaceBtn {
+    background-color: #276DA3;
+    border-color: #276DA3;
+}
+
+#newWorkspaceBtn:hover {
+    background-color: #3A8DC1;
+    border-color: #3A8DC1;
+}
+
+/* View/List toggle button styles */
+#listViewBtn,
+#gridViewBtn {
+    background-color: #fff;
+    color: #6c757d;
+    border: 1px solid #ced4da;
+}
+
+#listViewBtn:hover,
+#gridViewBtn:hover,
+#listViewBtn.active,
+#gridViewBtn.active {
+    background-color: #e9ecef;
+    color: #276DA3;
+}

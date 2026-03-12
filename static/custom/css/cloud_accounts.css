@@ -1,0 +1,97 @@
+/* Card Styles for Grid Layout */
+.account-card {
+    border: 1px solid #ddd;
+    position: relative;
+    background-color: #fff;
+    border-left: 2px solid #276DA3; /* This adds the blue line */
+    border-radius: 0;
+    transition: background-color 0.3s ease, border-left-color 0.3s ease;
+}
+
+.account-card-body {
+    padding: 15px;
+}
+
+.account-title-container,
+.account-id-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.account-icon {
+    width: 20px;
+    text-align: center;
+}
+
+.account-title, .account-id {
+    margin-left: 8px;
+    font-weight: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.account-footer {
+    background-color: #f8f9fa;
+    padding: 8px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* List Item Styles */
+.account-list-item {
+    border: 1px solid #ddd;
+    border-left: 2px solid #276DA3; /* This adds the blue line */
+    border-radius: 0;
+    margin-bottom: 10px;
+    padding: 15px;
+    background-color: #fff;
+    transition: background-color 0.3s ease, border-left-color 0.3s ease;
+}
+
+.account-actions-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Hover Effect for Consistency */
+.hover-effect {
+    background-color: #ECECEC !important;
+    border-left-color: #3A8DC1 !important;
+}
+
+/* Action Button Styles */
+.account-action {
+    padding: 0;
+}
+
+/* Pagination Styles */
+.pagination .page-item.active .page-link {
+    background-color: #276DA3;
+    border-color: #276DA3;
+}
+
+.pagination .page-link {
+    color: #276DA3;
+}
+
+.pagination .page-link:hover {
+    background-color: #3A8DC1;
+    border-color: #3A8DC1;
+}
+
+.pagination .page-link {
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Items Per Page Dropdown */
+#itemsPerPageSelect {
+    width: auto;
+    display: inline-block;
+    margin-left: 5px;
+}

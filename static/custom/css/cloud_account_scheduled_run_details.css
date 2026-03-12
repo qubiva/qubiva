@@ -1,0 +1,170 @@
+/* Basic resets and global styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+/* Schedule status toggle customization */
+.custom-switch {
+    padding-left: 2.25rem;
+}
+
+.custom-switch .custom-control-input:disabled ~ .custom-control-label {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* Schedule requests list specific styles */
+#schedule-requests-list {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+.request-item {
+    display: grid;
+    grid-template-columns: minmax(80px, auto) 1fr;
+    grid-template-areas: 
+        "id status"
+        "time time"
+        "actions actions";
+    gap: 10px;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    align-items: center;
+}
+
+.request-item:last-child {
+    border-bottom: none;
+}
+
+.request-id {
+    grid-area: id;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.request-status-container {
+    grid-area: status;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.request-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    min-width: 100px;
+    text-align: center;
+}
+
+.status-completed { background-color: #dff6dd; color: #107c10; }
+.status-failed { background-color: #fde7e9; color: #a80000; }
+.status-in-progress { background-color: #deecf9; color: #0078d4; }
+
+.custom-spinner::before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    margin-right: 5px;
+    animation: customSpin 1s linear infinite;
+}
+
+@keyframes customSpin {
+    to { transform: rotate(360deg); }
+}
+
+.request-time {
+    grid-area: time;
+    color: #605e5c;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.request-actions {
+    grid-area: actions;
+}
+
+.view-logs-btn {
+    white-space: nowrap;
+    padding: 6px 12px;
+    background-color: #0078d4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.view-logs-btn:hover {
+    background-color: #106ebe;
+}
+
+/* Adjustments for refresh button */
+#refresh-requests {
+    transition: transform 0.3s ease;
+}
+
+#refresh-requests.rotating {
+    transform: rotate(180deg);
+}
+
+/* Info box enhancements */
+.info-box {
+    min-height: auto;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.info-box-number {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    word-break: break-all;
+}
+
+#schedule-requests-list {
+    margin: 0;  /* Remove the margin since it's inside card-body */
+}
+
+.request-item {
+    padding: 15px 20px;  /* Slightly more padding for better readability */
+}
+
+.request-status {
+    margin-left: auto;  /* Push status to right when in grid */
+}
+
+#pagination-container {
+    background: #f8f9fa;  /* Light background for pagination section */
+    border-top: 1px solid #dee2e6;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+    .request-item {
+        grid-template-columns: minmax(80px, auto) 1fr auto auto;
+        grid-template-areas: "id status time actions";
+    }
+}
+

@@ -1,0 +1,116 @@
+{% extends "dashboard_base.html" %}
+
+{% block workspaces_edit_select2 %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/edit_workspace.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+{% endblock %}
+
+{% block title %}Edit Workspace - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-2">
+  <div class="col-sm-6">
+    <h4></h4> <!-- create a neat space near header-->
+  </div>
+</div>
+<div class="card-header card-secondary">
+        <h5 class="page-title">Edit Workspace</h5>
+</div>        
+    <div class="card-body">
+        <form id="edit-workspace-form">
+            <div class="form-group">
+                <label for="workspace-name">Workspace Name</label>
+                <input type="text" id="workspace-name" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label for="workspace-description">Description</label>
+                <textarea id="workspace-description" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="terraform-version">{{ iac_engine_label }} Version</label>
+              <input type="text" id="terraform-version" class="form-control" placeholder="Enter {{ iac_engine_label }} version (e.g. 1.11.0)" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cloud-account-search">Cloud Account <span class="text-danger">*</span></label>
+                <select class="form-control select2" id="cloud-account-search" style="width: 100%;" required>
+                    <option selected="selected">Select a cloud account</option>
+                </select>
+                <small class="form-text text-muted">Select the cloud account for this workspace</small>
+            </div>
+            <div class="form-group">
+                <label for="git-repo-search">Git Repository <span class="text-danger">*</span></label>
+                <select class="form-control select2" id="git-repo-search" style="width: 100%;" required>
+                    <option selected="selected">Select a git repository</option>
+                </select>
+                <small class="form-text text-muted">Select the Git repository containing your Terraform configuration</small>
+            </div>
+            
+            <!-- Section for Variables -->
+            <div class="form-group">
+                <label for="variables">Variables</label>
+                <div id="variables-entries"></div>
+                <button type="button" id="add-variable-entry" class="btn btn-secondary mt-2">Add Variable</button>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" id="update-workspace-button" class="btn btn-primary">Update Workspace</button>
+                <div id="spinner" class="spinner-border text-primary" role="status" style="display: none;">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="successModalLabel">Success</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="modalMessage">
+        Workspace updated successfully.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="viewWorkspaceButton">View Workspace</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Failure Modal -->
+<div class="modal fade" id="failureModal" tabindex="-1" role="dialog" aria-labelledby="failureModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="failureModalLabel">Error</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="failureModalMessage">
+        Failed to update workspace. Please try again.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block edit_workspace_scripts %}
+{{ super() }}
+<script src="{{ static_content_url }}/static/plugins/select2/js/select2.full.min.js"></script>
+<script src="{{ static_content_url }}/static/custom/js/edit-workspace.js"></script>
+{% endblock %}

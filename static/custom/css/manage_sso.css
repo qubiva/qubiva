@@ -1,0 +1,50 @@
+/* Scoped to #manage-sso */
+#manage-sso .form-group label {
+    font-weight: 600;
+}
+
+#manage-sso .card-body {
+    padding: 20px;
+}
+
+#manage-sso hr {
+    margin: 1.5rem 0;
+    border-top: 1px solid #dee2e6;
+}
+
+#manage-sso .collapse {
+    transition: all 0.3s ease;
+}
+
+#manage-sso .form-row {
+    align-items: center;
+}
+
+#manage-sso .group-roles {
+    min-height: 38px;
+}
+
+#manage-sso #sp-metadata-url {
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+#manage-sso #acs-url {
+    font-family: monospace;
+    font-size: 0.9em;
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+#manage-sso .custom-control-label strong {
+    font-weight: 600;
+}
+
+#manage-sso .alert {
+    margin-bottom: 1rem;
+}
+
+#manage-sso .remove-mapping {
+    width: 100%;
+}

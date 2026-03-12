@@ -1,0 +1,80 @@
+/* Scoped to the #manage-users container */
+#manage-users .user-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#manage-users .username {
+    min-width: 200px;
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#manage-users .user-roles {
+    min-width: 250px;
+    max-width: 300px; /* Set a maximum width to prevent it from stretching */
+    width: 100%;
+    flex-grow: 1;
+}
+
+#manage-users .select2-container--bootstrap4 .select2-selection--multiple {
+    padding: 4px 8px;
+    min-height: 34px;
+    height: auto;
+    overflow: hidden; /* Prevents overflow */
+    white-space: nowrap; /* Keeps the width consistent */
+}
+
+#manage-users .select2-container--bootstrap4 .select2-selection__rendered {
+    padding: 0;
+    line-height: normal; /* Ensures placeholder and items are properly aligned */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#manage-users .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice {
+    margin: 2px 4px;
+    padding: 2px 6px;
+}
+
+#manage-users .remove-user {
+    color: #dc3545;
+    font-size: 1.2rem;
+    padding: 0;
+}
+
+#pagination-container {
+    text-align: center;
+    margin-top: 10px;
+}
+
+/* Target only the select2 search field to fix placeholder visibility */
+input.select2-search__field {
+    width: 100% !important;
+    min-width: 150px;
+    box-sizing: border-box; /* Ensures padding does not increase input size */
+    padding-right: 10px; /* Adjust padding as needed */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Ensures placeholder text stays within bounds */
+    white-space: nowrap;
+}
+
+/* Targeting pagination buttons */
+#pagination-container .page-btn {
+    background-color: #276DA3; /* Set the background color */
+    color: white; /* Change text color to white for contrast */
+    border: none; /* Remove any borders */
+    padding: 5px 10px; /* Add some padding for better spacing */
+    margin: 0 5px; /* Add space between the buttons */
+    border-radius: 5px; /* Optional: Rounded corners for the buttons */
+}
+
+/* Style for active page (optional) */
+#pagination-container .page-btn.active {
+    background-color: #1a4b74; /* Highlight active page with a different color */
+    color: white;
+}

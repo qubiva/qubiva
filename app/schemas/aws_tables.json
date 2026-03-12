@@ -1,0 +1,1163 @@
+{
+  "plugin": "aws",
+  "tables": {
+    "aws_account": {
+      "description": "AWS account details including account ID, organization info, and aliases.",
+      "columns": {
+        "account_id": {"type": "text", "description": "The unique 12-digit AWS account ID"},
+        "account_aliases": {"type": "jsonb", "description": "List of account aliases associated with the account"},
+        "arn": {"type": "text", "description": "The ARN of the AWS account"},
+        "organization_arn": {"type": "text", "description": "The ARN of the organization the account belongs to"},
+        "organization_id": {"type": "text", "description": "The unique identifier of the organization"},
+        "organization_master_account_id": {"type": "text", "description": "The account ID of the organization master account"},
+        "organization_master_account_email": {"type": "text", "description": "The email address of the master account"},
+        "organization_available_policy_types": {"type": "jsonb", "description": "Policy types available in the organization"},
+        "partition": {"type": "text", "description": "The AWS partition (aws, aws-cn, aws-us-gov)"}
+      }
+    },
+    "aws_region": {
+      "description": "AWS regions available in the account, including opt-in status.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the region (e.g., us-east-1)"},
+        "region": {"type": "text", "description": "The AWS region"},
+        "opt_in_status": {"type": "text", "description": "Opt-in status of the region (opt-in-not-required, opted-in, not-opted-in)"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "partition": {"type": "text", "description": "The AWS partition"}
+      }
+    },
+    "aws_availability_zone": {
+      "description": "AWS availability zones within regions.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the availability zone (e.g., us-east-1a)"},
+        "zone_id": {"type": "text", "description": "The ID of the availability zone (e.g., use1-az1)"},
+        "zone_type": {"type": "text", "description": "The type of zone (availability-zone, local-zone, wavelength-zone)"},
+        "region_name": {"type": "text", "description": "The name of the region"},
+        "state": {"type": "text", "description": "The state of the availability zone (available, information, impaired, unavailable)"},
+        "opt_in_status": {"type": "text", "description": "Opt-in status for the zone"},
+        "group_name": {"type": "text", "description": "The name of the associated group"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ec2_instance": {
+      "description": "AWS EC2 virtual machine instances with configuration, state, and metadata.",
+      "columns": {
+        "instance_id": {"type": "text", "description": "The unique ID of the EC2 instance"},
+        "instance_type": {"type": "text", "description": "The instance type (e.g., t3.micro, m5.large)"},
+        "instance_state": {"type": "text", "description": "The current state (pending, running, stopping, stopped, shutting-down, terminated)"},
+        "arn": {"type": "text", "description": "The ARN of the instance"},
+        "image_id": {"type": "text", "description": "The ID of the AMI used to launch the instance"},
+        "launch_time": {"type": "timestamp", "description": "The time the instance was launched"},
+        "public_ip_address": {"type": "text", "description": "The public IPv4 address assigned to the instance"},
+        "private_ip_address": {"type": "text", "description": "The private IPv4 address assigned to the instance"},
+        "vpc_id": {"type": "text", "description": "The ID of the VPC the instance is in"},
+        "subnet_id": {"type": "text", "description": "The ID of the subnet the instance is in"},
+        "key_name": {"type": "text", "description": "The name of the key pair used at launch"},
+        "security_groups": {"type": "jsonb", "description": "The security groups associated with the instance"},
+        "iam_instance_profile_arn": {"type": "text", "description": "The ARN of the IAM instance profile"},
+        "monitoring_state": {"type": "text", "description": "Monitoring state (disabled, disabling, enabled, pending)"},
+        "ebs_optimized": {"type": "boolean", "description": "Whether the instance is EBS-optimized"},
+        "metadata_options": {"type": "jsonb", "description": "Instance metadata options including IMDSv2 settings"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the instance"},
+        "tags_src": {"type": "jsonb", "description": "Raw tags as returned by the API"},
+        "title": {"type": "text", "description": "The Name tag value or instance ID"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ec2_ami": {
+      "description": "Amazon Machine Images (AMIs) available in the account.",
+      "columns": {
+        "image_id": {"type": "text", "description": "The ID of the AMI"},
+        "name": {"type": "text", "description": "The name of the AMI"},
+        "description": {"type": "text", "description": "The description of the AMI"},
+        "state": {"type": "text", "description": "The current state (available, pending, failed)"},
+        "image_type": {"type": "text", "description": "The type of image (machine, kernel, ramdisk)"},
+        "architecture": {"type": "text", "description": "The architecture (i386, x86_64, arm64)"},
+        "creation_date": {"type": "timestamp", "description": "The date the AMI was created"},
+        "public": {"type": "boolean", "description": "Whether the AMI is public"},
+        "owner_id": {"type": "text", "description": "The AWS account ID of the AMI owner"},
+        "platform": {"type": "text", "description": "The platform (Windows or empty for Linux)"},
+        "root_device_type": {"type": "text", "description": "The root device type (ebs, instance-store)"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the AMI"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ec2_launch_template": {
+      "description": "EC2 launch templates for standardized instance configurations.",
+      "columns": {
+        "launch_template_id": {"type": "text", "description": "The ID of the launch template"},
+        "launch_template_name": {"type": "text", "description": "The name of the launch template"},
+        "arn": {"type": "text", "description": "The ARN of the launch template"},
+        "default_version_number": {"type": "bigint", "description": "The default version number"},
+        "latest_version_number": {"type": "bigint", "description": "The latest version number"},
+        "create_time": {"type": "timestamp", "description": "The time the launch template was created"},
+        "created_by": {"type": "text", "description": "The principal that created the launch template"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the launch template"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_lambda_function": {
+      "description": "AWS Lambda serverless functions with runtime, memory, and configuration details.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the Lambda function"},
+        "arn": {"type": "text", "description": "The ARN of the Lambda function"},
+        "runtime": {"type": "text", "description": "The runtime environment (e.g., python3.12, nodejs20.x)"},
+        "handler": {"type": "text", "description": "The function entry point"},
+        "code_size": {"type": "bigint", "description": "The size of the deployment package in bytes"},
+        "memory_size": {"type": "bigint", "description": "The amount of memory allocated in MB"},
+        "timeout": {"type": "bigint", "description": "The function timeout in seconds"},
+        "last_modified": {"type": "timestamp", "description": "The date the function was last modified"},
+        "state": {"type": "text", "description": "The current state of the function (Active, Inactive, Pending, Failed)"},
+        "role": {"type": "text", "description": "The ARN of the execution role"},
+        "vpc_config": {"type": "jsonb", "description": "VPC networking configuration"},
+        "environment_variables": {"type": "jsonb", "description": "Environment variables configured on the function"},
+        "tracing_config": {"type": "jsonb", "description": "X-Ray tracing configuration"},
+        "architectures": {"type": "jsonb", "description": "Instruction set architecture (x86_64, arm64)"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the function"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ecs_cluster": {
+      "description": "Amazon ECS clusters for running containerized workloads.",
+      "columns": {
+        "cluster_name": {"type": "text", "description": "The name of the ECS cluster"},
+        "cluster_arn": {"type": "text", "description": "The ARN of the cluster"},
+        "status": {"type": "text", "description": "The status of the cluster (ACTIVE, PROVISIONING, DEPROVISIONING, FAILED, INACTIVE)"},
+        "active_services_count": {"type": "bigint", "description": "The number of active services in the cluster"},
+        "running_tasks_count": {"type": "bigint", "description": "The number of running tasks in the cluster"},
+        "pending_tasks_count": {"type": "bigint", "description": "The number of pending tasks in the cluster"},
+        "registered_container_instances_count": {"type": "bigint", "description": "The number of registered container instances"},
+        "settings": {"type": "jsonb", "description": "Cluster settings including containerInsights"},
+        "capacity_providers": {"type": "jsonb", "description": "Capacity providers associated with the cluster"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the cluster"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ecs_service": {
+      "description": "Amazon ECS services managing long-running containerized tasks.",
+      "columns": {
+        "service_name": {"type": "text", "description": "The name of the ECS service"},
+        "arn": {"type": "text", "description": "The ARN of the service"},
+        "cluster_arn": {"type": "text", "description": "The ARN of the cluster the service runs in"},
+        "status": {"type": "text", "description": "The status of the service (ACTIVE, DRAINING, INACTIVE)"},
+        "desired_count": {"type": "bigint", "description": "The desired number of task instances"},
+        "running_count": {"type": "bigint", "description": "The number of running task instances"},
+        "pending_count": {"type": "bigint", "description": "The number of pending task instances"},
+        "launch_type": {"type": "text", "description": "The launch type (EC2, FARGATE, EXTERNAL)"},
+        "task_definition": {"type": "text", "description": "The task definition ARN used by the service"},
+        "load_balancers": {"type": "jsonb", "description": "Load balancers associated with the service"},
+        "network_configuration": {"type": "jsonb", "description": "Network configuration for awsvpc mode"},
+        "deployment_configuration": {"type": "jsonb", "description": "Deployment parameters"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the service"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ecs_task_definition": {
+      "description": "ECS task definitions describing container configurations.",
+      "columns": {
+        "task_definition_arn": {"type": "text", "description": "The ARN of the task definition"},
+        "family": {"type": "text", "description": "The family name of the task definition"},
+        "revision": {"type": "bigint", "description": "The revision number"},
+        "status": {"type": "text", "description": "The status (ACTIVE, INACTIVE, DELETE_IN_PROGRESS)"},
+        "cpu": {"type": "text", "description": "The total CPU units for the task"},
+        "memory": {"type": "text", "description": "The total memory (MiB) for the task"},
+        "network_mode": {"type": "text", "description": "The networking mode (awsvpc, bridge, host, none)"},
+        "requires_compatibilities": {"type": "jsonb", "description": "Launch type compatibility (EC2, FARGATE)"},
+        "container_definitions": {"type": "jsonb", "description": "Container definitions in the task"},
+        "task_role_arn": {"type": "text", "description": "The ARN of the IAM role for task containers"},
+        "execution_role_arn": {"type": "text", "description": "The ARN of the task execution role"},
+        "volumes": {"type": "jsonb", "description": "Volume definitions for the task"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the task definition"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_eks_cluster": {
+      "description": "Amazon EKS managed Kubernetes clusters.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the EKS cluster"},
+        "arn": {"type": "text", "description": "The ARN of the cluster"},
+        "status": {"type": "text", "description": "The current status (CREATING, ACTIVE, DELETING, FAILED, UPDATING)"},
+        "version": {"type": "text", "description": "The Kubernetes server version"},
+        "platform_version": {"type": "text", "description": "The platform version of the cluster"},
+        "endpoint": {"type": "text", "description": "The endpoint for the Kubernetes API server"},
+        "role_arn": {"type": "text", "description": "The ARN of the IAM role for the cluster"},
+        "kubernetes_network_config": {"type": "jsonb", "description": "Kubernetes network configuration"},
+        "resources_vpc_config": {"type": "jsonb", "description": "VPC configuration including subnets and security groups"},
+        "logging": {"type": "jsonb", "description": "Cluster logging configuration"},
+        "encryption_config": {"type": "jsonb", "description": "Encryption configuration for secrets"},
+        "created_at": {"type": "timestamp", "description": "The creation time of the cluster"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the cluster"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_s3_bucket": {
+      "description": "AWS S3 buckets for object storage with configuration and policy details.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the S3 bucket"},
+        "arn": {"type": "text", "description": "The ARN of the bucket"},
+        "creation_date": {"type": "timestamp", "description": "The date the bucket was created"},
+        "bucket_policy_is_public": {"type": "boolean", "description": "Whether the bucket policy allows public access"},
+        "versioning_enabled": {"type": "boolean", "description": "Whether versioning is enabled"},
+        "versioning_mfa_delete": {"type": "boolean", "description": "Whether MFA delete is enabled"},
+        "server_side_encryption_configuration": {"type": "jsonb", "description": "Server-side encryption configuration"},
+        "logging": {"type": "jsonb", "description": "Logging configuration for the bucket"},
+        "acl": {"type": "jsonb", "description": "The access control list for the bucket"},
+        "lifecycle_rules": {"type": "jsonb", "description": "Lifecycle configuration rules"},
+        "block_public_acls": {"type": "boolean", "description": "Whether public ACLs are blocked"},
+        "block_public_policy": {"type": "boolean", "description": "Whether public bucket policies are blocked"},
+        "ignore_public_acls": {"type": "boolean", "description": "Whether public ACLs are ignored"},
+        "restrict_public_buckets": {"type": "boolean", "description": "Whether public and cross-account access is restricted"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the bucket"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region where the bucket is located"}
+      }
+    },
+    "aws_s3_bucket_policy": {
+      "description": "S3 bucket resource policies controlling access permissions.",
+      "columns": {
+        "bucket_name": {"type": "text", "description": "The name of the S3 bucket"},
+        "policy": {"type": "jsonb", "description": "The bucket policy document as JSON"},
+        "policy_std": {"type": "jsonb", "description": "The bucket policy in standard format"},
+        "is_public": {"type": "boolean", "description": "Whether the policy allows public access"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ebs_volume": {
+      "description": "Amazon EBS volumes providing block-level storage for EC2 instances.",
+      "columns": {
+        "volume_id": {"type": "text", "description": "The ID of the EBS volume"},
+        "arn": {"type": "text", "description": "The ARN of the volume"},
+        "volume_type": {"type": "text", "description": "The volume type (gp2, gp3, io1, io2, st1, sc1, standard)"},
+        "size": {"type": "bigint", "description": "The size of the volume in GiB"},
+        "state": {"type": "text", "description": "The volume state (creating, available, in-use, deleting, deleted, error)"},
+        "encrypted": {"type": "boolean", "description": "Whether the volume is encrypted"},
+        "kms_key_id": {"type": "text", "description": "The ARN of the KMS key used for encryption"},
+        "iops": {"type": "bigint", "description": "The provisioned IOPS"},
+        "throughput": {"type": "bigint", "description": "The throughput in MiB/s (gp3 only)"},
+        "availability_zone": {"type": "text", "description": "The availability zone of the volume"},
+        "create_time": {"type": "timestamp", "description": "The time the volume was created"},
+        "attachments": {"type": "jsonb", "description": "Attachment information including instance ID and device"},
+        "snapshot_id": {"type": "text", "description": "The snapshot from which the volume was created"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the volume"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ebs_snapshot": {
+      "description": "Amazon EBS snapshots for backup and disaster recovery.",
+      "columns": {
+        "snapshot_id": {"type": "text", "description": "The ID of the snapshot"},
+        "arn": {"type": "text", "description": "The ARN of the snapshot"},
+        "volume_id": {"type": "text", "description": "The ID of the volume the snapshot was created from"},
+        "volume_size": {"type": "bigint", "description": "The size of the volume in GiB"},
+        "state": {"type": "text", "description": "The snapshot state (pending, completed, error, recoverable, recovering)"},
+        "encrypted": {"type": "boolean", "description": "Whether the snapshot is encrypted"},
+        "kms_key_id": {"type": "text", "description": "The ARN of the KMS key used for encryption"},
+        "start_time": {"type": "timestamp", "description": "The time the snapshot was initiated"},
+        "progress": {"type": "text", "description": "The progress of the snapshot as a percentage"},
+        "owner_id": {"type": "text", "description": "The AWS account ID of the snapshot owner"},
+        "description": {"type": "text", "description": "The description of the snapshot"},
+        "create_volume_permissions": {"type": "jsonb", "description": "Users and groups with permission to create volumes from this snapshot"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the snapshot"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_efs_file_system": {
+      "description": "Amazon EFS elastic file systems for shared storage.",
+      "columns": {
+        "file_system_id": {"type": "text", "description": "The ID of the file system"},
+        "arn": {"type": "text", "description": "The ARN of the file system"},
+        "name": {"type": "text", "description": "The name tag value of the file system"},
+        "life_cycle_state": {"type": "text", "description": "The lifecycle phase (creating, available, updating, deleting, deleted, error)"},
+        "performance_mode": {"type": "text", "description": "The performance mode (generalPurpose, maxIO)"},
+        "throughput_mode": {"type": "text", "description": "The throughput mode (bursting, provisioned, elastic)"},
+        "encrypted": {"type": "boolean", "description": "Whether the file system is encrypted"},
+        "kms_key_id": {"type": "text", "description": "The ARN of the KMS key used for encryption"},
+        "size_in_bytes": {"type": "jsonb", "description": "Size information including value, timestamp, and value in IA/Standard"},
+        "number_of_mount_targets": {"type": "bigint", "description": "The number of mount targets"},
+        "creation_time": {"type": "timestamp", "description": "The time the file system was created"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the file system"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_vpc": {
+      "description": "Amazon VPC virtual private clouds providing isolated network environments.",
+      "columns": {
+        "vpc_id": {"type": "text", "description": "The ID of the VPC"},
+        "arn": {"type": "text", "description": "The ARN of the VPC"},
+        "cidr_block": {"type": "text", "description": "The primary IPv4 CIDR block of the VPC"},
+        "state": {"type": "text", "description": "The state of the VPC (pending, available)"},
+        "is_default": {"type": "boolean", "description": "Whether this is the default VPC"},
+        "owner_id": {"type": "text", "description": "The account ID of the VPC owner"},
+        "dhcp_options_id": {"type": "text", "description": "The ID of the DHCP options set"},
+        "instance_tenancy": {"type": "text", "description": "The instance tenancy (default, dedicated, host)"},
+        "cidr_block_association_set": {"type": "jsonb", "description": "Additional CIDR blocks associated with the VPC"},
+        "ipv6_cidr_block_association_set": {"type": "jsonb", "description": "IPv6 CIDR blocks associated with the VPC"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the VPC"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_vpc_subnet": {
+      "description": "VPC subnets defining IP address ranges within a VPC.",
+      "columns": {
+        "subnet_id": {"type": "text", "description": "The ID of the subnet"},
+        "subnet_arn": {"type": "text", "description": "The ARN of the subnet"},
+        "vpc_id": {"type": "text", "description": "The ID of the VPC the subnet belongs to"},
+        "cidr_block": {"type": "text", "description": "The IPv4 CIDR block of the subnet"},
+        "availability_zone": {"type": "text", "description": "The availability zone of the subnet"},
+        "availability_zone_id": {"type": "text", "description": "The ID of the availability zone"},
+        "state": {"type": "text", "description": "The state of the subnet (pending, available)"},
+        "available_ip_address_count": {"type": "bigint", "description": "The number of available IPv4 addresses"},
+        "default_for_az": {"type": "boolean", "description": "Whether this is the default subnet for the AZ"},
+        "map_public_ip_on_launch": {"type": "boolean", "description": "Whether instances get a public IP on launch"},
+        "map_customer_owned_ip_on_launch": {"type": "boolean", "description": "Whether customer-owned IPs are mapped on launch"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the subnet"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_vpc_security_group": {
+      "description": "VPC security groups acting as virtual firewalls for instances.",
+      "columns": {
+        "group_id": {"type": "text", "description": "The ID of the security group"},
+        "group_name": {"type": "text", "description": "The name of the security group"},
+        "arn": {"type": "text", "description": "The ARN of the security group"},
+        "description": {"type": "text", "description": "The description of the security group"},
+        "vpc_id": {"type": "text", "description": "The ID of the VPC the security group belongs to"},
+        "owner_id": {"type": "text", "description": "The account ID of the owner"},
+        "ip_permissions": {"type": "jsonb", "description": "Inbound rules (ingress permissions)"},
+        "ip_permissions_egress": {"type": "jsonb", "description": "Outbound rules (egress permissions)"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the security group"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_vpc_security_group_rule": {
+      "description": "Individual security group rules (both ingress and egress).",
+      "columns": {
+        "security_group_rule_id": {"type": "text", "description": "The ID of the security group rule"},
+        "group_id": {"type": "text", "description": "The ID of the security group"},
+        "group_name": {"type": "text", "description": "The name of the security group"},
+        "is_egress": {"type": "boolean", "description": "Whether this is an egress (outbound) rule"},
+        "ip_protocol": {"type": "text", "description": "The IP protocol (tcp, udp, icmp, or -1 for all)"},
+        "from_port": {"type": "bigint", "description": "The start of the port range"},
+        "to_port": {"type": "bigint", "description": "The end of the port range"},
+        "cidr_ip": {"type": "text", "description": "The IPv4 CIDR range"},
+        "cidr_ipv6": {"type": "text", "description": "The IPv6 CIDR range"},
+        "pair_group_id": {"type": "text", "description": "The referenced security group ID"},
+        "prefix_list_id": {"type": "text", "description": "The referenced prefix list ID"},
+        "type": {"type": "text", "description": "The type of rule (ingress or egress)"},
+        "vpc_id": {"type": "text", "description": "The ID of the VPC"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ec2_network_interface": {
+      "description": "EC2 elastic network interfaces (ENIs) attached to instances and services.",
+      "columns": {
+        "network_interface_id": {"type": "text", "description": "The ID of the network interface"},
+        "status": {"type": "text", "description": "The status (available, associated, attaching, in-use, detaching)"},
+        "interface_type": {"type": "text", "description": "The type of interface (interface, natGateway, efa, trunk, etc.)"},
+        "vpc_id": {"type": "text", "description": "The ID of the VPC"},
+        "subnet_id": {"type": "text", "description": "The ID of the subnet"},
+        "private_ip_address": {"type": "text", "description": "The primary private IPv4 address"},
+        "association_public_ip": {"type": "text", "description": "The associated public IP address"},
+        "mac_address": {"type": "text", "description": "The MAC address"},
+        "attached_instance_id": {"type": "text", "description": "The ID of the attached instance"},
+        "description": {"type": "text", "description": "The description of the network interface"},
+        "groups": {"type": "jsonb", "description": "Security groups associated with the interface"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the network interface"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ec2_internet_gateway": {
+      "description": "Internet gateways enabling internet access for VPC resources.",
+      "columns": {
+        "internet_gateway_id": {"type": "text", "description": "The ID of the internet gateway"},
+        "arn": {"type": "text", "description": "The ARN of the internet gateway"},
+        "owner_id": {"type": "text", "description": "The account ID of the owner"},
+        "attachments": {"type": "jsonb", "description": "VPCs attached to the internet gateway"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the internet gateway"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ec2_nat_gateway": {
+      "description": "NAT gateways enabling outbound internet access for private subnets.",
+      "columns": {
+        "nat_gateway_id": {"type": "text", "description": "The ID of the NAT gateway"},
+        "arn": {"type": "text", "description": "The ARN of the NAT gateway"},
+        "state": {"type": "text", "description": "The state (pending, failed, available, deleting, deleted)"},
+        "connectivity_type": {"type": "text", "description": "Connectivity type (public, private)"},
+        "subnet_id": {"type": "text", "description": "The ID of the subnet"},
+        "vpc_id": {"type": "text", "description": "The ID of the VPC"},
+        "nat_gateway_addresses": {"type": "jsonb", "description": "IP addresses associated with the NAT gateway"},
+        "create_time": {"type": "timestamp", "description": "The time the NAT gateway was created"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the NAT gateway"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_route_table": {
+      "description": "VPC route tables defining network traffic routing rules.",
+      "columns": {
+        "route_table_id": {"type": "text", "description": "The ID of the route table"},
+        "arn": {"type": "text", "description": "The ARN of the route table"},
+        "vpc_id": {"type": "text", "description": "The ID of the VPC"},
+        "owner_id": {"type": "text", "description": "The account ID of the owner"},
+        "routes": {"type": "jsonb", "description": "The routes in the route table"},
+        "associations": {"type": "jsonb", "description": "Subnet associations for the route table"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the route table"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ec2_transit_gateway": {
+      "description": "Transit gateways for connecting VPCs and on-premises networks.",
+      "columns": {
+        "transit_gateway_id": {"type": "text", "description": "The ID of the transit gateway"},
+        "transit_gateway_arn": {"type": "text", "description": "The ARN of the transit gateway"},
+        "state": {"type": "text", "description": "The state (pending, available, modifying, deleting, deleted)"},
+        "owner_id": {"type": "text", "description": "The account ID of the owner"},
+        "amazon_side_asn": {"type": "bigint", "description": "The Amazon side ASN for BGP sessions"},
+        "auto_accept_shared_attachments": {"type": "text", "description": "Whether shared attachments are auto-accepted"},
+        "default_route_table_association": {"type": "text", "description": "Whether new attachments auto-associate with default route table"},
+        "default_route_table_propagation": {"type": "text", "description": "Whether new attachments auto-propagate routes"},
+        "creation_time": {"type": "timestamp", "description": "The time the transit gateway was created"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the transit gateway"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_vpc_endpoint": {
+      "description": "VPC endpoints for private connectivity to AWS services.",
+      "columns": {
+        "vpc_endpoint_id": {"type": "text", "description": "The ID of the VPC endpoint"},
+        "vpc_endpoint_type": {"type": "text", "description": "The type of endpoint (Interface, Gateway, GatewayLoadBalancer)"},
+        "service_name": {"type": "text", "description": "The name of the AWS service"},
+        "state": {"type": "text", "description": "The state of the endpoint"},
+        "vpc_id": {"type": "text", "description": "The ID of the VPC"},
+        "subnet_ids": {"type": "jsonb", "description": "Subnets for interface endpoints"},
+        "network_interface_ids": {"type": "jsonb", "description": "Network interfaces for interface endpoints"},
+        "route_table_ids": {"type": "jsonb", "description": "Route tables for gateway endpoints"},
+        "policy_document": {"type": "jsonb", "description": "The endpoint policy document"},
+        "private_dns_enabled": {"type": "boolean", "description": "Whether private DNS is enabled"},
+        "creation_timestamp": {"type": "timestamp", "description": "The time the endpoint was created"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the endpoint"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_iam_user": {
+      "description": "IAM users with authentication credentials and permissions.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the IAM user"},
+        "user_id": {"type": "text", "description": "The unique ID of the user"},
+        "arn": {"type": "text", "description": "The ARN of the user"},
+        "path": {"type": "text", "description": "The path to the user"},
+        "create_date": {"type": "timestamp", "description": "The date the user was created"},
+        "password_last_used": {"type": "timestamp", "description": "The date the password was last used"},
+        "mfa_enabled": {"type": "boolean", "description": "Whether MFA is enabled for the user"},
+        "mfa_devices": {"type": "jsonb", "description": "MFA devices associated with the user"},
+        "login_profile": {"type": "jsonb", "description": "Console login profile information"},
+        "inline_policies": {"type": "jsonb", "description": "Inline policies attached to the user"},
+        "attached_policy_arns": {"type": "jsonb", "description": "ARNs of managed policies attached to the user"},
+        "groups": {"type": "jsonb", "description": "Groups the user belongs to"},
+        "permissions_boundary": {"type": "jsonb", "description": "Permissions boundary for the user"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the user"},
+        "account_id": {"type": "text", "description": "The AWS account ID"}
+      }
+    },
+    "aws_iam_role": {
+      "description": "IAM roles for delegating permissions to AWS services and users.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the IAM role"},
+        "role_id": {"type": "text", "description": "The unique ID of the role"},
+        "arn": {"type": "text", "description": "The ARN of the role"},
+        "path": {"type": "text", "description": "The path to the role"},
+        "create_date": {"type": "timestamp", "description": "The date the role was created"},
+        "max_session_duration": {"type": "bigint", "description": "Maximum session duration in seconds"},
+        "assume_role_policy_document": {"type": "jsonb", "description": "The trust policy that grants permission to assume the role"},
+        "assume_role_policy_document_std": {"type": "jsonb", "description": "The trust policy in standard format"},
+        "inline_policies": {"type": "jsonb", "description": "Inline policies attached to the role"},
+        "attached_policy_arns": {"type": "jsonb", "description": "ARNs of managed policies attached to the role"},
+        "permissions_boundary_arn": {"type": "text", "description": "The ARN of the permissions boundary policy"},
+        "description": {"type": "text", "description": "The description of the role"},
+        "role_last_used_date": {"type": "timestamp", "description": "The date the role was last used"},
+        "role_last_used_region": {"type": "text", "description": "The region where the role was last used"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the role"},
+        "account_id": {"type": "text", "description": "The AWS account ID"}
+      }
+    },
+    "aws_iam_policy": {
+      "description": "IAM managed policies defining permissions.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the policy"},
+        "policy_id": {"type": "text", "description": "The unique ID of the policy"},
+        "arn": {"type": "text", "description": "The ARN of the policy"},
+        "path": {"type": "text", "description": "The path to the policy"},
+        "is_aws_managed": {"type": "boolean", "description": "Whether this is an AWS managed policy"},
+        "is_attached": {"type": "boolean", "description": "Whether the policy is attached to any identity"},
+        "attachment_count": {"type": "bigint", "description": "The number of entities the policy is attached to"},
+        "default_version_id": {"type": "text", "description": "The ID of the default policy version"},
+        "policy_std": {"type": "jsonb", "description": "The policy document in standard format"},
+        "create_date": {"type": "timestamp", "description": "The date the policy was created"},
+        "update_date": {"type": "timestamp", "description": "The date the policy was last updated"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the policy"},
+        "account_id": {"type": "text", "description": "The AWS account ID"}
+      }
+    },
+    "aws_iam_group": {
+      "description": "IAM groups for organizing users and applying shared permissions.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the IAM group"},
+        "group_id": {"type": "text", "description": "The unique ID of the group"},
+        "arn": {"type": "text", "description": "The ARN of the group"},
+        "path": {"type": "text", "description": "The path to the group"},
+        "create_date": {"type": "timestamp", "description": "The date the group was created"},
+        "users": {"type": "jsonb", "description": "Users in the group"},
+        "inline_policies": {"type": "jsonb", "description": "Inline policies attached to the group"},
+        "attached_policy_arns": {"type": "jsonb", "description": "ARNs of managed policies attached to the group"},
+        "account_id": {"type": "text", "description": "The AWS account ID"}
+      }
+    },
+    "aws_iam_access_key": {
+      "description": "IAM access keys used for programmatic AWS access.",
+      "columns": {
+        "access_key_id": {"type": "text", "description": "The ID of the access key"},
+        "user_name": {"type": "text", "description": "The name of the IAM user the key belongs to"},
+        "status": {"type": "text", "description": "The status of the access key (Active, Inactive)"},
+        "create_date": {"type": "timestamp", "description": "The date the access key was created"},
+        "access_key_last_used_date": {"type": "timestamp", "description": "The date the access key was last used"},
+        "access_key_last_used_service": {"type": "text", "description": "The AWS service last accessed with the key"},
+        "access_key_last_used_region": {"type": "text", "description": "The region where the key was last used"},
+        "account_id": {"type": "text", "description": "The AWS account ID"}
+      }
+    },
+    "aws_iam_credential_report": {
+      "description": "IAM credential report with security status of all IAM users.",
+      "columns": {
+        "user_name": {"type": "text", "description": "The name of the IAM user"},
+        "arn": {"type": "text", "description": "The ARN of the user"},
+        "user_creation_time": {"type": "timestamp", "description": "The date the user was created"},
+        "password_enabled": {"type": "boolean", "description": "Whether console password is enabled"},
+        "password_last_used": {"type": "timestamp", "description": "The date the password was last used"},
+        "password_last_changed": {"type": "timestamp", "description": "The date the password was last changed"},
+        "password_next_rotation": {"type": "timestamp", "description": "When the password must next be rotated"},
+        "mfa_active": {"type": "boolean", "description": "Whether MFA is active"},
+        "access_key_1_active": {"type": "boolean", "description": "Whether access key 1 is active"},
+        "access_key_1_last_used_date": {"type": "timestamp", "description": "When access key 1 was last used"},
+        "access_key_1_last_rotated": {"type": "timestamp", "description": "When access key 1 was last rotated"},
+        "access_key_2_active": {"type": "boolean", "description": "Whether access key 2 is active"},
+        "access_key_2_last_used_date": {"type": "timestamp", "description": "When access key 2 was last used"},
+        "access_key_2_last_rotated": {"type": "timestamp", "description": "When access key 2 was last rotated"},
+        "account_id": {"type": "text", "description": "The AWS account ID"}
+      }
+    },
+    "aws_rds_db_instance": {
+      "description": "Amazon RDS database instances with engine, size, and configuration details.",
+      "columns": {
+        "db_instance_identifier": {"type": "text", "description": "The identifier of the DB instance"},
+        "arn": {"type": "text", "description": "The ARN of the DB instance"},
+        "db_instance_class": {"type": "text", "description": "The instance class (e.g., db.t3.micro, db.r5.large)"},
+        "engine": {"type": "text", "description": "The database engine (mysql, postgres, oracle-ee, sqlserver-ee, etc.)"},
+        "engine_version": {"type": "text", "description": "The version of the database engine"},
+        "db_instance_status": {"type": "text", "description": "The status of the DB instance"},
+        "allocated_storage": {"type": "bigint", "description": "The allocated storage size in GiB"},
+        "storage_encrypted": {"type": "boolean", "description": "Whether storage is encrypted"},
+        "kms_key_id": {"type": "text", "description": "The ARN of the KMS key for encryption"},
+        "multi_az": {"type": "boolean", "description": "Whether Multi-AZ is enabled"},
+        "publicly_accessible": {"type": "boolean", "description": "Whether the instance is publicly accessible"},
+        "auto_minor_version_upgrade": {"type": "boolean", "description": "Whether auto minor version upgrade is enabled"},
+        "backup_retention_period": {"type": "bigint", "description": "The backup retention period in days"},
+        "deletion_protection": {"type": "boolean", "description": "Whether deletion protection is enabled"},
+        "endpoint_address": {"type": "text", "description": "The DNS address of the DB instance"},
+        "endpoint_port": {"type": "bigint", "description": "The port the DB instance listens on"},
+        "vpc_security_groups": {"type": "jsonb", "description": "VPC security groups associated with the instance"},
+        "db_subnet_group_name": {"type": "text", "description": "The name of the DB subnet group"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the DB instance"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_rds_db_cluster": {
+      "description": "Amazon RDS Aurora database clusters.",
+      "columns": {
+        "db_cluster_identifier": {"type": "text", "description": "The identifier of the DB cluster"},
+        "arn": {"type": "text", "description": "The ARN of the DB cluster"},
+        "status": {"type": "text", "description": "The current status of the cluster"},
+        "engine": {"type": "text", "description": "The database engine (aurora-mysql, aurora-postgresql)"},
+        "engine_version": {"type": "text", "description": "The version of the database engine"},
+        "engine_mode": {"type": "text", "description": "The engine mode (provisioned, serverless, parallelquery, global, multimaster)"},
+        "multi_az": {"type": "boolean", "description": "Whether Multi-AZ is enabled"},
+        "storage_encrypted": {"type": "boolean", "description": "Whether storage is encrypted"},
+        "kms_key_id": {"type": "text", "description": "The ARN of the KMS key for encryption"},
+        "deletion_protection": {"type": "boolean", "description": "Whether deletion protection is enabled"},
+        "backup_retention_period": {"type": "bigint", "description": "The backup retention period in days"},
+        "endpoint": {"type": "text", "description": "The cluster writer endpoint"},
+        "reader_endpoint": {"type": "text", "description": "The cluster reader endpoint"},
+        "members": {"type": "jsonb", "description": "Members of the DB cluster"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the DB cluster"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_dynamodb_table": {
+      "description": "Amazon DynamoDB NoSQL tables with throughput and configuration.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the DynamoDB table"},
+        "arn": {"type": "text", "description": "The ARN of the table"},
+        "table_status": {"type": "text", "description": "The current status (CREATING, UPDATING, DELETING, ACTIVE, etc.)"},
+        "billing_mode": {"type": "text", "description": "The billing mode (PROVISIONED, PAY_PER_REQUEST)"},
+        "read_capacity": {"type": "bigint", "description": "Provisioned read capacity units"},
+        "write_capacity": {"type": "bigint", "description": "Provisioned write capacity units"},
+        "item_count": {"type": "bigint", "description": "The number of items in the table"},
+        "table_size_bytes": {"type": "bigint", "description": "The size of the table in bytes"},
+        "key_schema": {"type": "jsonb", "description": "The primary key schema"},
+        "attribute_definitions": {"type": "jsonb", "description": "Attribute definitions for the table"},
+        "global_secondary_indexes": {"type": "jsonb", "description": "Global secondary indexes on the table"},
+        "local_secondary_indexes": {"type": "jsonb", "description": "Local secondary indexes on the table"},
+        "sse_description": {"type": "jsonb", "description": "Server-side encryption configuration"},
+        "point_in_time_recovery_description": {"type": "jsonb", "description": "Point-in-time recovery settings"},
+        "continuous_backups_status": {"type": "text", "description": "Continuous backups status"},
+        "creation_date_time": {"type": "timestamp", "description": "The date the table was created"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the table"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_redshift_cluster": {
+      "description": "Amazon Redshift data warehouse clusters.",
+      "columns": {
+        "cluster_identifier": {"type": "text", "description": "The unique identifier of the Redshift cluster"},
+        "arn": {"type": "text", "description": "The ARN of the cluster"},
+        "cluster_status": {"type": "text", "description": "The status of the cluster (available, creating, deleting, etc.)"},
+        "node_type": {"type": "text", "description": "The node type for the cluster"},
+        "number_of_nodes": {"type": "bigint", "description": "The number of compute nodes"},
+        "db_name": {"type": "text", "description": "The name of the initial database"},
+        "encrypted": {"type": "boolean", "description": "Whether data is encrypted at rest"},
+        "kms_key_id": {"type": "text", "description": "The ARN of the KMS key for encryption"},
+        "publicly_accessible": {"type": "boolean", "description": "Whether the cluster is publicly accessible"},
+        "endpoint_address": {"type": "text", "description": "The DNS address of the cluster"},
+        "endpoint_port": {"type": "bigint", "description": "The port the cluster listens on"},
+        "vpc_id": {"type": "text", "description": "The VPC ID of the cluster"},
+        "vpc_security_groups": {"type": "jsonb", "description": "VPC security groups associated with the cluster"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the cluster"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_elasticache_cluster": {
+      "description": "Amazon ElastiCache clusters for in-memory caching (Redis, Memcached).",
+      "columns": {
+        "cache_cluster_id": {"type": "text", "description": "The identifier of the cache cluster"},
+        "arn": {"type": "text", "description": "The ARN of the cache cluster"},
+        "cache_cluster_status": {"type": "text", "description": "The status of the cache cluster"},
+        "engine": {"type": "text", "description": "The cache engine (redis, memcached)"},
+        "engine_version": {"type": "text", "description": "The version of the cache engine"},
+        "cache_node_type": {"type": "text", "description": "The cache node type (e.g., cache.t3.micro)"},
+        "num_cache_nodes": {"type": "bigint", "description": "The number of cache nodes"},
+        "preferred_availability_zone": {"type": "text", "description": "The preferred availability zone"},
+        "at_rest_encryption_enabled": {"type": "boolean", "description": "Whether at-rest encryption is enabled"},
+        "transit_encryption_enabled": {"type": "boolean", "description": "Whether in-transit encryption is enabled"},
+        "auth_token_enabled": {"type": "boolean", "description": "Whether AUTH token (password) is enabled"},
+        "cache_subnet_group_name": {"type": "text", "description": "The name of the cache subnet group"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the cache cluster"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_kms_key": {
+      "description": "AWS KMS encryption keys for data protection.",
+      "columns": {
+        "id": {"type": "text", "description": "The globally unique ID of the KMS key"},
+        "arn": {"type": "text", "description": "The ARN of the KMS key"},
+        "key_manager": {"type": "text", "description": "The manager of the key (AWS or CUSTOMER)"},
+        "key_state": {"type": "text", "description": "The state of the key (Enabled, Disabled, PendingDeletion, etc.)"},
+        "key_usage": {"type": "text", "description": "The cryptographic usage (ENCRYPT_DECRYPT, SIGN_VERIFY, etc.)"},
+        "key_spec": {"type": "text", "description": "The key spec (SYMMETRIC_DEFAULT, RSA_2048, etc.)"},
+        "creation_date": {"type": "timestamp", "description": "The date the key was created"},
+        "enabled": {"type": "boolean", "description": "Whether the key is enabled"},
+        "description": {"type": "text", "description": "The description of the key"},
+        "key_rotation_enabled": {"type": "boolean", "description": "Whether automatic key rotation is enabled"},
+        "policy": {"type": "jsonb", "description": "The key policy document"},
+        "policy_std": {"type": "jsonb", "description": "The key policy in standard format"},
+        "aliases": {"type": "jsonb", "description": "Aliases associated with the key"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the key"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_secretsmanager_secret": {
+      "description": "AWS Secrets Manager secrets for managing credentials and sensitive data.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the secret"},
+        "arn": {"type": "text", "description": "The ARN of the secret"},
+        "description": {"type": "text", "description": "The description of the secret"},
+        "created_date": {"type": "timestamp", "description": "The date the secret was created"},
+        "last_accessed_date": {"type": "timestamp", "description": "The date the secret was last accessed"},
+        "last_changed_date": {"type": "timestamp", "description": "The date the secret was last changed"},
+        "last_rotated_date": {"type": "timestamp", "description": "The date the secret was last rotated"},
+        "rotation_enabled": {"type": "boolean", "description": "Whether rotation is enabled"},
+        "rotation_lambda_arn": {"type": "text", "description": "The ARN of the Lambda function for rotation"},
+        "rotation_rules": {"type": "jsonb", "description": "Rotation rules including schedule"},
+        "kms_key_id": {"type": "text", "description": "The ARN of the KMS key used for encryption"},
+        "primary_region": {"type": "text", "description": "The primary region for multi-region secrets"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the secret"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_guardduty_detector": {
+      "description": "Amazon GuardDuty threat detection service detectors.",
+      "columns": {
+        "detector_id": {"type": "text", "description": "The unique ID of the GuardDuty detector"},
+        "arn": {"type": "text", "description": "The ARN of the detector"},
+        "status": {"type": "text", "description": "The status of the detector (ENABLED, DISABLED)"},
+        "finding_publishing_frequency": {"type": "text", "description": "The frequency of publishing findings (FIFTEEN_MINUTES, ONE_HOUR, SIX_HOURS)"},
+        "service_role": {"type": "text", "description": "The service-linked role ARN"},
+        "created_at": {"type": "timestamp", "description": "The time the detector was created"},
+        "updated_at": {"type": "timestamp", "description": "The time the detector was last updated"},
+        "data_sources": {"type": "jsonb", "description": "Data sources enabled for the detector"},
+        "master_account": {"type": "jsonb", "description": "Information about the master account"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_securityhub_hub": {
+      "description": "AWS Security Hub central security findings aggregation.",
+      "columns": {
+        "hub_arn": {"type": "text", "description": "The ARN of the Security Hub"},
+        "subscribed_at": {"type": "timestamp", "description": "The date Security Hub was enabled"},
+        "auto_enable_controls": {"type": "boolean", "description": "Whether controls are auto-enabled for new standards"},
+        "administrator_account": {"type": "jsonb", "description": "Details about the administrator account"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_cloudtrail_trail": {
+      "description": "AWS CloudTrail trails for auditing API activity and events.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the trail"},
+        "arn": {"type": "text", "description": "The ARN of the trail"},
+        "home_region": {"type": "text", "description": "The region where the trail was created"},
+        "is_multi_region_trail": {"type": "boolean", "description": "Whether the trail logs events from all regions"},
+        "is_organization_trail": {"type": "boolean", "description": "Whether the trail is an organization trail"},
+        "is_logging": {"type": "boolean", "description": "Whether logging is currently enabled"},
+        "log_file_validation_enabled": {"type": "boolean", "description": "Whether log file integrity validation is enabled"},
+        "s3_bucket_name": {"type": "text", "description": "The S3 bucket where logs are stored"},
+        "s3_key_prefix": {"type": "text", "description": "The S3 key prefix for log files"},
+        "kms_key_id": {"type": "text", "description": "The ARN of the KMS key for log encryption"},
+        "cloud_watch_logs_log_group_arn": {"type": "text", "description": "The ARN of the CloudWatch Logs log group"},
+        "include_global_service_events": {"type": "boolean", "description": "Whether global service events are logged"},
+        "event_selectors": {"type": "jsonb", "description": "Event selectors configured for the trail"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the trail"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_config_rule": {
+      "description": "AWS Config rules for evaluating resource compliance.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the Config rule"},
+        "arn": {"type": "text", "description": "The ARN of the Config rule"},
+        "rule_id": {"type": "text", "description": "The ID of the Config rule"},
+        "state": {"type": "text", "description": "The state (ACTIVE, DELETING, DELETING_RESULTS, EVALUATING)"},
+        "compliance_by_config_rule": {"type": "jsonb", "description": "Compliance status of the rule"},
+        "description": {"type": "text", "description": "The description of the rule"},
+        "source": {"type": "jsonb", "description": "The rule source (AWS managed, custom Lambda, etc.)"},
+        "input_parameters": {"type": "text", "description": "Input parameters for the rule as JSON string"},
+        "scope": {"type": "jsonb", "description": "The scope of the rule (resource types, tags, etc.)"},
+        "maximum_execution_frequency": {"type": "text", "description": "The maximum frequency for periodic evaluations"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the rule"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_waf_web_acl": {
+      "description": "AWS WAF web ACLs for protecting web applications from attacks.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the web ACL"},
+        "arn": {"type": "text", "description": "The ARN of the web ACL"},
+        "web_acl_id": {"type": "text", "description": "The ID of the web ACL"},
+        "scope": {"type": "text", "description": "The scope (REGIONAL or CLOUDFRONT)"},
+        "default_action": {"type": "jsonb", "description": "The default action (allow or block)"},
+        "description": {"type": "text", "description": "The description of the web ACL"},
+        "capacity": {"type": "bigint", "description": "The WCU capacity consumed by the rules"},
+        "rules": {"type": "jsonb", "description": "The rules in the web ACL"},
+        "visibility_config": {"type": "jsonb", "description": "Visibility configuration for metrics and sampling"},
+        "managed_by_firewall_manager": {"type": "boolean", "description": "Whether managed by Firewall Manager"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the web ACL"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_acm_certificate": {
+      "description": "AWS Certificate Manager SSL/TLS certificates.",
+      "columns": {
+        "certificate_arn": {"type": "text", "description": "The ARN of the certificate"},
+        "domain_name": {"type": "text", "description": "The fully qualified domain name"},
+        "subject_alternative_names": {"type": "jsonb", "description": "Additional domain names covered by the certificate"},
+        "status": {"type": "text", "description": "The status (PENDING_VALIDATION, ISSUED, INACTIVE, REVOKED, EXPIRED, VALIDATION_TIMED_OUT, FAILED)"},
+        "type": {"type": "text", "description": "The source (AMAZON_ISSUED, IMPORTED, PRIVATE)"},
+        "key_algorithm": {"type": "text", "description": "The algorithm used to generate the key pair"},
+        "issuer": {"type": "text", "description": "The name of the certificate authority"},
+        "not_before": {"type": "timestamp", "description": "The start of the validity period"},
+        "not_after": {"type": "timestamp", "description": "The end of the validity period"},
+        "renewal_eligibility": {"type": "text", "description": "Whether the certificate is eligible for renewal"},
+        "in_use_by": {"type": "jsonb", "description": "AWS resources using this certificate"},
+        "domain_validation_options": {"type": "jsonb", "description": "Domain validation information"},
+        "failure_reason": {"type": "text", "description": "The reason the certificate request failed"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the certificate"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_cloudwatch_alarm": {
+      "description": "Amazon CloudWatch alarms for monitoring AWS resources and metrics.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the alarm"},
+        "arn": {"type": "text", "description": "The ARN of the alarm"},
+        "state_value": {"type": "text", "description": "The current state (OK, ALARM, INSUFFICIENT_DATA)"},
+        "state_reason": {"type": "text", "description": "A human-readable reason for the alarm state"},
+        "state_updated_timestamp": {"type": "timestamp", "description": "The time the state was last updated"},
+        "metric_name": {"type": "text", "description": "The name of the metric"},
+        "namespace": {"type": "text", "description": "The namespace of the metric"},
+        "statistic": {"type": "text", "description": "The statistic for the metric (Average, Sum, etc.)"},
+        "period": {"type": "bigint", "description": "The period in seconds for evaluation"},
+        "evaluation_periods": {"type": "bigint", "description": "The number of periods for evaluation"},
+        "threshold": {"type": "double precision", "description": "The threshold value for the alarm"},
+        "comparison_operator": {"type": "text", "description": "The comparison operator"},
+        "alarm_actions": {"type": "jsonb", "description": "Actions to execute when alarm triggers"},
+        "actions_enabled": {"type": "boolean", "description": "Whether actions are enabled"},
+        "dimensions": {"type": "jsonb", "description": "The dimensions for the metric"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the alarm"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_cloudwatch_log_group": {
+      "description": "Amazon CloudWatch Logs log groups for centralized log management.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the log group"},
+        "arn": {"type": "text", "description": "The ARN of the log group"},
+        "creation_time": {"type": "timestamp", "description": "The creation time of the log group"},
+        "retention_in_days": {"type": "bigint", "description": "The number of days to retain log events (null = never expire)"},
+        "metric_filter_count": {"type": "bigint", "description": "The number of metric filters"},
+        "stored_bytes": {"type": "bigint", "description": "The number of bytes stored"},
+        "kms_key_id": {"type": "text", "description": "The ARN of the KMS key for encryption"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the log group"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_sns_topic": {
+      "description": "Amazon SNS topics for pub/sub messaging and notifications.",
+      "columns": {
+        "topic_arn": {"type": "text", "description": "The ARN of the SNS topic"},
+        "display_name": {"type": "text", "description": "The display name of the topic"},
+        "owner": {"type": "text", "description": "The AWS account ID of the topic owner"},
+        "subscriptions_confirmed": {"type": "bigint", "description": "The number of confirmed subscriptions"},
+        "subscriptions_pending": {"type": "bigint", "description": "The number of pending subscriptions"},
+        "kms_master_key_id": {"type": "text", "description": "The KMS key ID for server-side encryption"},
+        "delivery_policy": {"type": "jsonb", "description": "The delivery retry policy"},
+        "policy": {"type": "jsonb", "description": "The access policy for the topic"},
+        "policy_std": {"type": "jsonb", "description": "The access policy in standard format"},
+        "fifo_topic": {"type": "boolean", "description": "Whether this is a FIFO topic"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the topic"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_sqs_queue": {
+      "description": "Amazon SQS queues for decoupled message processing.",
+      "columns": {
+        "queue_url": {"type": "text", "description": "The URL of the SQS queue"},
+        "queue_arn": {"type": "text", "description": "The ARN of the SQS queue"},
+        "fifo_queue": {"type": "boolean", "description": "Whether this is a FIFO queue"},
+        "visibility_timeout_secs": {"type": "bigint", "description": "The visibility timeout in seconds"},
+        "message_retention_secs": {"type": "bigint", "description": "The message retention period in seconds"},
+        "max_message_size_bytes": {"type": "bigint", "description": "The maximum message size in bytes"},
+        "delay_seconds": {"type": "bigint", "description": "The default delay for messages in seconds"},
+        "receive_wait_time_secs": {"type": "bigint", "description": "The receive message wait time in seconds"},
+        "kms_master_key_id": {"type": "text", "description": "The KMS key ID for server-side encryption"},
+        "sqs_managed_sse_enabled": {"type": "boolean", "description": "Whether SQS-managed SSE is enabled"},
+        "policy": {"type": "jsonb", "description": "The access policy for the queue"},
+        "policy_std": {"type": "jsonb", "description": "The access policy in standard format"},
+        "redrive_policy": {"type": "jsonb", "description": "The dead-letter queue redrive policy"},
+        "content_based_deduplication": {"type": "boolean", "description": "Whether content-based deduplication is enabled (FIFO only)"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the queue"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ec2_load_balancer_listener": {
+      "description": "Elastic Load Balancer listeners defining port and protocol configurations.",
+      "columns": {
+        "arn": {"type": "text", "description": "The ARN of the listener"},
+        "load_balancer_arn": {"type": "text", "description": "The ARN of the load balancer"},
+        "port": {"type": "bigint", "description": "The port on which the listener listens"},
+        "protocol": {"type": "text", "description": "The protocol (HTTP, HTTPS, TCP, UDP, TLS, TCP_UDP)"},
+        "ssl_policy": {"type": "text", "description": "The security policy for HTTPS/TLS listeners"},
+        "default_actions": {"type": "jsonb", "description": "The default actions for the listener"},
+        "certificates": {"type": "jsonb", "description": "SSL certificates associated with the listener"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ec2_target_group": {
+      "description": "Elastic Load Balancer target groups for routing requests to targets.",
+      "columns": {
+        "target_group_name": {"type": "text", "description": "The name of the target group"},
+        "target_group_arn": {"type": "text", "description": "The ARN of the target group"},
+        "target_type": {"type": "text", "description": "The target type (instance, ip, lambda, alb)"},
+        "protocol": {"type": "text", "description": "The protocol for routing (HTTP, HTTPS, TCP, UDP, TLS, TCP_UDP, GENEVE)"},
+        "port": {"type": "bigint", "description": "The port on which targets receive traffic"},
+        "vpc_id": {"type": "text", "description": "The ID of the VPC"},
+        "health_check_enabled": {"type": "boolean", "description": "Whether health checks are enabled"},
+        "health_check_protocol": {"type": "text", "description": "The protocol used for health checks"},
+        "health_check_path": {"type": "text", "description": "The health check path"},
+        "health_check_port": {"type": "text", "description": "The port used for health checks"},
+        "healthy_threshold_count": {"type": "bigint", "description": "The number of consecutive successes to consider healthy"},
+        "unhealthy_threshold_count": {"type": "bigint", "description": "The number of consecutive failures to consider unhealthy"},
+        "load_balancer_arns": {"type": "jsonb", "description": "Load balancers associated with the target group"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the target group"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ec2_application_load_balancer": {
+      "description": "Application Load Balancers (ALB) for HTTP/HTTPS traffic routing.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the load balancer"},
+        "arn": {"type": "text", "description": "The ARN of the load balancer"},
+        "dns_name": {"type": "text", "description": "The DNS name of the load balancer"},
+        "scheme": {"type": "text", "description": "The scheme (internet-facing, internal)"},
+        "state_code": {"type": "text", "description": "The state (active, provisioning, active_impaired, failed)"},
+        "type": {"type": "text", "description": "The type of load balancer (application)"},
+        "vpc_id": {"type": "text", "description": "The ID of the VPC"},
+        "availability_zones": {"type": "jsonb", "description": "Availability zones enabled for the load balancer"},
+        "security_groups": {"type": "jsonb", "description": "Security groups associated with the load balancer"},
+        "ip_address_type": {"type": "text", "description": "The IP address type (ipv4, dualstack)"},
+        "access_log_s3_enabled": {"type": "boolean", "description": "Whether access logs to S3 are enabled"},
+        "access_log_s3_bucket": {"type": "text", "description": "The S3 bucket for access logs"},
+        "deletion_protection_enabled": {"type": "boolean", "description": "Whether deletion protection is enabled"},
+        "created_time": {"type": "timestamp", "description": "The time the load balancer was created"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the load balancer"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ec2_network_load_balancer": {
+      "description": "Network Load Balancers (NLB) for TCP/UDP/TLS traffic routing.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the load balancer"},
+        "arn": {"type": "text", "description": "The ARN of the load balancer"},
+        "dns_name": {"type": "text", "description": "The DNS name of the load balancer"},
+        "scheme": {"type": "text", "description": "The scheme (internet-facing, internal)"},
+        "state_code": {"type": "text", "description": "The state (active, provisioning, active_impaired, failed)"},
+        "type": {"type": "text", "description": "The type of load balancer (network)"},
+        "vpc_id": {"type": "text", "description": "The ID of the VPC"},
+        "availability_zones": {"type": "jsonb", "description": "Availability zones enabled for the load balancer"},
+        "ip_address_type": {"type": "text", "description": "The IP address type (ipv4, dualstack)"},
+        "cross_zone_load_balancing_enabled": {"type": "boolean", "description": "Whether cross-zone load balancing is enabled"},
+        "deletion_protection_enabled": {"type": "boolean", "description": "Whether deletion protection is enabled"},
+        "created_time": {"type": "timestamp", "description": "The time the load balancer was created"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the load balancer"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ec2_classic_load_balancer": {
+      "description": "Classic Load Balancers (CLB/ELB) for legacy HTTP/TCP load balancing.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the load balancer"},
+        "arn": {"type": "text", "description": "The ARN of the load balancer"},
+        "dns_name": {"type": "text", "description": "The DNS name of the load balancer"},
+        "scheme": {"type": "text", "description": "The scheme (internet-facing, internal)"},
+        "vpc_id": {"type": "text", "description": "The ID of the VPC"},
+        "availability_zones": {"type": "jsonb", "description": "Availability zones enabled for the load balancer"},
+        "security_groups": {"type": "jsonb", "description": "Security groups associated with the load balancer"},
+        "listener_descriptions": {"type": "jsonb", "description": "Listener configurations"},
+        "health_check": {"type": "jsonb", "description": "Health check configuration"},
+        "instances": {"type": "jsonb", "description": "Registered instances"},
+        "access_log_enabled": {"type": "boolean", "description": "Whether access logging is enabled"},
+        "cross_zone_load_balancing_enabled": {"type": "boolean", "description": "Whether cross-zone load balancing is enabled"},
+        "connection_draining_enabled": {"type": "boolean", "description": "Whether connection draining is enabled"},
+        "created_time": {"type": "timestamp", "description": "The time the load balancer was created"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the load balancer"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_route53_zone": {
+      "description": "Amazon Route 53 hosted zones for DNS management.",
+      "columns": {
+        "id": {"type": "text", "description": "The ID of the hosted zone"},
+        "name": {"type": "text", "description": "The name of the hosted zone"},
+        "caller_reference": {"type": "text", "description": "The unique identifier for the zone creation request"},
+        "comment": {"type": "text", "description": "A comment for the hosted zone"},
+        "private_zone": {"type": "boolean", "description": "Whether this is a private hosted zone"},
+        "resource_record_set_count": {"type": "bigint", "description": "The number of resource record sets in the zone"},
+        "linked_service_principal": {"type": "text", "description": "The service that created the zone (if service-linked)"},
+        "vpcs": {"type": "jsonb", "description": "VPCs associated with a private hosted zone"},
+        "query_logging_configs": {"type": "jsonb", "description": "DNS query logging configurations"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the hosted zone"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_route53_record": {
+      "description": "Amazon Route 53 DNS resource records within hosted zones.",
+      "columns": {
+        "name": {"type": "text", "description": "The domain name of the record"},
+        "type": {"type": "text", "description": "The DNS record type (A, AAAA, CNAME, MX, NS, PTR, SOA, SRV, TXT)"},
+        "zone_id": {"type": "text", "description": "The ID of the hosted zone"},
+        "ttl": {"type": "bigint", "description": "The time to live in seconds"},
+        "records": {"type": "jsonb", "description": "The resource record values"},
+        "alias_target": {"type": "jsonb", "description": "Alias target information (for alias records)"},
+        "failover": {"type": "text", "description": "The failover type (PRIMARY, SECONDARY)"},
+        "geolocation_continent_code": {"type": "text", "description": "The continent code for geolocation routing"},
+        "geolocation_country_code": {"type": "text", "description": "The country code for geolocation routing"},
+        "health_check_id": {"type": "text", "description": "The ID of an associated health check"},
+        "multi_value_answer": {"type": "boolean", "description": "Whether this is a multivalue answer routing record"},
+        "set_identifier": {"type": "text", "description": "The identifier for weighted/latency/failover/geolocation routing"},
+        "weight": {"type": "bigint", "description": "The weight for weighted routing"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_cloudfront_distribution": {
+      "description": "Amazon CloudFront CDN distributions for content delivery.",
+      "columns": {
+        "id": {"type": "text", "description": "The ID of the CloudFront distribution"},
+        "arn": {"type": "text", "description": "The ARN of the distribution"},
+        "domain_name": {"type": "text", "description": "The CloudFront domain name (e.g., d111111abcdef8.cloudfront.net)"},
+        "status": {"type": "text", "description": "The status of the distribution (Deployed, InProgress)"},
+        "enabled": {"type": "boolean", "description": "Whether the distribution is enabled"},
+        "comment": {"type": "text", "description": "A comment describing the distribution"},
+        "price_class": {"type": "text", "description": "The price class (PriceClass_All, PriceClass_200, PriceClass_100)"},
+        "http_version": {"type": "text", "description": "The maximum HTTP version (http1.1, http2, http3, http2and3)"},
+        "is_ipv6_enabled": {"type": "boolean", "description": "Whether IPv6 is enabled"},
+        "default_root_object": {"type": "text", "description": "The default root object (e.g., index.html)"},
+        "aliases": {"type": "jsonb", "description": "Alternate domain names (CNAMEs)"},
+        "origins": {"type": "jsonb", "description": "Origin configurations"},
+        "default_cache_behavior": {"type": "jsonb", "description": "Default cache behavior settings"},
+        "viewer_certificate": {"type": "jsonb", "description": "SSL/TLS certificate configuration"},
+        "web_acl_id": {"type": "text", "description": "The WAF web ACL ID associated with the distribution"},
+        "logging": {"type": "jsonb", "description": "Access logging configuration"},
+        "last_modified_time": {"type": "timestamp", "description": "The date the distribution was last modified"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the distribution"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region (always us-east-1 for CloudFront)"}
+      }
+    },
+    "aws_cost_by_service_daily": {
+      "description": "AWS daily cost breakdown by service from Cost Explorer.",
+      "columns": {
+        "service": {"type": "text", "description": "The AWS service name"},
+        "period_start": {"type": "timestamp", "description": "The start date of the cost period"},
+        "period_end": {"type": "timestamp", "description": "The end date of the cost period"},
+        "blended_cost_amount": {"type": "double precision", "description": "The blended cost amount"},
+        "blended_cost_unit": {"type": "text", "description": "The unit of blended cost (USD)"},
+        "unblended_cost_amount": {"type": "double precision", "description": "The unblended cost amount"},
+        "unblended_cost_unit": {"type": "text", "description": "The unit of unblended cost (USD)"},
+        "amortized_cost_amount": {"type": "double precision", "description": "The amortized cost amount"},
+        "amortized_cost_unit": {"type": "text", "description": "The unit of amortized cost (USD)"},
+        "net_unblended_cost_amount": {"type": "double precision", "description": "The net unblended cost amount"},
+        "net_amortized_cost_amount": {"type": "double precision", "description": "The net amortized cost amount"},
+        "usage_quantity_amount": {"type": "double precision", "description": "The usage quantity"},
+        "usage_quantity_unit": {"type": "text", "description": "The unit of usage quantity"},
+        "estimated": {"type": "boolean", "description": "Whether the cost is estimated"},
+        "account_id": {"type": "text", "description": "The AWS account ID"}
+      }
+    },
+    "aws_cost_by_service_monthly": {
+      "description": "AWS monthly cost breakdown by service from Cost Explorer.",
+      "columns": {
+        "service": {"type": "text", "description": "The AWS service name"},
+        "period_start": {"type": "timestamp", "description": "The start date of the cost period"},
+        "period_end": {"type": "timestamp", "description": "The end date of the cost period"},
+        "blended_cost_amount": {"type": "double precision", "description": "The blended cost amount"},
+        "blended_cost_unit": {"type": "text", "description": "The unit of blended cost (USD)"},
+        "unblended_cost_amount": {"type": "double precision", "description": "The unblended cost amount"},
+        "unblended_cost_unit": {"type": "text", "description": "The unit of unblended cost (USD)"},
+        "amortized_cost_amount": {"type": "double precision", "description": "The amortized cost amount"},
+        "amortized_cost_unit": {"type": "text", "description": "The unit of amortized cost (USD)"},
+        "net_unblended_cost_amount": {"type": "double precision", "description": "The net unblended cost amount"},
+        "net_amortized_cost_amount": {"type": "double precision", "description": "The net amortized cost amount"},
+        "usage_quantity_amount": {"type": "double precision", "description": "The usage quantity"},
+        "usage_quantity_unit": {"type": "text", "description": "The unit of usage quantity"},
+        "estimated": {"type": "boolean", "description": "Whether the cost is estimated"},
+        "account_id": {"type": "text", "description": "The AWS account ID"}
+      }
+    },
+    "aws_ecr_repository": {
+      "description": "Amazon ECR container image repositories.",
+      "columns": {
+        "repository_name": {"type": "text", "description": "The name of the repository"},
+        "arn": {"type": "text", "description": "The ARN of the repository"},
+        "registry_id": {"type": "text", "description": "The AWS account ID for the registry"},
+        "repository_uri": {"type": "text", "description": "The URI of the repository"},
+        "created_at": {"type": "timestamp", "description": "The date the repository was created"},
+        "image_tag_mutability": {"type": "text", "description": "The tag mutability (MUTABLE, IMMUTABLE)"},
+        "image_scanning_configuration": {"type": "jsonb", "description": "Image scanning configuration"},
+        "encryption_configuration": {"type": "jsonb", "description": "Encryption configuration for the repository"},
+        "lifecycle_policy": {"type": "jsonb", "description": "The lifecycle policy"},
+        "policy": {"type": "jsonb", "description": "The repository policy"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the repository"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_ssm_parameter": {
+      "description": "AWS Systems Manager Parameter Store parameters.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the parameter"},
+        "arn": {"type": "text", "description": "The ARN of the parameter"},
+        "type": {"type": "text", "description": "The type (String, StringList, SecureString)"},
+        "value": {"type": "text", "description": "The parameter value (decrypted for SecureString)"},
+        "version": {"type": "bigint", "description": "The version number of the parameter"},
+        "tier": {"type": "text", "description": "The tier (Standard, Advanced, Intelligent-Tiering)"},
+        "key_id": {"type": "text", "description": "The KMS key ID for SecureString parameters"},
+        "last_modified_date": {"type": "timestamp", "description": "The date the parameter was last modified"},
+        "last_modified_user": {"type": "text", "description": "The ARN of the user who last modified the parameter"},
+        "data_type": {"type": "text", "description": "The data type (text, aws:ec2:image, aws:ssm:integration)"},
+        "description": {"type": "text", "description": "The description of the parameter"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the parameter"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    },
+    "aws_elastic_ip": {
+      "description": "AWS Elastic IP addresses for static public IPv4 addressing.",
+      "columns": {
+        "allocation_id": {"type": "text", "description": "The ID of the Elastic IP allocation"},
+        "public_ip": {"type": "text", "description": "The Elastic IP address"},
+        "private_ip_address": {"type": "text", "description": "The private IP address associated with the Elastic IP"},
+        "association_id": {"type": "text", "description": "The association ID for the address"},
+        "domain": {"type": "text", "description": "The domain (vpc or standard)"},
+        "instance_id": {"type": "text", "description": "The ID of the associated EC2 instance"},
+        "network_interface_id": {"type": "text", "description": "The ID of the associated network interface"},
+        "network_border_group": {"type": "text", "description": "The network border group"},
+        "public_ipv4_pool": {"type": "text", "description": "The ID of the public IPv4 pool"},
+        "tags": {"type": "jsonb", "description": "Tags attached to the Elastic IP"},
+        "account_id": {"type": "text", "description": "The AWS account ID"},
+        "region": {"type": "text", "description": "The AWS region"}
+      }
+    }
+  }
+}
