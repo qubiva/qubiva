@@ -1,0 +1,167 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Cloud Analyst - Qubiva Dashboard{% endblock %}
+
+{% block analyst_styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/cloud_analyst.css?v=64">
+{% endblock %}
+
+{% block content %}
+<div class="analyst-container{% if not analyst_ready %} analyst-disabled{% endif %}">
+    {% if not analyst_ready %}
+    <div class="analyst-not-configured">
+        <div class="not-configured-content">
+            <i class="fas fa-robot" style="font-size: 2.5rem; color: #adb5bd; margin-bottom: 1rem;"></i>
+            <h5>Cloud Analyst requires an LLM provider</h5>
+            <p class="text-muted">
+                Cloud Analyst lets you query your cloud infrastructure using natural language.
+                It connects to the cloud accounts in your project and uses an LLM to translate
+                your questions into live queries &mdash; helping you audit resources, review security posture,
+                investigate costs, check compliance, and get actionable recommendations.
+            </p>
+            <p class="text-muted">
+                Any OpenAI-compatible API endpoint is supported &mdash; including OpenAI, Azure OpenAI,
+                Google Gemini, and self-hosted models.
+            </p>
+            <p class="text-muted" style="font-size: 0.8rem;">
+                Set <code>cloud_analyst.llm.provider</code>, <code>cloud_analyst.llm.model</code>, and
+                <code>LLM_API_KEY</code> in your app configuration to get started.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+    <!-- Sidebar: Conversation List -->
+    <div class="analyst-sidebar">
+        <div class="sidebar-header">
+            <h5>Conversations</h5>
+            <button class="btn btn-primary btn-sm btn-new-chat" id="btn-new-chat"{% if not analyst_ready %} disabled{% endif %}>
+                <i class="fas fa-plus mr-1"></i> New Chat
+            </button>
+        </div>
+        <div class="conversation-list" id="conversation-list">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="analyst-main">
+        <div class="chat-header">
+            <div class="chat-header-left">
+                <h5 class="chat-title" id="chat-title">Cloud Analyst</h5>
+                <span class="chat-scope-badge" id="chat-scope-badge" style="display:none;"></span>
+            </div>
+            <span class="pod-status-badge" id="pod-status" style="display:none;"></span>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+            <!-- Welcome screen -->
+            <div class="chat-welcome" id="chat-welcome">
+                <div class="welcome-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h4>Cloud Analyst</h4>
+                <p>
+                    Ask questions about your cloud infrastructure. I can query live data,
+                    analyze security posture, review costs, and provide actionable recommendations.
+                </p>
+                <p class="text-muted" style="font-size: 0.8rem; margin-top: 12px;">
+                    Click <strong>New Chat</strong> to start a conversation.
+                </p>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <textarea id="chat-input"
+                      placeholder="Ask about your cloud infrastructure..."
+                      rows="1"
+                      maxlength="10000"
+                      {% if not analyst_ready %}disabled{% endif %}></textarea>
+            <button class="btn btn-primary btn-send" id="btn-send"{% if not analyst_ready %} disabled{% endif %}>
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- New Chat Modal: Project & Scope Picker -->
+<div class="modal fade" id="new-chat-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Chat</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div id="new-chat-loading" class="text-center p-3">
+                    <i class="fas fa-spinner fa-spin"></i> Loading projects...
+                </div>
+                <div id="new-chat-form" style="display:none;">
+                    <div class="form-group">
+                        <label for="nc-scope">Scope</label>
+                        <select class="form-control" id="nc-scope">
+                            <option value="project">Entire Project (all accounts)</option>
+                            <option value="account">Single Account</option>
+                            <!-- "org" option added dynamically by JS if user has org_analyst_use -->
+                        </select>
+                    </div>
+                    <div class="form-group" id="nc-project-group">
+                        <label for="nc-project">Project</label>
+                        <select class="form-control" id="nc-project">
+                            <option value="">-- Select a project --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="nc-account-group" style="display:none;">
+                        <label for="nc-account">Cloud Account</label>
+                        <select class="form-control" id="nc-account">
+                            <option value="">-- Select an account --</option>
+                        </select>
+                    </div>
+                    <div id="nc-no-projects" class="text-muted text-center" style="display:none;">
+                        No accessible projects found. Contact your administrator for access.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="nc-start-chat">
+                    <i class="fas fa-comments mr-1"></i> Start Chat
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Conversation Confirmation Modal -->
+<div class="modal fade" id="deleteConversationModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Conversation</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <p>The session pod will also be destroyed. This cannot be undone.</p>
+                <p>Are you sure you want to delete this conversation?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteConversationBtn">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block analyst_scripts %}
+{{ super() }}
+<!-- marked.js for markdown rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="{{ static_content_url }}/static/custom/js/cloud_analyst.js?v=64"></script>
+<script>
+$(document).ready(function() {
+    window.analyst = new CloudAnalyst();
+});
+</script>
+{% endblock %}

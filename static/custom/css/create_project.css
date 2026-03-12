@@ -1,0 +1,40 @@
+.member-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #f8f9fa; /* Adjust background color as needed */
+}
+
+.member-entry .username {
+    width: 150px; /* Fixed width for usernames */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 10px;
+}
+
+.member-entry .select2-container {
+    flex: 1;
+}
+
+.member-entry .select2-selection {
+    min-height: 38px; /* Ensure consistent height */
+}
+
+.member-entry .remove-user {
+    margin-left: 10px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #dc3545; /* Bootstrap danger color */
+}
+
+.member-entry .remove-user i {
+    font-size: 18px; /* Adjust size for visibility */
+}
+
+.member-entry .remove-user:hover {
+    cursor: pointer;
+    color: #a71d2a; /* Darker shade for hover effect */
+}

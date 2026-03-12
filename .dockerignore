@@ -1,0 +1,87 @@
+# All hidden files/directories (git, IDE, AI tools, env, secrets, etc.)
+.*
+
+# Python cache / bytecode
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+*.egg-info/
+*.egg
+
+# Python environments
+venv/
+env/
+ENV/
+
+# Testing
+tests/
+htmlcov/
+coverage.xml
+nosetests.xml
+*.cover
+
+# Docker
+Dockerfile
+docker-compose*.yml
+
+# Kubernetes / Helm (not needed in app image)
+k8s/
+helm/
+
+# Runner images (separate Docker images)
+iac_runner/
+discovery_runner/
+
+# Documentation
+docs/
+*.md
+
+# Development tools
+dev_tools/
+
+# Node modules
+node_modules/
+
+# Terraform state (never ship)
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Secrets / sensitive files
+*.pem
+*.key
+
+# Build artifacts / archives
+*.zip
+*.tar.gz
+*.tgz
+build/
+
+# Project-specific exclusions
+investor_pitch/
+lambda_layer/
+launcher/wix_backend_http_functions.js
+launcher/wix_deployment_manager.js
+local_app_config.json
+**/config.php
+
+# Logs
+*.log
+
+# OS files
+Thumbs.db
+desktop.ini
+
+# Editor temp files
+*.swp
+*.swo
+*~

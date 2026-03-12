@@ -1,0 +1,921 @@
+{
+  "plugin": "azure",
+  "tables": {
+    "azure_compute_virtual_machine": {
+      "description": "Azure Compute Virtual Machine — represents a virtual machine instance in Azure.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the virtual machine."},
+        "id": {"type": "text", "description": "The unique ID of the virtual machine resource."},
+        "type": {"type": "text", "description": "The resource type (Microsoft.Compute/virtualMachines)."},
+        "region": {"type": "text", "description": "The Azure region where the VM is deployed."},
+        "resource_group": {"type": "text", "description": "The resource group containing the VM."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "vm_id": {"type": "text", "description": "The unique identifier assigned to the VM by Azure."},
+        "size": {"type": "text", "description": "The VM size/SKU (e.g., Standard_DS2_v2)."},
+        "os_type": {"type": "text", "description": "The operating system type (Linux or Windows)."},
+        "power_state": {"type": "text", "description": "The current power state of the VM (e.g., running, deallocated)."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state of the VM."},
+        "image_reference": {"type": "jsonb", "description": "The image reference used to create the VM (publisher, offer, sku, version)."},
+        "os_disk": {"type": "jsonb", "description": "The OS disk configuration including caching, size, and managed disk details."},
+        "data_disks": {"type": "jsonb", "description": "List of data disks attached to the VM."},
+        "network_interfaces": {"type": "jsonb", "description": "List of network interface references attached to the VM."},
+        "private_ips": {"type": "jsonb", "description": "List of private IP addresses assigned to the VM."},
+        "public_ips": {"type": "jsonb", "description": "List of public IP addresses assigned to the VM."},
+        "extensions": {"type": "jsonb", "description": "List of VM extensions installed."},
+        "statuses": {"type": "jsonb", "description": "The instance view statuses of the VM."},
+        "identity": {"type": "jsonb", "description": "The managed identity associated with the VM."},
+        "zones": {"type": "jsonb", "description": "The availability zones the VM is deployed in."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the VM."},
+        "title": {"type": "text", "description": "Title of the resource (same as name)."}
+      }
+    },
+    "azure_compute_disk": {
+      "description": "Azure Compute Disk — represents a managed disk in Azure.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the managed disk."},
+        "id": {"type": "text", "description": "The unique ID of the disk resource."},
+        "region": {"type": "text", "description": "The Azure region where the disk is located."},
+        "resource_group": {"type": "text", "description": "The resource group containing the disk."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "sku_name": {"type": "text", "description": "The disk SKU name (e.g., Premium_LRS, Standard_LRS)."},
+        "sku_tier": {"type": "text", "description": "The disk SKU tier (e.g., Premium, Standard)."},
+        "disk_size_gb": {"type": "bigint", "description": "The size of the disk in GB."},
+        "disk_state": {"type": "text", "description": "The state of the disk (Attached, Unattached, Reserved)."},
+        "os_type": {"type": "text", "description": "The OS type if the disk is an OS disk (Linux, Windows)."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state of the disk."},
+        "disk_iops_read_write": {"type": "bigint", "description": "The number of IOPS allowed for the disk."},
+        "disk_mbps_read_write": {"type": "bigint", "description": "The throughput allowed for the disk in MBps."},
+        "managed_by": {"type": "text", "description": "The resource ID of the VM that has the disk attached."},
+        "encryption_type": {"type": "text", "description": "The type of encryption used on the disk."},
+        "creation_data": {"type": "jsonb", "description": "The creation data of the disk (source, image reference)."},
+        "time_created": {"type": "timestamp", "description": "The time when the disk was created."},
+        "zones": {"type": "jsonb", "description": "The availability zones of the disk."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the disk."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_compute_virtual_machine_scale_set": {
+      "description": "Azure Compute Virtual Machine Scale Set — manages a group of identical VMs for auto-scaling.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the VM scale set."},
+        "id": {"type": "text", "description": "The unique ID of the scale set resource."},
+        "region": {"type": "text", "description": "The Azure region of the scale set."},
+        "resource_group": {"type": "text", "description": "The resource group containing the scale set."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "sku_name": {"type": "text", "description": "The VM size for instances in the scale set."},
+        "sku_tier": {"type": "text", "description": "The tier of the VM size (Standard, Basic)."},
+        "sku_capacity": {"type": "bigint", "description": "The number of instances in the scale set."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state of the scale set."},
+        "overprovision": {"type": "boolean", "description": "Whether overprovisioning is enabled."},
+        "single_placement_group": {"type": "boolean", "description": "Whether the scale set is limited to a single placement group."},
+        "upgrade_policy": {"type": "jsonb", "description": "The upgrade policy (Automatic, Manual, Rolling)."},
+        "virtual_machine_profile": {"type": "jsonb", "description": "The VM profile including OS, storage, and network configuration."},
+        "identity": {"type": "jsonb", "description": "The managed identity for the scale set."},
+        "zones": {"type": "jsonb", "description": "The availability zones of the scale set."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the scale set."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_app_service_web_app": {
+      "description": "Azure App Service Web App — a managed platform for building and hosting web applications.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the web app."},
+        "id": {"type": "text", "description": "The unique ID of the web app resource."},
+        "region": {"type": "text", "description": "The Azure region where the web app is hosted."},
+        "resource_group": {"type": "text", "description": "The resource group containing the web app."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "kind": {"type": "text", "description": "The kind of the resource (app, functionapp, etc.)."},
+        "state": {"type": "text", "description": "The current state of the web app (Running, Stopped)."},
+        "default_site_hostname": {"type": "text", "description": "The default hostname of the web app."},
+        "https_only": {"type": "boolean", "description": "Whether the web app only accepts HTTPS traffic."},
+        "client_cert_enabled": {"type": "boolean", "description": "Whether client certificate authentication is enabled."},
+        "enabled": {"type": "boolean", "description": "Whether the web app is enabled."},
+        "server_farm_id": {"type": "text", "description": "The resource ID of the App Service Plan."},
+        "hosting_environment_profile": {"type": "jsonb", "description": "The App Service Environment hosting the app."},
+        "site_config": {"type": "jsonb", "description": "The site configuration including runtime, app settings, etc."},
+        "identity": {"type": "jsonb", "description": "The managed identity associated with the web app."},
+        "outbound_ip_addresses": {"type": "text", "description": "Comma-separated list of outbound IP addresses."},
+        "auth_settings": {"type": "jsonb", "description": "Authentication and authorization settings."},
+        "configuration": {"type": "jsonb", "description": "The configuration of the web app."},
+        "vnet_connection": {"type": "jsonb", "description": "VNet integration configuration."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the web app."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_app_service_plan": {
+      "description": "Azure App Service Plan — defines the compute resources for hosting web apps.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the App Service Plan."},
+        "id": {"type": "text", "description": "The unique ID of the App Service Plan."},
+        "region": {"type": "text", "description": "The Azure region where the plan is hosted."},
+        "resource_group": {"type": "text", "description": "The resource group containing the plan."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "kind": {"type": "text", "description": "The kind of plan (linux, windows, elastic, etc.)."},
+        "sku": {"type": "jsonb", "description": "The pricing tier and instance size (name, tier, size, capacity)."},
+        "status": {"type": "text", "description": "The status of the plan."},
+        "is_spot": {"type": "boolean", "description": "Whether this plan uses Spot instances."},
+        "reserved": {"type": "boolean", "description": "Whether the plan is Linux-based."},
+        "hyper_v": {"type": "boolean", "description": "Whether Hyper-V container isolation is enabled."},
+        "maximum_number_of_workers": {"type": "bigint", "description": "Maximum number of worker instances."},
+        "number_of_sites": {"type": "bigint", "description": "Number of apps hosted on this plan."},
+        "per_site_scaling": {"type": "boolean", "description": "Whether per-app scaling is enabled."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the plan."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_container_registry": {
+      "description": "Azure Container Registry — a managed Docker registry for storing container images.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the container registry."},
+        "id": {"type": "text", "description": "The unique ID of the registry resource."},
+        "region": {"type": "text", "description": "The Azure region of the registry."},
+        "resource_group": {"type": "text", "description": "The resource group containing the registry."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "login_server": {"type": "text", "description": "The login server URL of the registry."},
+        "sku_name": {"type": "text", "description": "The SKU name (Basic, Standard, Premium)."},
+        "sku_tier": {"type": "text", "description": "The SKU tier."},
+        "admin_user_enabled": {"type": "boolean", "description": "Whether admin user is enabled."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state of the registry."},
+        "creation_date": {"type": "timestamp", "description": "The creation date of the registry."},
+        "network_rule_set": {"type": "jsonb", "description": "The network rule set for the registry."},
+        "policies": {"type": "jsonb", "description": "Policies for the registry (quarantine, trust, retention)."},
+        "encryption": {"type": "jsonb", "description": "Encryption settings for the registry."},
+        "public_network_access": {"type": "text", "description": "Whether public network access is enabled or disabled."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the registry."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_kubernetes_cluster": {
+      "description": "Azure Kubernetes Service (AKS) — a managed Kubernetes cluster.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the AKS cluster."},
+        "id": {"type": "text", "description": "The unique ID of the AKS cluster resource."},
+        "region": {"type": "text", "description": "The Azure region of the cluster."},
+        "resource_group": {"type": "text", "description": "The resource group containing the cluster."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "kubernetes_version": {"type": "text", "description": "The Kubernetes version running on the cluster."},
+        "dns_prefix": {"type": "text", "description": "The DNS prefix for the cluster."},
+        "fqdn": {"type": "text", "description": "The fully qualified domain name of the cluster API server."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state of the cluster."},
+        "power_state": {"type": "text", "description": "The power state of the cluster (Running, Stopped)."},
+        "node_resource_group": {"type": "text", "description": "The resource group for the cluster nodes."},
+        "enable_rbac": {"type": "boolean", "description": "Whether RBAC is enabled."},
+        "network_profile": {"type": "jsonb", "description": "The network configuration (plugin, policy, service/pod CIDR)."},
+        "agent_pool_profiles": {"type": "jsonb", "description": "List of agent pool profiles (node pools)."},
+        "addon_profiles": {"type": "jsonb", "description": "Add-on profiles (monitoring, policy, etc.)."},
+        "identity": {"type": "jsonb", "description": "The managed identity for the cluster."},
+        "api_server_access_profile": {"type": "jsonb", "description": "Access profile for the API server."},
+        "sku": {"type": "jsonb", "description": "The SKU of the cluster (Free, Standard)."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the cluster."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_container_group": {
+      "description": "Azure Container Instances — a group of containers running on Azure without managing VMs.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the container group."},
+        "id": {"type": "text", "description": "The unique ID of the container group resource."},
+        "region": {"type": "text", "description": "The Azure region of the container group."},
+        "resource_group": {"type": "text", "description": "The resource group containing the container group."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "os_type": {"type": "text", "description": "The OS type (Linux, Windows)."},
+        "restart_policy": {"type": "text", "description": "The restart policy (Always, OnFailure, Never)."},
+        "ip_address": {"type": "jsonb", "description": "The IP address and ports configuration."},
+        "containers": {"type": "jsonb", "description": "List of containers in the group."},
+        "volumes": {"type": "jsonb", "description": "List of volumes available to the containers."},
+        "sku": {"type": "text", "description": "The SKU (Standard, Dedicated)."},
+        "identity": {"type": "jsonb", "description": "The managed identity for the container group."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the container group."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_storage_account": {
+      "description": "Azure Storage Account — a top-level resource for Azure Storage services (Blob, File, Queue, Table).",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the storage account."},
+        "id": {"type": "text", "description": "The unique ID of the storage account resource."},
+        "region": {"type": "text", "description": "The Azure region of the storage account."},
+        "resource_group": {"type": "text", "description": "The resource group containing the storage account."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "sku_name": {"type": "text", "description": "The SKU name (Standard_LRS, Standard_GRS, Premium_LRS, etc.)."},
+        "sku_tier": {"type": "text", "description": "The SKU tier (Standard, Premium)."},
+        "kind": {"type": "text", "description": "The kind of account (StorageV2, BlobStorage, etc.)."},
+        "access_tier": {"type": "text", "description": "The access tier (Hot, Cool)."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state of the account."},
+        "primary_location": {"type": "text", "description": "The primary region of the account."},
+        "enable_https_traffic_only": {"type": "boolean", "description": "Whether HTTPS-only traffic is enforced."},
+        "allow_blob_public_access": {"type": "boolean", "description": "Whether public access to blobs is allowed."},
+        "minimum_tls_version": {"type": "text", "description": "The minimum TLS version required (TLS1_0, TLS1_1, TLS1_2)."},
+        "network_rule_set": {"type": "jsonb", "description": "Network rules including default action and IP/VNet rules."},
+        "encryption": {"type": "jsonb", "description": "Encryption configuration for the account."},
+        "blob_service_properties": {"type": "jsonb", "description": "Blob service properties (soft delete, versioning, etc.)."},
+        "primary_endpoints": {"type": "jsonb", "description": "Primary service endpoints (blob, file, queue, table)."},
+        "private_endpoint_connections": {"type": "jsonb", "description": "Private endpoint connections to the account."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the storage account."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_storage_blob": {
+      "description": "Azure Storage Blob — a binary large object stored in Azure Blob Storage.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the blob."},
+        "storage_account_name": {"type": "text", "description": "The name of the storage account containing the blob."},
+        "container_name": {"type": "text", "description": "The name of the container holding the blob."},
+        "resource_group": {"type": "text", "description": "The resource group of the storage account."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "type": {"type": "text", "description": "The blob type (BlockBlob, PageBlob, AppendBlob)."},
+        "access_tier": {"type": "text", "description": "The access tier of the blob (Hot, Cool, Archive)."},
+        "content_length": {"type": "bigint", "description": "The size of the blob in bytes."},
+        "content_type": {"type": "text", "description": "The MIME content type of the blob."},
+        "creation_time": {"type": "timestamp", "description": "The creation time of the blob."},
+        "last_modified": {"type": "timestamp", "description": "The last modified time of the blob."},
+        "is_snapshot": {"type": "boolean", "description": "Whether the blob is a snapshot."},
+        "server_encrypted": {"type": "boolean", "description": "Whether the blob is encrypted at rest."},
+        "metadata": {"type": "jsonb", "description": "User-defined metadata for the blob."},
+        "region": {"type": "text", "description": "The Azure region."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_storage_container": {
+      "description": "Azure Storage Container — a container that organizes blobs within a storage account.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the container."},
+        "storage_account_name": {"type": "text", "description": "The name of the parent storage account."},
+        "resource_group": {"type": "text", "description": "The resource group of the storage account."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "public_access": {"type": "text", "description": "The level of public access (None, Blob, Container)."},
+        "has_immutability_policy": {"type": "boolean", "description": "Whether an immutability policy is set."},
+        "has_legal_hold": {"type": "boolean", "description": "Whether a legal hold is in effect."},
+        "lease_state": {"type": "text", "description": "The lease state of the container."},
+        "lease_status": {"type": "text", "description": "The lease status (Locked, Unlocked)."},
+        "last_modified": {"type": "timestamp", "description": "The last modified time."},
+        "metadata": {"type": "jsonb", "description": "User-defined metadata for the container."},
+        "region": {"type": "text", "description": "The Azure region."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_sql_database": {
+      "description": "Azure SQL Database — a managed relational database service.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the SQL database."},
+        "id": {"type": "text", "description": "The unique ID of the database resource."},
+        "server_name": {"type": "text", "description": "The name of the SQL server hosting the database."},
+        "region": {"type": "text", "description": "The Azure region of the database."},
+        "resource_group": {"type": "text", "description": "The resource group containing the database."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "status": {"type": "text", "description": "The status of the database."},
+        "sku_name": {"type": "text", "description": "The SKU name (e.g., S0, P1, GP_S_Gen5_2)."},
+        "sku_tier": {"type": "text", "description": "The pricing tier (Basic, Standard, Premium, GeneralPurpose)."},
+        "collation": {"type": "text", "description": "The collation of the database."},
+        "max_size_bytes": {"type": "bigint", "description": "The maximum size of the database in bytes."},
+        "creation_date": {"type": "timestamp", "description": "The creation date of the database."},
+        "zone_redundant": {"type": "boolean", "description": "Whether the database is zone-redundant."},
+        "transparent_data_encryption": {"type": "jsonb", "description": "Transparent data encryption configuration."},
+        "retention_policy": {"type": "jsonb", "description": "Long-term retention policy."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the database."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_sql_server": {
+      "description": "Azure SQL Server — the logical server hosting Azure SQL Databases.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the SQL server."},
+        "id": {"type": "text", "description": "The unique ID of the server resource."},
+        "region": {"type": "text", "description": "The Azure region of the server."},
+        "resource_group": {"type": "text", "description": "The resource group containing the server."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "fully_qualified_domain_name": {"type": "text", "description": "The FQDN of the SQL server."},
+        "version": {"type": "text", "description": "The version of the SQL server."},
+        "state": {"type": "text", "description": "The state of the server."},
+        "administrator_login": {"type": "text", "description": "The admin login name."},
+        "public_network_access": {"type": "text", "description": "Whether public network access is allowed."},
+        "minimal_tls_version": {"type": "text", "description": "The minimum TLS version enforced."},
+        "firewall_rules": {"type": "jsonb", "description": "List of firewall rules for the server."},
+        "server_audit_policy": {"type": "jsonb", "description": "The auditing policy of the server."},
+        "server_vulnerability_assessment": {"type": "jsonb", "description": "Vulnerability assessment settings."},
+        "server_azure_ad_administrator": {"type": "jsonb", "description": "Azure AD administrator configuration."},
+        "encryption_protector": {"type": "jsonb", "description": "Encryption protector details."},
+        "private_endpoint_connections": {"type": "jsonb", "description": "Private endpoint connections."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the server."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_cosmosdb_account": {
+      "description": "Azure Cosmos DB Account — a globally distributed, multi-model database service.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the Cosmos DB account."},
+        "id": {"type": "text", "description": "The unique ID of the Cosmos DB account."},
+        "region": {"type": "text", "description": "The Azure region of the account."},
+        "resource_group": {"type": "text", "description": "The resource group containing the account."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "kind": {"type": "text", "description": "The kind of Cosmos DB account (GlobalDocumentDB, MongoDB, etc.)."},
+        "database_account_offer_type": {"type": "text", "description": "The offer type (Standard)."},
+        "document_endpoint": {"type": "text", "description": "The document endpoint URL."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "consistency_policy": {"type": "jsonb", "description": "The consistency policy (Strong, BoundedStaleness, Session, etc.)."},
+        "read_locations": {"type": "jsonb", "description": "List of read regions."},
+        "write_locations": {"type": "jsonb", "description": "List of write regions."},
+        "capabilities": {"type": "jsonb", "description": "Account capabilities (EnableServerless, EnableCassandra, etc.)."},
+        "ip_rules": {"type": "jsonb", "description": "IP access control rules."},
+        "is_virtual_network_filter_enabled": {"type": "boolean", "description": "Whether VNet filtering is enabled."},
+        "virtual_network_rules": {"type": "jsonb", "description": "VNet rules for the account."},
+        "enable_automatic_failover": {"type": "boolean", "description": "Whether automatic failover is enabled."},
+        "disable_key_based_metadata_write_access": {"type": "boolean", "description": "Whether key-based metadata write is disabled."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the account."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_redis_cache": {
+      "description": "Azure Cache for Redis — a managed in-memory data store based on Redis.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the Redis cache."},
+        "id": {"type": "text", "description": "The unique ID of the Redis cache resource."},
+        "region": {"type": "text", "description": "The Azure region of the cache."},
+        "resource_group": {"type": "text", "description": "The resource group containing the cache."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "host_name": {"type": "text", "description": "The hostname of the Redis cache."},
+        "port": {"type": "bigint", "description": "The non-SSL port (6379)."},
+        "ssl_port": {"type": "bigint", "description": "The SSL port (6380)."},
+        "sku_name": {"type": "text", "description": "The SKU name (Basic, Standard, Premium)."},
+        "sku_family": {"type": "text", "description": "The SKU family (C for Basic/Standard, P for Premium)."},
+        "sku_capacity": {"type": "bigint", "description": "The size of the cache (0-6 for C, 1-5 for P)."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "redis_version": {"type": "text", "description": "The Redis version."},
+        "enable_non_ssl_port": {"type": "boolean", "description": "Whether the non-SSL port is enabled."},
+        "minimum_tls_version": {"type": "text", "description": "The minimum TLS version required."},
+        "redis_configuration": {"type": "jsonb", "description": "Redis configuration settings."},
+        "linked_servers": {"type": "jsonb", "description": "Linked server details for geo-replication."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the cache."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_virtual_network": {
+      "description": "Azure Virtual Network — a logically isolated network in Azure.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the virtual network."},
+        "id": {"type": "text", "description": "The unique ID of the virtual network."},
+        "region": {"type": "text", "description": "The Azure region of the VNet."},
+        "resource_group": {"type": "text", "description": "The resource group containing the VNet."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "address_prefixes": {"type": "jsonb", "description": "List of address space CIDR blocks."},
+        "subnets": {"type": "jsonb", "description": "List of subnets in the VNet."},
+        "dns_servers": {"type": "jsonb", "description": "List of custom DNS server IPs."},
+        "enable_ddos_protection": {"type": "boolean", "description": "Whether DDoS protection is enabled."},
+        "enable_vm_protection": {"type": "boolean", "description": "Whether VM protection is enabled."},
+        "network_peerings": {"type": "jsonb", "description": "List of VNet peering connections."},
+        "flow_timeout_in_minutes": {"type": "bigint", "description": "The flow timeout value in minutes."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the VNet."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_subnet": {
+      "description": "Azure Subnet — a range of IP addresses within a virtual network.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the subnet."},
+        "id": {"type": "text", "description": "The unique ID of the subnet."},
+        "virtual_network_name": {"type": "text", "description": "The name of the parent virtual network."},
+        "resource_group": {"type": "text", "description": "The resource group of the virtual network."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "address_prefix": {"type": "text", "description": "The CIDR address prefix of the subnet."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "network_security_group": {"type": "jsonb", "description": "The NSG associated with the subnet."},
+        "route_table": {"type": "jsonb", "description": "The route table associated with the subnet."},
+        "service_endpoints": {"type": "jsonb", "description": "Service endpoints enabled on the subnet."},
+        "private_endpoint_network_policies": {"type": "text", "description": "Whether network policies are enabled for private endpoints."},
+        "delegations": {"type": "jsonb", "description": "Delegations configured on the subnet."},
+        "ip_configurations": {"type": "jsonb", "description": "IP configurations referencing this subnet."},
+        "nat_gateway": {"type": "jsonb", "description": "The NAT gateway associated with the subnet."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_network_security_group": {
+      "description": "Azure Network Security Group — contains security rules to filter network traffic.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the NSG."},
+        "id": {"type": "text", "description": "The unique ID of the NSG resource."},
+        "region": {"type": "text", "description": "The Azure region of the NSG."},
+        "resource_group": {"type": "text", "description": "The resource group containing the NSG."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "security_rules": {"type": "jsonb", "description": "List of custom security rules."},
+        "default_security_rules": {"type": "jsonb", "description": "List of default security rules."},
+        "subnets": {"type": "jsonb", "description": "Subnets associated with this NSG."},
+        "network_interfaces": {"type": "jsonb", "description": "Network interfaces associated with this NSG."},
+        "flow_logs": {"type": "jsonb", "description": "Flow log configurations for the NSG."},
+        "diagnostic_settings": {"type": "jsonb", "description": "Diagnostic settings for the NSG."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the NSG."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_network_interface": {
+      "description": "Azure Network Interface — represents a network interface attached to a VM or other resource.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the network interface."},
+        "id": {"type": "text", "description": "The unique ID of the network interface."},
+        "region": {"type": "text", "description": "The Azure region."},
+        "resource_group": {"type": "text", "description": "The resource group containing the NIC."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "mac_address": {"type": "text", "description": "The MAC address of the NIC."},
+        "enable_accelerated_networking": {"type": "boolean", "description": "Whether accelerated networking is enabled."},
+        "enable_ip_forwarding": {"type": "boolean", "description": "Whether IP forwarding is enabled."},
+        "ip_configurations": {"type": "jsonb", "description": "List of IP configurations."},
+        "dns_settings": {"type": "jsonb", "description": "DNS settings for the NIC."},
+        "network_security_group": {"type": "jsonb", "description": "The NSG associated with the NIC."},
+        "virtual_machine": {"type": "jsonb", "description": "The VM that the NIC is attached to."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the NIC."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_public_ip": {
+      "description": "Azure Public IP Address — a public IP resource that can be assigned to Azure resources.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the public IP address."},
+        "id": {"type": "text", "description": "The unique ID of the public IP resource."},
+        "region": {"type": "text", "description": "The Azure region."},
+        "resource_group": {"type": "text", "description": "The resource group containing the public IP."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "ip_address": {"type": "text", "description": "The assigned public IP address."},
+        "public_ip_allocation_method": {"type": "text", "description": "The allocation method (Static, Dynamic)."},
+        "public_ip_address_version": {"type": "text", "description": "The IP version (IPv4, IPv6)."},
+        "sku_name": {"type": "text", "description": "The SKU name (Basic, Standard)."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "ip_configuration": {"type": "jsonb", "description": "The IP configuration this public IP is assigned to."},
+        "dns_settings": {"type": "jsonb", "description": "DNS settings (domain name label, FQDN)."},
+        "idle_timeout_in_minutes": {"type": "bigint", "description": "The idle timeout in minutes."},
+        "zones": {"type": "jsonb", "description": "Availability zones."},
+        "ddos_settings": {"type": "jsonb", "description": "DDoS protection settings."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the public IP."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_lb": {
+      "description": "Azure Load Balancer — distributes incoming traffic among backend resources.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the load balancer."},
+        "id": {"type": "text", "description": "The unique ID of the load balancer."},
+        "region": {"type": "text", "description": "The Azure region."},
+        "resource_group": {"type": "text", "description": "The resource group containing the load balancer."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "sku_name": {"type": "text", "description": "The SKU name (Basic, Standard, Gateway)."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "frontend_ip_configurations": {"type": "jsonb", "description": "Frontend IP configurations."},
+        "backend_address_pools": {"type": "jsonb", "description": "Backend address pool configurations."},
+        "load_balancing_rules": {"type": "jsonb", "description": "Load balancing rule configurations."},
+        "probes": {"type": "jsonb", "description": "Health probe configurations."},
+        "inbound_nat_rules": {"type": "jsonb", "description": "Inbound NAT rule configurations."},
+        "outbound_rules": {"type": "jsonb", "description": "Outbound rule configurations."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the load balancer."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_application_gateway": {
+      "description": "Azure Application Gateway — a layer 7 load balancer with WAF capabilities.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the application gateway."},
+        "id": {"type": "text", "description": "The unique ID of the application gateway."},
+        "region": {"type": "text", "description": "The Azure region."},
+        "resource_group": {"type": "text", "description": "The resource group containing the gateway."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "operational_state": {"type": "text", "description": "The operational state (Running, Stopped, Starting)."},
+        "sku_name": {"type": "text", "description": "The SKU name (Standard_v2, WAF_v2, etc.)."},
+        "sku_tier": {"type": "text", "description": "The SKU tier."},
+        "sku_capacity": {"type": "bigint", "description": "The capacity (instance count) of the gateway."},
+        "gateway_ip_configurations": {"type": "jsonb", "description": "Gateway IP configurations."},
+        "frontend_ip_configurations": {"type": "jsonb", "description": "Frontend IP configurations."},
+        "backend_address_pools": {"type": "jsonb", "description": "Backend address pools."},
+        "http_listeners": {"type": "jsonb", "description": "HTTP listener configurations."},
+        "request_routing_rules": {"type": "jsonb", "description": "Request routing rules."},
+        "web_application_firewall_configuration": {"type": "jsonb", "description": "WAF configuration."},
+        "ssl_certificates": {"type": "jsonb", "description": "SSL certificate configurations."},
+        "ssl_policy": {"type": "jsonb", "description": "SSL policy settings."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the gateway."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_firewall": {
+      "description": "Azure Firewall — a managed cloud-based network security service.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the firewall."},
+        "id": {"type": "text", "description": "The unique ID of the firewall resource."},
+        "region": {"type": "text", "description": "The Azure region."},
+        "resource_group": {"type": "text", "description": "The resource group containing the firewall."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "sku_name": {"type": "text", "description": "The SKU name (AZFW_VNet, AZFW_Hub)."},
+        "sku_tier": {"type": "text", "description": "The SKU tier (Standard, Premium)."},
+        "threat_intel_mode": {"type": "text", "description": "The threat intelligence mode (Alert, Deny, Off)."},
+        "ip_configurations": {"type": "jsonb", "description": "IP configurations of the firewall."},
+        "nat_rule_collections": {"type": "jsonb", "description": "NAT rule collections."},
+        "network_rule_collections": {"type": "jsonb", "description": "Network rule collections."},
+        "application_rule_collections": {"type": "jsonb", "description": "Application rule collections."},
+        "firewall_policy": {"type": "jsonb", "description": "The firewall policy associated with this firewall."},
+        "zones": {"type": "jsonb", "description": "Availability zones."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the firewall."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_dns_zone": {
+      "description": "Azure DNS Zone — hosts DNS records for a domain.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the DNS zone."},
+        "id": {"type": "text", "description": "The unique ID of the DNS zone."},
+        "resource_group": {"type": "text", "description": "The resource group containing the zone."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "zone_type": {"type": "text", "description": "The type of DNS zone (Public, Private)."},
+        "max_number_of_record_sets": {"type": "bigint", "description": "Maximum number of record sets in the zone."},
+        "number_of_record_sets": {"type": "bigint", "description": "Current number of record sets."},
+        "name_servers": {"type": "jsonb", "description": "List of name servers for the zone."},
+        "registration_virtual_networks": {"type": "jsonb", "description": "VNets for auto-registration."},
+        "resolution_virtual_networks": {"type": "jsonb", "description": "VNets for resolution."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the DNS zone."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_private_dns_zone": {
+      "description": "Azure Private DNS Zone — provides DNS resolution within a virtual network.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the private DNS zone."},
+        "id": {"type": "text", "description": "The unique ID of the private DNS zone."},
+        "resource_group": {"type": "text", "description": "The resource group containing the zone."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "max_number_of_record_sets": {"type": "bigint", "description": "Maximum number of record sets."},
+        "number_of_record_sets": {"type": "bigint", "description": "Current number of record sets."},
+        "max_number_of_virtual_network_links": {"type": "bigint", "description": "Maximum number of VNet links."},
+        "number_of_virtual_network_links": {"type": "bigint", "description": "Current number of VNet links."},
+        "virtual_network_links": {"type": "jsonb", "description": "VNet links associated with the zone."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the zone."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_private_endpoint": {
+      "description": "Azure Private Endpoint — provides private connectivity to Azure services.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the private endpoint."},
+        "id": {"type": "text", "description": "The unique ID of the private endpoint."},
+        "region": {"type": "text", "description": "The Azure region."},
+        "resource_group": {"type": "text", "description": "The resource group containing the endpoint."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "subnet": {"type": "jsonb", "description": "The subnet the private endpoint is connected to."},
+        "network_interfaces": {"type": "jsonb", "description": "Network interfaces of the private endpoint."},
+        "private_link_service_connections": {"type": "jsonb", "description": "Private link service connection details."},
+        "manual_private_link_service_connections": {"type": "jsonb", "description": "Manual approval private link connections."},
+        "custom_dns_configs": {"type": "jsonb", "description": "Custom DNS configurations."},
+        "private_dns_zone_groups": {"type": "jsonb", "description": "Private DNS zone group configurations."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the endpoint."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_ad_user": {
+      "description": "Azure Active Directory User — a user identity in Azure AD.",
+      "columns": {
+        "display_name": {"type": "text", "description": "The display name of the user."},
+        "id": {"type": "text", "description": "The unique object ID of the user."},
+        "user_principal_name": {"type": "text", "description": "The user principal name (UPN)."},
+        "mail": {"type": "text", "description": "The SMTP email address of the user."},
+        "user_type": {"type": "text", "description": "The user type (Member, Guest)."},
+        "account_enabled": {"type": "boolean", "description": "Whether the user account is enabled."},
+        "created_date_time": {"type": "timestamp", "description": "When the user was created."},
+        "given_name": {"type": "text", "description": "The given (first) name of the user."},
+        "surname": {"type": "text", "description": "The surname (last name) of the user."},
+        "job_title": {"type": "text", "description": "The job title of the user."},
+        "department": {"type": "text", "description": "The department of the user."},
+        "member_of": {"type": "jsonb", "description": "Groups and roles the user is a member of."},
+        "sign_in_activity": {"type": "jsonb", "description": "Sign-in activity information."},
+        "tenant_id": {"type": "text", "description": "The Azure AD tenant ID."},
+        "title": {"type": "text", "description": "Title of the resource (same as display_name)."}
+      }
+    },
+    "azure_ad_group": {
+      "description": "Azure Active Directory Group — a group of users, service principals, or other groups.",
+      "columns": {
+        "display_name": {"type": "text", "description": "The display name of the group."},
+        "id": {"type": "text", "description": "The unique object ID of the group."},
+        "description": {"type": "text", "description": "The description of the group."},
+        "mail": {"type": "text", "description": "The email address of the group."},
+        "mail_enabled": {"type": "boolean", "description": "Whether the group is mail-enabled."},
+        "security_enabled": {"type": "boolean", "description": "Whether the group is a security group."},
+        "group_types": {"type": "jsonb", "description": "Group types (Unified for Microsoft 365, DynamicMembership, etc.)."},
+        "membership_rule": {"type": "text", "description": "The dynamic membership rule if applicable."},
+        "created_date_time": {"type": "timestamp", "description": "When the group was created."},
+        "members": {"type": "jsonb", "description": "List of group members."},
+        "owners": {"type": "jsonb", "description": "List of group owners."},
+        "tenant_id": {"type": "text", "description": "The Azure AD tenant ID."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_ad_service_principal": {
+      "description": "Azure AD Service Principal — an application identity used for authentication.",
+      "columns": {
+        "display_name": {"type": "text", "description": "The display name of the service principal."},
+        "id": {"type": "text", "description": "The unique object ID of the service principal."},
+        "app_id": {"type": "text", "description": "The application (client) ID."},
+        "app_display_name": {"type": "text", "description": "The display name of the associated application."},
+        "service_principal_type": {"type": "text", "description": "The type (Application, ManagedIdentity, Legacy)."},
+        "account_enabled": {"type": "boolean", "description": "Whether the service principal is enabled."},
+        "app_role_assignment_required": {"type": "boolean", "description": "Whether app role assignment is required."},
+        "created_date_time": {"type": "timestamp", "description": "When the service principal was created."},
+        "sign_in_audience": {"type": "text", "description": "The sign-in audience for the application."},
+        "app_roles": {"type": "jsonb", "description": "App roles defined by the application."},
+        "oauth2_permission_scopes": {"type": "jsonb", "description": "OAuth2 permission scopes."},
+        "owner_ids": {"type": "jsonb", "description": "List of owner object IDs."},
+        "tenant_id": {"type": "text", "description": "The Azure AD tenant ID."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_role_assignment": {
+      "description": "Azure Role Assignment — assigns a role to a principal at a given scope.",
+      "columns": {
+        "id": {"type": "text", "description": "The unique ID of the role assignment."},
+        "name": {"type": "text", "description": "The name (GUID) of the role assignment."},
+        "principal_id": {"type": "text", "description": "The object ID of the principal (user, group, SP)."},
+        "principal_type": {"type": "text", "description": "The type of principal (User, Group, ServicePrincipal)."},
+        "role_definition_id": {"type": "text", "description": "The ID of the role definition."},
+        "role_name": {"type": "text", "description": "The display name of the assigned role."},
+        "scope": {"type": "text", "description": "The scope of the assignment (subscription, RG, resource)."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "created_on": {"type": "timestamp", "description": "When the assignment was created."},
+        "updated_on": {"type": "timestamp", "description": "When the assignment was last updated."},
+        "created_by": {"type": "text", "description": "The principal that created the assignment."},
+        "condition": {"type": "text", "description": "ABAC condition for the role assignment."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_role_definition": {
+      "description": "Azure Role Definition — defines a set of permissions that can be assigned.",
+      "columns": {
+        "id": {"type": "text", "description": "The unique ID of the role definition."},
+        "name": {"type": "text", "description": "The name (GUID) of the role definition."},
+        "role_name": {"type": "text", "description": "The display name of the role."},
+        "description": {"type": "text", "description": "The description of the role."},
+        "role_type": {"type": "text", "description": "The type of role (BuiltInRole, CustomRole)."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "permissions": {"type": "jsonb", "description": "List of allowed and denied actions and data actions."},
+        "assignable_scopes": {"type": "jsonb", "description": "Scopes where the role can be assigned."},
+        "created_on": {"type": "timestamp", "description": "When the role definition was created."},
+        "updated_on": {"type": "timestamp", "description": "When the role definition was last updated."},
+        "created_by": {"type": "text", "description": "The principal that created the definition."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_subscription": {
+      "description": "Azure Subscription — the billing and management boundary for Azure resources.",
+      "columns": {
+        "id": {"type": "text", "description": "The fully qualified resource ID of the subscription."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID (GUID)."},
+        "display_name": {"type": "text", "description": "The display name of the subscription."},
+        "state": {"type": "text", "description": "The state of the subscription (Enabled, Disabled, Warned, etc.)."},
+        "tenant_id": {"type": "text", "description": "The Azure AD tenant ID."},
+        "authorization_source": {"type": "text", "description": "The authorization source."},
+        "managed_by_tenants": {"type": "jsonb", "description": "Tenants managing the subscription via Azure Lighthouse."},
+        "subscription_policies": {"type": "jsonb", "description": "Subscription policies (quota ID, spending limit, location placement)."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the subscription."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_resource_group": {
+      "description": "Azure Resource Group — a logical container for grouping Azure resources.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the resource group."},
+        "id": {"type": "text", "description": "The fully qualified resource ID."},
+        "region": {"type": "text", "description": "The Azure region of the resource group."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "managed_by": {"type": "text", "description": "The ID of the resource that manages this resource group."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the resource group."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_key_vault": {
+      "description": "Azure Key Vault — securely stores and manages secrets, keys, and certificates.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the key vault."},
+        "id": {"type": "text", "description": "The unique ID of the key vault."},
+        "region": {"type": "text", "description": "The Azure region of the vault."},
+        "resource_group": {"type": "text", "description": "The resource group containing the vault."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "vault_uri": {"type": "text", "description": "The URI of the vault for operations."},
+        "sku_name": {"type": "text", "description": "The SKU name (standard, premium)."},
+        "sku_family": {"type": "text", "description": "The SKU family."},
+        "tenant_id": {"type": "text", "description": "The Azure AD tenant ID for the vault."},
+        "enabled_for_deployment": {"type": "boolean", "description": "Whether VMs can retrieve certificates from the vault."},
+        "enabled_for_disk_encryption": {"type": "boolean", "description": "Whether Azure Disk Encryption can retrieve secrets."},
+        "enabled_for_template_deployment": {"type": "boolean", "description": "Whether ARM templates can retrieve secrets."},
+        "enable_rbac_authorization": {"type": "boolean", "description": "Whether RBAC is used for data plane authorization."},
+        "soft_delete_enabled": {"type": "boolean", "description": "Whether soft delete is enabled."},
+        "soft_delete_retention_in_days": {"type": "bigint", "description": "The soft delete retention period in days."},
+        "purge_protection_enabled": {"type": "boolean", "description": "Whether purge protection is enabled."},
+        "access_policies": {"type": "jsonb", "description": "Access policies for the vault."},
+        "network_acls": {"type": "jsonb", "description": "Network ACLs for the vault."},
+        "private_endpoint_connections": {"type": "jsonb", "description": "Private endpoint connections."},
+        "diagnostic_settings": {"type": "jsonb", "description": "Diagnostic settings for the vault."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the vault."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_key_vault_secret": {
+      "description": "Azure Key Vault Secret — a secret stored in Azure Key Vault.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the secret."},
+        "id": {"type": "text", "description": "The unique ID of the secret."},
+        "vault_name": {"type": "text", "description": "The name of the key vault containing the secret."},
+        "resource_group": {"type": "text", "description": "The resource group of the key vault."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "enabled": {"type": "boolean", "description": "Whether the secret is enabled."},
+        "created_at": {"type": "timestamp", "description": "When the secret was created."},
+        "updated_at": {"type": "timestamp", "description": "When the secret was last updated."},
+        "not_before": {"type": "timestamp", "description": "The not-before date of the secret."},
+        "expires_at": {"type": "timestamp", "description": "The expiration date of the secret."},
+        "content_type": {"type": "text", "description": "The content type of the secret value."},
+        "value": {"type": "text", "description": "The secret value (only if access policy allows)."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the secret."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_key_vault_key": {
+      "description": "Azure Key Vault Key — a cryptographic key stored in Azure Key Vault.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the key."},
+        "id": {"type": "text", "description": "The unique ID of the key."},
+        "vault_name": {"type": "text", "description": "The name of the key vault containing the key."},
+        "resource_group": {"type": "text", "description": "The resource group of the key vault."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "enabled": {"type": "boolean", "description": "Whether the key is enabled."},
+        "key_type": {"type": "text", "description": "The key type (RSA, EC, oct)."},
+        "key_size": {"type": "bigint", "description": "The key size in bits."},
+        "curve_name": {"type": "text", "description": "The elliptic curve name for EC keys."},
+        "key_ops": {"type": "jsonb", "description": "Permitted key operations (encrypt, decrypt, sign, verify, etc.)."},
+        "created_at": {"type": "timestamp", "description": "When the key was created."},
+        "updated_at": {"type": "timestamp", "description": "When the key was last updated."},
+        "not_before": {"type": "timestamp", "description": "The not-before date."},
+        "expires_at": {"type": "timestamp", "description": "The expiration date."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the key."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_security_center_subscription_pricing": {
+      "description": "Azure Security Center Pricing — Microsoft Defender for Cloud pricing tier per resource type.",
+      "columns": {
+        "id": {"type": "text", "description": "The resource ID."},
+        "name": {"type": "text", "description": "The resource type name (VirtualMachines, SqlServers, etc.)."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "pricing_tier": {"type": "text", "description": "The pricing tier (Free, Standard)."},
+        "free_trial_remaining_time": {"type": "text", "description": "Remaining free trial time."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_policy_assignment": {
+      "description": "Azure Policy Assignment — assigns a policy definition to a scope.",
+      "columns": {
+        "id": {"type": "text", "description": "The unique ID of the policy assignment."},
+        "name": {"type": "text", "description": "The name of the policy assignment."},
+        "display_name": {"type": "text", "description": "The display name of the assignment."},
+        "description": {"type": "text", "description": "The description of the assignment."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "scope": {"type": "text", "description": "The scope where the policy is assigned."},
+        "policy_definition_id": {"type": "text", "description": "The ID of the policy definition."},
+        "enforcement_mode": {"type": "text", "description": "The enforcement mode (Default, DoNotEnforce)."},
+        "parameters": {"type": "jsonb", "description": "Parameter values for the policy."},
+        "non_compliance_messages": {"type": "jsonb", "description": "Non-compliance messages."},
+        "identity": {"type": "jsonb", "description": "Managed identity for remediation."},
+        "not_scopes": {"type": "jsonb", "description": "Excluded scopes."},
+        "created_on": {"type": "timestamp", "description": "When the assignment was created."},
+        "created_by": {"type": "text", "description": "The principal that created the assignment."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_log_analytics_workspace": {
+      "description": "Azure Log Analytics Workspace — a central repository for log data collection and analysis.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the workspace."},
+        "id": {"type": "text", "description": "The unique ID of the workspace."},
+        "region": {"type": "text", "description": "The Azure region."},
+        "resource_group": {"type": "text", "description": "The resource group containing the workspace."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "workspace_id": {"type": "text", "description": "The unique workspace ID (GUID)."},
+        "customer_id": {"type": "text", "description": "The customer ID for the workspace."},
+        "sku_name": {"type": "text", "description": "The SKU name (PerGB2018, Free, Standalone, etc.)."},
+        "provisioning_state": {"type": "text", "description": "The provisioning state."},
+        "retention_in_days": {"type": "bigint", "description": "Data retention period in days."},
+        "daily_quota_gb": {"type": "text", "description": "Daily ingestion quota in GB (-1 for unlimited)."},
+        "created_date": {"type": "timestamp", "description": "When the workspace was created."},
+        "modified_date": {"type": "timestamp", "description": "When the workspace was last modified."},
+        "public_network_access_for_ingestion": {"type": "text", "description": "Public network access for data ingestion."},
+        "public_network_access_for_query": {"type": "text", "description": "Public network access for queries."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the workspace."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_diagnostic_setting": {
+      "description": "Azure Diagnostic Setting — configures where to send platform logs and metrics for a resource.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the diagnostic setting."},
+        "id": {"type": "text", "description": "The unique ID of the diagnostic setting."},
+        "resource_uri": {"type": "text", "description": "The resource ID that the setting applies to."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "storage_account_id": {"type": "text", "description": "The storage account for archiving."},
+        "workspace_id": {"type": "text", "description": "The Log Analytics workspace ID for sending data."},
+        "event_hub_authorization_rule_id": {"type": "text", "description": "The Event Hub authorization rule ID."},
+        "event_hub_name": {"type": "text", "description": "The Event Hub name for streaming."},
+        "logs": {"type": "jsonb", "description": "Log categories and their retention settings."},
+        "metrics": {"type": "jsonb", "description": "Metric categories and their retention settings."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_monitor_activity_log_event": {
+      "description": "Azure Monitor Activity Log Event — events from the Azure activity log.",
+      "columns": {
+        "id": {"type": "text", "description": "The event ID."},
+        "event_name": {"type": "jsonb", "description": "The event name (localized)."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "correlation_id": {"type": "text", "description": "The correlation ID for related events."},
+        "event_timestamp": {"type": "timestamp", "description": "The timestamp of the event."},
+        "submission_timestamp": {"type": "timestamp", "description": "When the event was submitted."},
+        "caller": {"type": "text", "description": "The caller identity (email or system GUID)."},
+        "level": {"type": "text", "description": "The severity level (Critical, Error, Warning, Informational)."},
+        "category": {"type": "jsonb", "description": "The event category."},
+        "operation_name": {"type": "jsonb", "description": "The operation name."},
+        "resource_group_name": {"type": "text", "description": "The resource group of the affected resource."},
+        "resource_id": {"type": "text", "description": "The resource ID of the affected resource."},
+        "resource_type": {"type": "jsonb", "description": "The resource type."},
+        "status": {"type": "jsonb", "description": "The status of the operation."},
+        "sub_status": {"type": "jsonb", "description": "The sub-status of the operation."},
+        "claims": {"type": "jsonb", "description": "Claims from the JWT token."},
+        "authorization": {"type": "jsonb", "description": "Authorization details."},
+        "http_request": {"type": "jsonb", "description": "HTTP request details."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_monitor_log_profile": {
+      "description": "Azure Monitor Log Profile — configures how activity logs are exported.",
+      "columns": {
+        "id": {"type": "text", "description": "The resource ID of the log profile."},
+        "name": {"type": "text", "description": "The name of the log profile."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "region": {"type": "text", "description": "The Azure region."},
+        "storage_account_id": {"type": "text", "description": "The storage account for archiving logs."},
+        "service_bus_rule_id": {"type": "text", "description": "The Service Bus rule ID for streaming."},
+        "locations": {"type": "jsonb", "description": "Locations for which activity log events are stored."},
+        "categories": {"type": "jsonb", "description": "Categories of events to collect (Write, Delete, Action)."},
+        "retention_policy": {"type": "jsonb", "description": "Retention policy (enabled, days)."},
+        "tags": {"type": "jsonb", "description": "Tags associated with the log profile."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_alert_management": {
+      "description": "Azure Alert Management — alerts generated by Azure Monitor and other services.",
+      "columns": {
+        "id": {"type": "text", "description": "The unique ID of the alert."},
+        "name": {"type": "text", "description": "The name of the alert."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "severity": {"type": "text", "description": "The severity of the alert (Sev0-Sev4)."},
+        "alert_state": {"type": "text", "description": "The state of the alert (New, Acknowledged, Closed)."},
+        "monitor_condition": {"type": "text", "description": "The monitor condition (Fired, Resolved)."},
+        "target_resource": {"type": "text", "description": "The target resource ID."},
+        "target_resource_group": {"type": "text", "description": "The target resource group."},
+        "target_resource_type": {"type": "text", "description": "The target resource type."},
+        "signal_type": {"type": "text", "description": "The signal type (Metric, Log, Activity Log)."},
+        "monitor_service": {"type": "text", "description": "The monitor service that fired the alert."},
+        "start_date_time": {"type": "timestamp", "description": "When the alert was fired."},
+        "last_modified_date_time": {"type": "timestamp", "description": "When the alert was last modified."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_tenant": {
+      "description": "Azure Tenant — represents the Azure AD tenant associated with subscriptions.",
+      "columns": {
+        "id": {"type": "text", "description": "The fully qualified resource ID."},
+        "tenant_id": {"type": "text", "description": "The Azure AD tenant ID (GUID)."},
+        "display_name": {"type": "text", "description": "The display name of the tenant."},
+        "country": {"type": "text", "description": "The country of the tenant."},
+        "country_code": {"type": "text", "description": "The country code."},
+        "default_domain": {"type": "text", "description": "The default domain name."},
+        "domains": {"type": "jsonb", "description": "List of domains associated with the tenant."},
+        "tenant_category": {"type": "text", "description": "The category of the tenant (Home, ProjectedBy, ManagedBy)."},
+        "tenant_type": {"type": "text", "description": "The tenant type."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    },
+    "azure_location": {
+      "description": "Azure Location — an Azure region/location available for deploying resources.",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the location (e.g., eastus, westeurope)."},
+        "id": {"type": "text", "description": "The fully qualified resource ID."},
+        "display_name": {"type": "text", "description": "The display name (e.g., East US, West Europe)."},
+        "subscription_id": {"type": "text", "description": "The Azure subscription ID."},
+        "regional_display_name": {"type": "text", "description": "The regional display name."},
+        "geography_group": {"type": "text", "description": "The geography group (US, Europe, Asia Pacific, etc.)."},
+        "latitude": {"type": "text", "description": "The latitude of the location."},
+        "longitude": {"type": "text", "description": "The longitude of the location."},
+        "physical_location": {"type": "text", "description": "The physical location (city or area)."},
+        "paired_region": {"type": "jsonb", "description": "The paired region for disaster recovery."},
+        "title": {"type": "text", "description": "Title of the resource."}
+      }
+    }
+  }
+}

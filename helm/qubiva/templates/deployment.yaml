@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "qubiva.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "qubiva.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "qubiva.selectorLabels" . | nindent 6 }}
+      component: app
+  template:
+    metadata:
+      labels:
+        {{- include "qubiva.selectorLabels" . | nindent 8 }}
+        component: app
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      terminationGracePeriodSeconds: 60
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      {{- if .Values.mongodb.enabled }}
+      initContainers:
+        - name: wait-for-mongodb
+          image: {{ .Values.mongodb.image }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              HOST="{{ include "qubiva.fullname" . }}-mongo:27017"
+              echo "Waiting for MongoDB at $HOST..."
+              until mongosh --host "$HOST" --quiet --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+                echo "  MongoDB not ready, retrying..."
+                sleep 2
+              done
+              echo "MongoDB is accepting connections."
+              mongosh --host "$HOST" --quiet --eval "try{rs.status()}catch(e){rs.initiate({_id:'rs0',members:[{_id:0,host:'$HOST'}]})}" >/dev/null 2>&1
+              echo "Waiting for primary election..."
+              until mongosh --host "$HOST" --quiet --eval "rs.status().members[0].stateStr" 2>/dev/null | grep -q PRIMARY; do
+                sleep 1
+              done
+              echo "MongoDB replica set is ready."
+      {{- end }}
+      containers:
+        - name: qubiva
+          image: {{ include "qubiva.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "qubiva.fullname" . }}-env
+            - secretRef:
+                name: {{ include "qubiva.secretName" . }}
+          volumeMounts:
+            - name: app-config
+              mountPath: /app/config
+              readOnly: true
+            - name: artifacts-storage
+              mountPath: /app/data/artifacts
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: app-config
+          configMap:
+            name: {{ include "qubiva.fullname" . }}-config
+        - name: artifacts-storage
+          persistentVolumeClaim:
+            claimName: {{ include "qubiva.fullname" . }}-artifacts

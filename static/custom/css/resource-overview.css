@@ -1,0 +1,455 @@
+/* resource-overview.css */
+.resource-overview {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+.dashboard-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Projects Column */
+.projects-column {
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.projects-column h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    margin: 0;
+}
+
+.projects-list {
+    padding: 8px 0;
+}
+
+/* Project Items */
+.project-item {
+    position: relative;
+    margin: 0;
+    border-left: 3px solid transparent;
+}
+
+.project-item:hover {
+    background-color: #f9fafb;
+    border-left-color: #e5e7eb;
+}
+
+.project-item.expanded {
+    border-left-color: #2563eb;
+}
+
+.project-header {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.project-header-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.project-header:hover .project-name {
+    color: #2563eb;
+}
+
+.project-expand-icon {
+    color: #9ca3af;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    transition: transform 0.15s ease-in-out;
+}
+
+.project-item.expanded .project-expand-icon {
+    transform: rotate(90deg);
+    color: #2563eb;
+}
+
+.project-name {
+    color: #111827;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+/* Role Badges */
+.role-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.role-badge {
+    font-size: 0.6875rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.role-badges-container {
+    margin-top: 4px;
+    margin-left: 24px;
+}
+
+.role-badges-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.role-badge.project_admin,
+.role-badge.org_admin {
+    background-color: #e6efff;
+    color: #1d4ed8;
+}
+
+.role-badge.project_editor {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+.role-badge.project_viewer,
+.role-badge.project_cloud_account_viewer {
+    background-color: #f8fafc;
+    color: #64748b;
+}
+
+/* Project Content */
+.project-content {
+    display: none;
+    padding: 0 12px 8px 36px;
+}
+
+.project-item.expanded .project-content {
+    display: block;
+}
+
+/* Resource Groups */
+.resource-group {
+    margin: 8px 0;
+}
+
+.resource-group h3 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.resource-group h3 i {
+    font-size: 0.875rem;
+    margin-right: 6px;
+    color: #9ca3af;
+}
+
+.resource-list {
+    font-size: 0.8125rem;
+}
+
+.resource-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    color: #374151;
+    text-decoration: none;
+    border-radius: 4px;
+    margin: 2px 0;
+    width: 100%;
+}
+
+.resource-item:hover {
+    background-color: #f3f4f6;
+}
+
+.resource-item i {
+    width: 16px;
+    margin-right: 8px;
+    color: #6b7280;
+    flex-shrink: 0;
+}
+
+/* Specific Resource Types */
+.resource-item.cloud-account {
+    color: #0369a1;
+}
+
+.resource-item.cloud-account i {
+    color: #0ea5e9;
+}
+
+.resource-item.workspace {
+    color: #047857;
+}
+
+.resource-item.workspace i {
+    color: #10b981;
+}
+
+.resource-item.github-repo {
+    color: #4b5563;
+    justify-content: space-between;
+}
+
+.resource-item.github-repo span {
+    display: flex;
+    align-items: center;
+}
+
+.resource-item.github-repo span i {
+    margin-right: 4px;  /* Reduced spacing between icon and text */
+}
+
+.resource-item.github-repo i.external {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-left: auto;
+}
+
+/* Details Column — don't stretch children to full grid row height */
+.details-column {
+    align-self: start;
+}
+
+/* Quick Access Section */
+.details-column .quick-access {
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    margin-bottom: 16px;
+}
+
+.quick-access h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    margin: 0;
+}
+
+.task-list {
+    padding: 12px;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin: 4px 0;
+    text-decoration: none;
+    gap: 8px;
+    max-width: 100%; /* Add this */
+    overflow: hidden; /* Add this */
+}
+
+.task-item:hover {
+    background-color: #f3f4f6;
+}
+
+.task-item .status {
+    flex-shrink: 0;
+    margin-left: auto;
+    font-size: 0.75rem;
+    padding: 1px 8px;
+    border-radius: 9999px;
+    background-color: #f3f4f6;
+}
+
+.task-item.blocked {
+    color: #dc2626;
+}
+
+.task-item.blocked i {
+    color: #dc2626;
+}
+
+.task-item.blocked .status {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.task-item.in-progress {
+    color: #2563eb;
+}
+
+.task-item.in-progress i {
+    color: #2563eb;
+}
+
+.task-item.in-progress .status {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+.task-item.todo {
+    color: #4b5563;
+}
+
+.task-item.todo i {
+    color: #4b5563;
+}
+
+.task-item.todo .status {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+/* Count Badge */
+.count {
+    font-size: 0.6875rem;
+    background: #f3f4f6;
+    color: #6b7280;
+    padding: 0 4px;
+    border-radius: 4px;
+    margin-left: 6px;
+}
+
+/* Error Message */
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border-radius: 4px;
+    margin-bottom: 16px;
+}
+
+.error-message i {
+    font-size: 1.125rem;
+}
+
+/* Empty State / Welcome Message */
+.welcome-message {
+    text-align: center;
+    padding: 48px 0;
+    color: #6b7280;
+}
+
+.welcome-message i {
+    color: #9ca3af;
+    margin-bottom: 16px;
+}
+
+.welcome-message h4 {
+    margin: 8px 0;
+    font-size: 1.125rem;
+}
+
+.welcome-message h3 {
+    color: #111827;
+    font-size: 1.5rem;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.pagination-btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    color: #2563eb;
+    background: #e0f2fe;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pagination-btn:hover {
+    background: #bfdbfe;
+}
+
+.pagination-info {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .resource-overview {
+        padding: 12px;
+    }
+
+    .project-header {
+        padding: 12px;
+    }
+
+    .role-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        line-height: 1.8;
+    }
+
+    .project-item.expanded .role-badges {
+        display: flex;
+        margin: 8px 0;
+        padding-left: 36px;
+    }
+
+    .resource-item {
+        padding: 8px;
+    }
+}
+
+.task-main-content {
+    display: flex;
+    align-items: center;
+    min-width: 0;  /* This is crucial */
+    flex: 1;
+    width: 0;      /* Add this */
+}
+
+.task-identifier {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.task-separator {
+    margin: 0 8px;
+    color: #9ca3af;
+    flex-shrink: 0;
+}
+
+.task-description {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #6b7280;
+    min-width: 0;
+}
+

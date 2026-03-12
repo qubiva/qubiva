@@ -1,0 +1,88 @@
+{% extends "dashboard_base.html" %}
+
+{% block projects_create_select2 %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/create_project.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+{% endblock %}
+
+{% block title %}Create Cloud Project - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-2">
+    <div class="col-sm-6">
+    <h4></h4> <!-- create a neat space near header-->
+    </div>
+</div>
+<div class="card-header card-secondary">
+  
+  <div class="info-box bg-docs">
+    <span class="info-box-icon"><i class="fas fa-book"></i></span>
+    <div class="info-box-content">
+      <span class="info-box-text">Create a new cloud project to manage resources like cloud accounts, workspaces, users, tasks, and more. Define project-level variables and secrets here, which are automatically injected into your workspaces. Add one or more onboarded users to the project and assign them specific roles based on their functional responsibilities.</span>
+    </div>
+  </div>
+    <h5 class="page-title">Create New Cloud Project</h5>
+    <div class="card-body">
+        <form id="create-project-form">
+            <div class="form-group">
+                <label for="project-name">Project Name</label>
+                <input type="text" class="form-control" id="project-name" name="project-name" placeholder="Enter project name" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="project-description">Project Description</label>
+                <textarea class="form-control" id="project-description" name="project-description" rows="2" placeholder="Describe your project" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Add Members</label>
+                <input type="text" class="form-control" id="user-search" placeholder="Search for users..." autocomplete="off">
+                <div id="user-search-results" class="list-group mt-2"></div>
+            </div>
+            <div class="form-group" id="members-container"></div>
+            
+            <!-- Variables and Secrets section -->
+            <div class="form-group">
+                <label for="variables">Variables and Secrets</label>
+                <div id="variables-entries"></div>
+                <button type="button" id="add-variable-entry" class="btn btn-secondary mt-2">Add Variable</button>
+            </div>
+
+            <button type="submit" id="create-project-button" class="btn btn-primary">Create Project</button>
+            <div id="spinner" class="spinner-border text-primary" role="status" style="display: none;">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal for project creation success/error -->
+<div class="modal fade" id="projectModal" tabindex="-1" role="dialog" aria-labelledby="projectModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="projectModalLabel">Project Creation</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Modal body content will be dynamically set -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <a id="viewProjectLink" class="btn btn-primary" href="#" role="button">View Project</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block create_project_scripts %}
+{{ super() }}
+<!-- Include jQuery, Bootstrap, and Select2 before your custom scripts -->
+<script src="{{ static_content_url }}/static/plugins/jquery/jquery.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/select2/js/select2.full.min.js"></script>
+<script src="{{ static_content_url }}/static/custom/js/create-project.js"></script>
+{% endblock %}

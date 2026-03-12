@@ -1,0 +1,795 @@
+{
+  "plugin": "gcp",
+  "tables": {
+    "gcp_compute_instance": {
+      "description": "GCP Compute Engine VM Instance",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the instance"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the instance"},
+        "status": {"type": "text", "description": "The status of the instance, e.g. RUNNING, STOPPED, TERMINATED"},
+        "machine_type": {"type": "text", "description": "The machine type URI for this instance, e.g. e2-medium"},
+        "zone": {"type": "text", "description": "The zone where the instance resides"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the instance"},
+        "can_ip_forward": {"type": "boolean", "description": "Whether the instance can forward IP packets"},
+        "cpu_platform": {"type": "text", "description": "The CPU platform used by the instance"},
+        "deletion_protection": {"type": "boolean", "description": "Whether the instance is protected against deletion"},
+        "description": {"type": "text", "description": "A user-provided description of the instance"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the instance as key-value pairs"},
+        "network_interfaces": {"type": "jsonb", "description": "Network interfaces associated with the instance"},
+        "disks": {"type": "jsonb", "description": "Disks attached to the instance"},
+        "metadata": {"type": "jsonb", "description": "Instance metadata key-value pairs"},
+        "service_accounts": {"type": "jsonb", "description": "Service accounts authorized for the instance"},
+        "shielded_instance_config": {"type": "jsonb", "description": "Shielded instance configuration including vTPM and integrity monitoring"},
+        "confidential_instance_config": {"type": "jsonb", "description": "Confidential computing configuration"},
+        "tags": {"type": "jsonb", "description": "Network tags applied to the instance"}
+      }
+    },
+    "gcp_compute_disk": {
+      "description": "GCP Compute Engine Persistent Disk",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the disk"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the disk"},
+        "status": {"type": "text", "description": "The status of the disk, e.g. READY, CREATING, FAILED"},
+        "size_gb": {"type": "bigint", "description": "Size of the disk in GB"},
+        "type": {"type": "text", "description": "The disk type, e.g. pd-standard, pd-ssd, pd-balanced"},
+        "zone": {"type": "text", "description": "The zone where the disk resides"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the disk"},
+        "source_image": {"type": "text", "description": "The source image used to create this disk"},
+        "source_snapshot": {"type": "text", "description": "The source snapshot used to create this disk"},
+        "users": {"type": "jsonb", "description": "Instances using this disk"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the disk as key-value pairs"},
+        "disk_encryption_key": {"type": "jsonb", "description": "Encryption key used to protect this disk"},
+        "physical_block_size_bytes": {"type": "bigint", "description": "Physical block size of the disk in bytes"}
+      }
+    },
+    "gcp_compute_image": {
+      "description": "GCP Compute Engine Image",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the image"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the image"},
+        "status": {"type": "text", "description": "The status of the image, e.g. READY, FAILED, PENDING"},
+        "description": {"type": "text", "description": "A user-provided description of the image"},
+        "disk_size_gb": {"type": "bigint", "description": "Size of the image when restored to a disk in GB"},
+        "family": {"type": "text", "description": "The image family this image belongs to"},
+        "source_disk": {"type": "text", "description": "The source disk used to create this image"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the image"},
+        "deprecated": {"type": "jsonb", "description": "Deprecation status of the image"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the image as key-value pairs"},
+        "storage_locations": {"type": "jsonb", "description": "Cloud Storage locations where the image is stored"},
+        "image_encryption_key": {"type": "jsonb", "description": "Encryption key used to protect this image"}
+      }
+    },
+    "gcp_compute_instance_template": {
+      "description": "GCP Compute Engine Instance Template used to create VM instances and managed instance groups",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the instance template"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the template"},
+        "description": {"type": "text", "description": "A user-provided description of the template"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the template"},
+        "machine_type": {"type": "text", "description": "The machine type for instances created from this template"},
+        "instance_description": {"type": "text", "description": "Description for instances created from this template"},
+        "disks": {"type": "jsonb", "description": "Disk configurations for instances created from this template"},
+        "network_interfaces": {"type": "jsonb", "description": "Network interface configurations"},
+        "metadata": {"type": "jsonb", "description": "Metadata key-value pairs for instances"},
+        "service_accounts": {"type": "jsonb", "description": "Service accounts authorized for instances"},
+        "tags": {"type": "jsonb", "description": "Network tags for instances created from this template"},
+        "labels": {"type": "jsonb", "description": "Labels for instances created from this template"}
+      }
+    },
+    "gcp_compute_instance_group": {
+      "description": "GCP Compute Engine Instance Group for managing collections of VM instances",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the instance group"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the instance group"},
+        "description": {"type": "text", "description": "A user-provided description of the instance group"},
+        "size": {"type": "bigint", "description": "The total number of instances in the instance group"},
+        "zone": {"type": "text", "description": "The zone where the instance group resides"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the instance group"},
+        "network": {"type": "text", "description": "The URL of the network to which all instances in the group belong"},
+        "subnetwork": {"type": "text", "description": "The URL of the subnetwork to which all instances belong"},
+        "named_ports": {"type": "jsonb", "description": "Named ports configured for the instance group"},
+        "instances": {"type": "jsonb", "description": "List of instances in the group"}
+      }
+    },
+    "gcp_kubernetes_cluster": {
+      "description": "GCP Google Kubernetes Engine (GKE) Cluster",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the GKE cluster"},
+        "id": {"type": "text", "description": "The unique identifier of the cluster"},
+        "status": {"type": "text", "description": "The current status of the cluster, e.g. RUNNING, PROVISIONING"},
+        "description": {"type": "text", "description": "A user-provided description of the cluster"},
+        "location": {"type": "text", "description": "The zone or region where the cluster is deployed"},
+        "location_type": {"type": "text", "description": "The type of location: REGIONAL or ZONAL"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "create_time": {"type": "timestamp", "description": "The time the cluster was created"},
+        "cluster_ipv4_cidr": {"type": "text", "description": "The IP address range of the container pods"},
+        "services_ipv4_cidr": {"type": "text", "description": "The IP address range of Kubernetes services"},
+        "current_master_version": {"type": "text", "description": "The current Kubernetes master version"},
+        "current_node_version": {"type": "text", "description": "The current Kubernetes node version"},
+        "current_node_count": {"type": "bigint", "description": "The number of nodes in the cluster"},
+        "endpoint": {"type": "text", "description": "The IP address of the cluster master"},
+        "initial_cluster_version": {"type": "text", "description": "The initial Kubernetes version for the cluster"},
+        "network": {"type": "text", "description": "The VPC network the cluster is connected to"},
+        "subnetwork": {"type": "text", "description": "The VPC subnetwork the cluster is connected to"},
+        "logging_service": {"type": "text", "description": "The logging service used by the cluster"},
+        "monitoring_service": {"type": "text", "description": "The monitoring service used by the cluster"},
+        "master_authorized_networks_config": {"type": "jsonb", "description": "Configuration for master authorized networks"},
+        "network_policy": {"type": "jsonb", "description": "Network policy configuration for the cluster"},
+        "private_cluster_config": {"type": "jsonb", "description": "Private cluster configuration"},
+        "node_pools": {"type": "jsonb", "description": "The node pools associated with the cluster"},
+        "resource_labels": {"type": "jsonb", "description": "Resource labels applied to the cluster"},
+        "addons_config": {"type": "jsonb", "description": "Configuration for cluster addons"},
+        "legacy_abac": {"type": "jsonb", "description": "Legacy ABAC configuration"},
+        "binary_authorization": {"type": "jsonb", "description": "Binary authorization configuration"},
+        "shielded_nodes": {"type": "jsonb", "description": "Shielded nodes configuration"},
+        "workload_identity_config": {"type": "jsonb", "description": "Workload Identity configuration"}
+      }
+    },
+    "gcp_cloud_run_service": {
+      "description": "GCP Cloud Run fully managed serverless service",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the Cloud Run service"},
+        "uid": {"type": "text", "description": "The unique identifier of the service"},
+        "description": {"type": "text", "description": "A user-provided description of the service"},
+        "location": {"type": "text", "description": "The region where the service is deployed"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "uri": {"type": "text", "description": "The URL of the service"},
+        "create_time": {"type": "timestamp", "description": "The creation timestamp of the service"},
+        "update_time": {"type": "timestamp", "description": "The last update timestamp of the service"},
+        "creator": {"type": "text", "description": "The email of the user who created the service"},
+        "last_modifier": {"type": "text", "description": "The email of the user who last modified the service"},
+        "ingress": {"type": "text", "description": "The ingress setting for the service, e.g. INGRESS_TRAFFIC_ALL"},
+        "launch_stage": {"type": "text", "description": "The launch stage of the service"},
+        "template": {"type": "jsonb", "description": "The template used to create revisions"},
+        "traffic": {"type": "jsonb", "description": "Traffic routing configuration for the service"},
+        "conditions": {"type": "jsonb", "description": "The conditions of the service"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the service as key-value pairs"},
+        "annotations": {"type": "jsonb", "description": "Annotations assigned to the service"}
+      }
+    },
+    "gcp_cloudfunctions_function": {
+      "description": "GCP Cloud Functions serverless function",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the Cloud Function"},
+        "description": {"type": "text", "description": "A user-provided description of the function"},
+        "status": {"type": "text", "description": "The status of the function, e.g. ACTIVE, DEPLOY_IN_PROGRESS"},
+        "runtime": {"type": "text", "description": "The runtime in which the function runs, e.g. python39, nodejs16"},
+        "entry_point": {"type": "text", "description": "The name of the function entry point"},
+        "available_memory_mb": {"type": "bigint", "description": "The amount of memory in MB available for the function"},
+        "timeout": {"type": "text", "description": "The function execution timeout"},
+        "location": {"type": "text", "description": "The region where the function is deployed"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "update_time": {"type": "timestamp", "description": "The last update timestamp of the function"},
+        "version_id": {"type": "bigint", "description": "The version identifier of the function"},
+        "https_trigger": {"type": "jsonb", "description": "HTTPS trigger configuration"},
+        "event_trigger": {"type": "jsonb", "description": "Event trigger configuration"},
+        "source_archive_url": {"type": "text", "description": "The Cloud Storage URL of the function source code archive"},
+        "service_account_email": {"type": "text", "description": "The email of the function's service account"},
+        "ingress_settings": {"type": "text", "description": "The ingress settings for the function"},
+        "vpc_connector": {"type": "text", "description": "The VPC connector for the function"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the function as key-value pairs"},
+        "environment_variables": {"type": "jsonb", "description": "Environment variables available during function execution"}
+      }
+    },
+    "gcp_storage_bucket": {
+      "description": "GCP Cloud Storage Bucket",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the storage bucket"},
+        "id": {"type": "text", "description": "The unique identifier of the bucket"},
+        "location": {"type": "text", "description": "The location of the bucket, e.g. US, EU, us-central1"},
+        "location_type": {"type": "text", "description": "The type of location: multi-region, dual-region, or region"},
+        "storage_class": {"type": "text", "description": "The storage class of the bucket, e.g. STANDARD, NEARLINE, COLDLINE, ARCHIVE"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "time_created": {"type": "timestamp", "description": "The creation timestamp of the bucket"},
+        "updated": {"type": "timestamp", "description": "The last modification timestamp of the bucket"},
+        "versioning_enabled": {"type": "boolean", "description": "Whether object versioning is enabled"},
+        "default_event_based_hold": {"type": "boolean", "description": "Whether new objects have event-based hold by default"},
+        "uniform_bucket_level_access": {"type": "boolean", "description": "Whether uniform bucket-level access is enabled"},
+        "public_access_prevention": {"type": "text", "description": "The public access prevention setting"},
+        "iam_policy": {"type": "jsonb", "description": "The IAM policy for the bucket"},
+        "acl": {"type": "jsonb", "description": "Access control list for the bucket"},
+        "lifecycle_rules": {"type": "jsonb", "description": "Lifecycle management rules for the bucket"},
+        "logging": {"type": "jsonb", "description": "Access logging configuration"},
+        "encryption": {"type": "jsonb", "description": "Default encryption configuration (CMEK)"},
+        "retention_policy": {"type": "jsonb", "description": "Retention policy for objects in the bucket"},
+        "cors": {"type": "jsonb", "description": "CORS configuration for the bucket"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the bucket as key-value pairs"}
+      }
+    },
+    "gcp_storage_object": {
+      "description": "GCP Cloud Storage Object (file or blob in a bucket)",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the object"},
+        "bucket": {"type": "text", "description": "The name of the bucket containing the object"},
+        "id": {"type": "text", "description": "The unique identifier of the object"},
+        "size": {"type": "bigint", "description": "The size of the object in bytes"},
+        "content_type": {"type": "text", "description": "The MIME type of the object"},
+        "storage_class": {"type": "text", "description": "The storage class of the object"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "time_created": {"type": "timestamp", "description": "The creation timestamp of the object"},
+        "updated": {"type": "timestamp", "description": "The last modification timestamp of the object"},
+        "md5_hash": {"type": "text", "description": "The MD5 hash of the object data"},
+        "crc32c": {"type": "text", "description": "The CRC32c checksum of the object data"},
+        "event_based_hold": {"type": "boolean", "description": "Whether the object is under event-based hold"},
+        "temporary_hold": {"type": "boolean", "description": "Whether the object is under temporary hold"},
+        "metadata": {"type": "jsonb", "description": "User-defined metadata for the object"},
+        "acl": {"type": "jsonb", "description": "Access control list for the object"}
+      }
+    },
+    "gcp_sql_database_instance": {
+      "description": "GCP Cloud SQL Database Instance (MySQL, PostgreSQL, SQL Server)",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the Cloud SQL instance"},
+        "database_version": {"type": "text", "description": "The database engine and version, e.g. MYSQL_8_0, POSTGRES_14"},
+        "state": {"type": "text", "description": "The current state of the instance, e.g. RUNNABLE, SUSPENDED"},
+        "region": {"type": "text", "description": "The region where the instance resides"},
+        "gce_zone": {"type": "text", "description": "The Compute Engine zone of the instance"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "connection_name": {"type": "text", "description": "The connection name for connecting to the instance"},
+        "backend_type": {"type": "text", "description": "The backend type, e.g. SECOND_GEN"},
+        "instance_type": {"type": "text", "description": "The instance type, e.g. CLOUD_SQL_INSTANCE, READ_REPLICA_INSTANCE"},
+        "tier": {"type": "text", "description": "The machine tier (first generation) or machine type (second generation)"},
+        "data_disk_size_gb": {"type": "bigint", "description": "The size of the data disk in GB"},
+        "data_disk_type": {"type": "text", "description": "The type of data disk, e.g. PD_SSD, PD_HDD"},
+        "availability_type": {"type": "text", "description": "Availability type: ZONAL or REGIONAL (high availability)"},
+        "ip_addresses": {"type": "jsonb", "description": "IP addresses assigned to the instance"},
+        "settings": {"type": "jsonb", "description": "The user settings of the instance"},
+        "backup_configuration": {"type": "jsonb", "description": "Backup configuration for the instance"},
+        "ssl_config": {"type": "jsonb", "description": "SSL configuration for the instance"},
+        "ip_configuration": {"type": "jsonb", "description": "IP configuration including authorized networks"},
+        "maintenance_window": {"type": "jsonb", "description": "Maintenance window configuration"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the instance as key-value pairs"}
+      }
+    },
+    "gcp_bigquery_dataset": {
+      "description": "GCP BigQuery Dataset",
+      "columns": {
+        "dataset_id": {"type": "text", "description": "The ID of the dataset"},
+        "friendly_name": {"type": "text", "description": "A descriptive name for the dataset"},
+        "description": {"type": "text", "description": "A user-provided description of the dataset"},
+        "location": {"type": "text", "description": "The geographic location where the dataset resides"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_time": {"type": "timestamp", "description": "The creation timestamp of the dataset"},
+        "last_modified_time": {"type": "timestamp", "description": "The last modification timestamp of the dataset"},
+        "default_table_expiration_ms": {"type": "bigint", "description": "Default expiration time for tables in milliseconds"},
+        "default_partition_expiration_ms": {"type": "bigint", "description": "Default partition expiration time in milliseconds"},
+        "default_encryption_configuration": {"type": "jsonb", "description": "Default encryption configuration (CMEK)"},
+        "access": {"type": "jsonb", "description": "Access control entries for the dataset"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the dataset as key-value pairs"},
+        "tags": {"type": "jsonb", "description": "Tags assigned to the dataset"}
+      }
+    },
+    "gcp_bigquery_table": {
+      "description": "GCP BigQuery Table",
+      "columns": {
+        "table_id": {"type": "text", "description": "The ID of the table"},
+        "dataset_id": {"type": "text", "description": "The ID of the dataset containing the table"},
+        "friendly_name": {"type": "text", "description": "A descriptive name for the table"},
+        "description": {"type": "text", "description": "A user-provided description of the table"},
+        "type": {"type": "text", "description": "The type of table: TABLE, VIEW, MATERIALIZED_VIEW, EXTERNAL"},
+        "location": {"type": "text", "description": "The geographic location of the table"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_time": {"type": "timestamp", "description": "The creation timestamp of the table"},
+        "expiration_time": {"type": "timestamp", "description": "The expiration time of the table"},
+        "num_bytes": {"type": "bigint", "description": "The size of the table in bytes"},
+        "num_rows": {"type": "bigint", "description": "The number of rows in the table"},
+        "num_long_term_bytes": {"type": "bigint", "description": "Number of bytes in long-term storage"},
+        "schema": {"type": "jsonb", "description": "The schema of the table"},
+        "time_partitioning": {"type": "jsonb", "description": "Time-based partitioning configuration"},
+        "clustering_fields": {"type": "jsonb", "description": "Clustering specification for the table"},
+        "encryption_configuration": {"type": "jsonb", "description": "Encryption configuration (CMEK)"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the table as key-value pairs"}
+      }
+    },
+    "gcp_bigtable_instance": {
+      "description": "GCP Cloud Bigtable Instance",
+      "columns": {
+        "name": {"type": "text", "description": "The unique name of the Bigtable instance"},
+        "display_name": {"type": "text", "description": "The descriptive name for the instance"},
+        "instance_type": {"type": "text", "description": "The instance type: PRODUCTION or DEVELOPMENT"},
+        "state": {"type": "text", "description": "The current state of the instance"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "create_time": {"type": "timestamp", "description": "The creation timestamp of the instance"},
+        "cluster_count": {"type": "bigint", "description": "The number of clusters in the instance"},
+        "clusters": {"type": "jsonb", "description": "The clusters associated with the instance"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the instance as key-value pairs"}
+      }
+    },
+    "gcp_compute_network": {
+      "description": "GCP Virtual Private Cloud (VPC) Network",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the VPC network"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the network"},
+        "description": {"type": "text", "description": "A user-provided description of the network"},
+        "auto_create_subnetworks": {"type": "boolean", "description": "Whether subnets are created automatically (auto mode)"},
+        "routing_mode": {"type": "text", "description": "The network-wide routing mode: REGIONAL or GLOBAL"},
+        "mtu": {"type": "bigint", "description": "Maximum transmission unit in bytes"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the network"},
+        "subnetworks": {"type": "jsonb", "description": "List of subnetwork URLs in this network"},
+        "peerings": {"type": "jsonb", "description": "VPC network peering configurations"},
+        "firewall_policy": {"type": "text", "description": "URL of the firewall policy applied to this network"}
+      }
+    },
+    "gcp_compute_subnetwork": {
+      "description": "GCP VPC Subnetwork",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the subnetwork"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the subnetwork"},
+        "description": {"type": "text", "description": "A user-provided description of the subnetwork"},
+        "ip_cidr_range": {"type": "text", "description": "The IPv4 CIDR range of the subnetwork"},
+        "network": {"type": "text", "description": "The URL of the VPC network this subnetwork belongs to"},
+        "region": {"type": "text", "description": "The region where the subnetwork resides"},
+        "gateway_address": {"type": "text", "description": "The gateway address for the subnetwork"},
+        "purpose": {"type": "text", "description": "The purpose of the subnetwork, e.g. PRIVATE, INTERNAL_HTTPS_LOAD_BALANCER"},
+        "private_ip_google_access": {"type": "boolean", "description": "Whether VMs can access Google APIs via private IP"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the subnetwork"},
+        "enable_flow_logs": {"type": "boolean", "description": "Whether VPC Flow Logs are enabled"},
+        "log_config": {"type": "jsonb", "description": "VPC Flow Logs configuration"},
+        "secondary_ip_ranges": {"type": "jsonb", "description": "Secondary IP ranges for alias IPs"}
+      }
+    },
+    "gcp_compute_firewall": {
+      "description": "GCP VPC Firewall Rule",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the firewall rule"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the firewall rule"},
+        "description": {"type": "text", "description": "A user-provided description of the firewall rule"},
+        "direction": {"type": "text", "description": "The direction of traffic: INGRESS or EGRESS"},
+        "priority": {"type": "bigint", "description": "The priority of the rule (0-65535, lower is higher priority)"},
+        "action": {"type": "text", "description": "The action: allow or deny"},
+        "disabled": {"type": "boolean", "description": "Whether the firewall rule is disabled"},
+        "network": {"type": "text", "description": "The URL of the VPC network this rule applies to"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the firewall rule"},
+        "source_ranges": {"type": "jsonb", "description": "Source IPv4 ranges for INGRESS rules"},
+        "destination_ranges": {"type": "jsonb", "description": "Destination IPv4 ranges for EGRESS rules"},
+        "source_tags": {"type": "jsonb", "description": "Source network tags for INGRESS rules"},
+        "target_tags": {"type": "jsonb", "description": "Target network tags the rule applies to"},
+        "source_service_accounts": {"type": "jsonb", "description": "Source service accounts for INGRESS rules"},
+        "target_service_accounts": {"type": "jsonb", "description": "Target service accounts the rule applies to"},
+        "allowed": {"type": "jsonb", "description": "List of allowed protocols and ports"},
+        "denied": {"type": "jsonb", "description": "List of denied protocols and ports"},
+        "log_config": {"type": "jsonb", "description": "Firewall logging configuration"}
+      }
+    },
+    "gcp_compute_address": {
+      "description": "GCP Compute Engine Regional Static IP Address",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the address resource"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the address"},
+        "address": {"type": "text", "description": "The static IP address"},
+        "address_type": {"type": "text", "description": "The address type: INTERNAL or EXTERNAL"},
+        "status": {"type": "text", "description": "The status of the address: RESERVING, RESERVED, IN_USE"},
+        "purpose": {"type": "text", "description": "The purpose of the address resource"},
+        "network_tier": {"type": "text", "description": "The network tier: PREMIUM or STANDARD"},
+        "region": {"type": "text", "description": "The region where the address resides"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the address"},
+        "subnetwork": {"type": "text", "description": "The URL of the subnetwork for internal addresses"},
+        "users": {"type": "jsonb", "description": "Resources using this address"}
+      }
+    },
+    "gcp_compute_global_address": {
+      "description": "GCP Compute Engine Global Static IP Address",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the global address resource"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the address"},
+        "address": {"type": "text", "description": "The static IP address"},
+        "address_type": {"type": "text", "description": "The address type: INTERNAL or EXTERNAL"},
+        "status": {"type": "text", "description": "The status of the address: RESERVING, RESERVED, IN_USE"},
+        "purpose": {"type": "text", "description": "The purpose of the address, e.g. VPC_PEERING"},
+        "ip_version": {"type": "text", "description": "The IP version: IPV4 or IPV6"},
+        "prefix_length": {"type": "bigint", "description": "The prefix length for internal addresses used for peering"},
+        "network": {"type": "text", "description": "The URL of the network for internal addresses"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the address"},
+        "users": {"type": "jsonb", "description": "Resources using this address"}
+      }
+    },
+    "gcp_compute_forwarding_rule": {
+      "description": "GCP Compute Engine Forwarding Rule for load balancing and protocol forwarding",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the forwarding rule"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the forwarding rule"},
+        "description": {"type": "text", "description": "A user-provided description of the forwarding rule"},
+        "ip_address": {"type": "text", "description": "The IP address that the forwarding rule serves"},
+        "ip_protocol": {"type": "text", "description": "The IP protocol: TCP, UDP, ESP, AH, SCTP, ICMP, L3_DEFAULT"},
+        "port_range": {"type": "text", "description": "The port range for the forwarding rule"},
+        "target": {"type": "text", "description": "The URL of the target resource"},
+        "load_balancing_scheme": {"type": "text", "description": "The load balancing scheme: EXTERNAL, INTERNAL, INTERNAL_MANAGED"},
+        "network": {"type": "text", "description": "The URL of the VPC network"},
+        "subnetwork": {"type": "text", "description": "The URL of the subnetwork"},
+        "region": {"type": "text", "description": "The region of the forwarding rule"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the forwarding rule"},
+        "backend_service": {"type": "text", "description": "The URL of the backend service"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the forwarding rule"}
+      }
+    },
+    "gcp_compute_router": {
+      "description": "GCP Cloud Router for dynamic routing",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the Cloud Router"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the router"},
+        "description": {"type": "text", "description": "A user-provided description of the router"},
+        "network": {"type": "text", "description": "The URL of the VPC network this router belongs to"},
+        "region": {"type": "text", "description": "The region where the router resides"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the router"},
+        "bgp": {"type": "jsonb", "description": "BGP configuration including ASN and advertised groups"},
+        "bgp_peers": {"type": "jsonb", "description": "BGP peer configurations"},
+        "nats": {"type": "jsonb", "description": "Cloud NAT configurations on this router"},
+        "interfaces": {"type": "jsonb", "description": "Router interface configurations"}
+      }
+    },
+    "gcp_dns_managed_zone": {
+      "description": "GCP Cloud DNS Managed Zone",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the managed zone"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the zone"},
+        "dns_name": {"type": "text", "description": "The DNS domain name of the zone, e.g. example.com."},
+        "description": {"type": "text", "description": "A user-provided description of the zone"},
+        "visibility": {"type": "text", "description": "The zone visibility: public or private"},
+        "name_servers": {"type": "jsonb", "description": "Name servers assigned to the zone"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_time": {"type": "timestamp", "description": "The creation timestamp of the zone"},
+        "dnssec_config": {"type": "jsonb", "description": "DNSSEC configuration for the zone"},
+        "private_visibility_config": {"type": "jsonb", "description": "VPC networks the private zone is visible to"},
+        "forwarding_config": {"type": "jsonb", "description": "DNS forwarding configuration"},
+        "peering_config": {"type": "jsonb", "description": "DNS peering configuration"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the zone as key-value pairs"}
+      }
+    },
+    "gcp_dns_record_set": {
+      "description": "GCP Cloud DNS Record Set within a managed zone",
+      "columns": {
+        "name": {"type": "text", "description": "The DNS record name, e.g. www.example.com."},
+        "type": {"type": "text", "description": "The DNS record type, e.g. A, AAAA, CNAME, MX, TXT, NS, SOA"},
+        "ttl": {"type": "bigint", "description": "The time-to-live of the record in seconds"},
+        "managed_zone_name": {"type": "text", "description": "The name of the managed zone containing the record"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "rrdatas": {"type": "jsonb", "description": "The resource record data values"},
+        "signature_rrdatas": {"type": "jsonb", "description": "DNSSEC signature resource record data"},
+        "routing_policy": {"type": "jsonb", "description": "Routing policy configuration for the record"}
+      }
+    },
+    "gcp_iam_role": {
+      "description": "GCP IAM Role (predefined or custom)",
+      "columns": {
+        "name": {"type": "text", "description": "The full name of the role, e.g. roles/editor or projects/my-project/roles/customRole"},
+        "title": {"type": "text", "description": "The human-readable title of the role"},
+        "description": {"type": "text", "description": "A description of the role"},
+        "stage": {"type": "text", "description": "The launch stage of the role: ALPHA, BETA, GA, DEPRECATED, EAP"},
+        "deleted": {"type": "boolean", "description": "Whether the role has been deleted"},
+        "is_custom_role": {"type": "boolean", "description": "Whether this is a custom role"},
+        "project": {"type": "text", "description": "The GCP project ID (for custom roles)"},
+        "included_permissions": {"type": "jsonb", "description": "The permissions included in this role"}
+      }
+    },
+    "gcp_service_account": {
+      "description": "GCP IAM Service Account",
+      "columns": {
+        "name": {"type": "text", "description": "The resource name of the service account"},
+        "display_name": {"type": "text", "description": "A user-provided display name for the service account"},
+        "email": {"type": "text", "description": "The email address of the service account"},
+        "description": {"type": "text", "description": "A user-provided description of the service account"},
+        "unique_id": {"type": "text", "description": "The unique numeric ID of the service account"},
+        "disabled": {"type": "boolean", "description": "Whether the service account is disabled"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "oauth2_client_id": {"type": "text", "description": "The OAuth 2.0 client ID of the service account"},
+        "iam_policy": {"type": "jsonb", "description": "The IAM policy on the service account"}
+      }
+    },
+    "gcp_service_account_key": {
+      "description": "GCP IAM Service Account Key",
+      "columns": {
+        "name": {"type": "text", "description": "The resource name of the service account key"},
+        "service_account_name": {"type": "text", "description": "The resource name of the service account"},
+        "key_algorithm": {"type": "text", "description": "The algorithm used for the key"},
+        "key_origin": {"type": "text", "description": "The origin of the key: GOOGLE_PROVIDED or USER_PROVIDED"},
+        "key_type": {"type": "text", "description": "The type of key: SYSTEM_MANAGED or USER_MANAGED"},
+        "valid_after_time": {"type": "timestamp", "description": "The key is valid after this timestamp"},
+        "valid_before_time": {"type": "timestamp", "description": "The key is valid before this timestamp"},
+        "project": {"type": "text", "description": "The GCP project ID"}
+      }
+    },
+    "gcp_iam_policy": {
+      "description": "GCP IAM Policy bindings at the project level",
+      "columns": {
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "bindings": {"type": "jsonb", "description": "List of IAM policy bindings with roles and members"},
+        "version": {"type": "bigint", "description": "The version of the IAM policy schema"},
+        "etag": {"type": "text", "description": "The etag for concurrency control"},
+        "audit_configs": {"type": "jsonb", "description": "Audit logging configuration for the policy"}
+      }
+    },
+    "gcp_project": {
+      "description": "GCP Project",
+      "columns": {
+        "name": {"type": "text", "description": "The user-assigned display name of the project"},
+        "project_id": {"type": "text", "description": "The unique, user-assigned project ID"},
+        "project_number": {"type": "text", "description": "The unique numeric project number"},
+        "lifecycle_state": {"type": "text", "description": "The lifecycle state of the project: ACTIVE, DELETE_REQUESTED, DELETE_IN_PROGRESS"},
+        "parent": {"type": "jsonb", "description": "The parent resource (organization or folder)"},
+        "create_time": {"type": "timestamp", "description": "The creation timestamp of the project"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the project as key-value pairs"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "tags": {"type": "jsonb", "description": "Tags assigned to the project"}
+      }
+    },
+    "gcp_kms_key": {
+      "description": "GCP Cloud KMS Cryptographic Key",
+      "columns": {
+        "name": {"type": "text", "description": "The resource name of the crypto key"},
+        "key_ring_name": {"type": "text", "description": "The name of the key ring containing this key"},
+        "purpose": {"type": "text", "description": "The immutable purpose of the key: ENCRYPT_DECRYPT, ASYMMETRIC_SIGN, ASYMMETRIC_DECRYPT, MAC"},
+        "create_time": {"type": "timestamp", "description": "The creation timestamp of the key"},
+        "next_rotation_time": {"type": "timestamp", "description": "The time of the next scheduled key rotation"},
+        "rotation_period": {"type": "text", "description": "The rotation period for the key"},
+        "primary": {"type": "jsonb", "description": "The primary version of the key used for encryption"},
+        "version_template": {"type": "jsonb", "description": "Template describing the settings for new key versions"},
+        "location": {"type": "text", "description": "The location of the key"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the key as key-value pairs"},
+        "iam_policy": {"type": "jsonb", "description": "The IAM policy for the key"},
+        "destroy_scheduled_duration": {"type": "text", "description": "The duration before key material is destroyed after scheduling"}
+      }
+    },
+    "gcp_kms_key_ring": {
+      "description": "GCP Cloud KMS Key Ring that holds cryptographic keys",
+      "columns": {
+        "name": {"type": "text", "description": "The resource name of the key ring"},
+        "location": {"type": "text", "description": "The location of the key ring"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "create_time": {"type": "timestamp", "description": "The creation timestamp of the key ring"},
+        "iam_policy": {"type": "jsonb", "description": "The IAM policy for the key ring"},
+        "keys": {"type": "jsonb", "description": "List of cryptographic keys in the key ring"}
+      }
+    },
+    "gcp_secret_manager_secret": {
+      "description": "GCP Secret Manager Secret",
+      "columns": {
+        "name": {"type": "text", "description": "The resource name of the secret"},
+        "create_time": {"type": "timestamp", "description": "The creation timestamp of the secret"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "replication": {"type": "jsonb", "description": "Replication policy for the secret"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the secret as key-value pairs"},
+        "expire_time": {"type": "timestamp", "description": "The expiration timestamp of the secret"},
+        "rotation": {"type": "jsonb", "description": "Rotation configuration for the secret"},
+        "topics": {"type": "jsonb", "description": "Pub/Sub topics for secret version notifications"},
+        "version_count": {"type": "bigint", "description": "The number of versions of the secret"},
+        "iam_policy": {"type": "jsonb", "description": "The IAM policy for the secret"}
+      }
+    },
+    "gcp_logging_sink": {
+      "description": "GCP Cloud Logging Sink (log router) for exporting log entries",
+      "columns": {
+        "name": {"type": "text", "description": "The client-assigned name of the sink"},
+        "description": {"type": "text", "description": "A description of the sink"},
+        "destination": {"type": "text", "description": "The export destination, e.g. bigquery.googleapis.com/projects/..."},
+        "filter": {"type": "text", "description": "An advanced logs filter that matches log entries to export"},
+        "disabled": {"type": "boolean", "description": "Whether the sink is disabled"},
+        "writer_identity": {"type": "text", "description": "The service account used to write to the destination"},
+        "include_children": {"type": "boolean", "description": "Whether to include child projects/folders/orgs"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "create_time": {"type": "timestamp", "description": "The creation timestamp of the sink"},
+        "update_time": {"type": "timestamp", "description": "The last update timestamp of the sink"},
+        "exclusions": {"type": "jsonb", "description": "Log entries to exclude from the sink"},
+        "bigquery_options": {"type": "jsonb", "description": "Options for BigQuery destination sinks"}
+      }
+    },
+    "gcp_logging_metric": {
+      "description": "GCP Cloud Logging Metric for counting or distributing log entries",
+      "columns": {
+        "name": {"type": "text", "description": "The client-assigned name of the metric"},
+        "description": {"type": "text", "description": "A description of the metric"},
+        "filter": {"type": "text", "description": "An advanced logs filter matching log entries to count"},
+        "metric_descriptor": {"type": "jsonb", "description": "The metric descriptor for the metric"},
+        "value_extractor": {"type": "text", "description": "A value extractor for distribution metrics"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "create_time": {"type": "timestamp", "description": "The creation timestamp of the metric"},
+        "update_time": {"type": "timestamp", "description": "The last update timestamp of the metric"},
+        "label_extractors": {"type": "jsonb", "description": "Label extractors for the metric"},
+        "bucket_options": {"type": "jsonb", "description": "Bucket options for distribution metrics"}
+      }
+    },
+    "gcp_audit_policy": {
+      "description": "GCP Cloud Audit Logs configuration policy",
+      "columns": {
+        "service": {"type": "text", "description": "The service for which audit logging is configured"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "audit_log_configs": {"type": "jsonb", "description": "Audit logging configurations per log type (ADMIN_READ, DATA_READ, DATA_WRITE)"}
+      }
+    },
+    "gcp_compute_backend_service": {
+      "description": "GCP Compute Engine Backend Service for load balancing",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the backend service"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the backend service"},
+        "description": {"type": "text", "description": "A user-provided description of the backend service"},
+        "protocol": {"type": "text", "description": "The protocol the backend service uses: HTTP, HTTPS, TCP, SSL, UDP, GRPC"},
+        "port": {"type": "bigint", "description": "The default port used by the backend service"},
+        "port_name": {"type": "text", "description": "The named port for the backend service"},
+        "timeout_sec": {"type": "bigint", "description": "The backend service timeout in seconds"},
+        "health_checks": {"type": "jsonb", "description": "Health check URLs associated with the backend service"},
+        "backends": {"type": "jsonb", "description": "The list of backends (instance groups or NEGs)"},
+        "load_balancing_scheme": {"type": "text", "description": "The load balancing scheme: EXTERNAL, INTERNAL, INTERNAL_MANAGED"},
+        "session_affinity": {"type": "text", "description": "Session affinity type: NONE, CLIENT_IP, GENERATED_COOKIE"},
+        "enable_cdn": {"type": "boolean", "description": "Whether Cloud CDN is enabled"},
+        "cdn_policy": {"type": "jsonb", "description": "Cloud CDN configuration"},
+        "connection_draining_timeout_sec": {"type": "bigint", "description": "Connection draining timeout in seconds"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the backend service"},
+        "log_config": {"type": "jsonb", "description": "Logging configuration for the backend service"},
+        "security_policy": {"type": "text", "description": "The URL of the security policy (Cloud Armor)"}
+      }
+    },
+    "gcp_compute_url_map": {
+      "description": "GCP Compute Engine URL Map for HTTP(S) load balancing routing",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the URL map"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the URL map"},
+        "description": {"type": "text", "description": "A user-provided description of the URL map"},
+        "default_service": {"type": "text", "description": "The URL of the default backend service"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the URL map"},
+        "host_rules": {"type": "jsonb", "description": "Host rules mapping hostnames to path matchers"},
+        "path_matchers": {"type": "jsonb", "description": "Path matchers mapping URL paths to backend services"},
+        "tests": {"type": "jsonb", "description": "URL map test configurations"},
+        "default_route_action": {"type": "jsonb", "description": "Default route action including retries, timeouts, and fault injection"}
+      }
+    },
+    "gcp_compute_target_https_proxy": {
+      "description": "GCP Compute Engine Target HTTPS Proxy for SSL-terminated load balancing",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the target HTTPS proxy"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the proxy"},
+        "description": {"type": "text", "description": "A user-provided description of the proxy"},
+        "url_map": {"type": "text", "description": "The URL of the URL map used by the proxy"},
+        "ssl_certificates": {"type": "jsonb", "description": "URLs of SSL certificate resources"},
+        "ssl_policy": {"type": "text", "description": "The URL of the SSL policy for the proxy"},
+        "quic_override": {"type": "text", "description": "QUIC negotiation override: NONE, ENABLE, DISABLE"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the proxy"},
+        "certificate_map": {"type": "text", "description": "URL of a certificate map containing SSL certificates"}
+      }
+    },
+    "gcp_compute_ssl_certificate": {
+      "description": "GCP Compute Engine SSL Certificate for HTTPS load balancing",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the SSL certificate"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the certificate"},
+        "description": {"type": "text", "description": "A user-provided description of the certificate"},
+        "type": {"type": "text", "description": "The certificate type: SELF_MANAGED or MANAGED"},
+        "subject_alternative_names": {"type": "jsonb", "description": "Subject alternative names (SANs) in the certificate"},
+        "expire_time": {"type": "timestamp", "description": "The expiration timestamp of the certificate"},
+        "managed": {"type": "jsonb", "description": "Configuration for managed SSL certificates (domain and status)"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "creation_timestamp": {"type": "timestamp", "description": "The creation timestamp of the certificate"}
+      }
+    },
+    "gcp_monitoring_alert_policy": {
+      "description": "GCP Cloud Monitoring Alert Policy",
+      "columns": {
+        "name": {"type": "text", "description": "The resource name of the alert policy"},
+        "display_name": {"type": "text", "description": "A short descriptive name for the alert policy"},
+        "enabled": {"type": "boolean", "description": "Whether the alert policy is enabled"},
+        "combiner": {"type": "text", "description": "How to combine conditions: AND, OR, AND_WITH_MATCHING_RESOURCE"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "creation_record": {"type": "jsonb", "description": "Record of when the policy was created and by whom"},
+        "mutation_record": {"type": "jsonb", "description": "Record of the last update to the policy"},
+        "conditions": {"type": "jsonb", "description": "Conditions that trigger the alert"},
+        "notification_channels": {"type": "jsonb", "description": "Notification channels to alert when the policy is triggered"},
+        "documentation": {"type": "jsonb", "description": "Documentation included in alert notifications"},
+        "user_labels": {"type": "jsonb", "description": "User-defined labels for the policy"},
+        "alert_strategy": {"type": "jsonb", "description": "Control for how alerts are automatically closed"}
+      }
+    },
+    "gcp_pubsub_topic": {
+      "description": "GCP Cloud Pub/Sub Topic for asynchronous messaging",
+      "columns": {
+        "name": {"type": "text", "description": "The resource name of the topic"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "kms_key_name": {"type": "text", "description": "The Cloud KMS key used to encrypt messages"},
+        "message_retention_duration": {"type": "text", "description": "Duration to retain messages after publish"},
+        "message_storage_policy": {"type": "jsonb", "description": "Policy for message storage regions"},
+        "schema_settings": {"type": "jsonb", "description": "Schema settings for validating messages"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the topic as key-value pairs"},
+        "iam_policy": {"type": "jsonb", "description": "The IAM policy for the topic"}
+      }
+    },
+    "gcp_pubsub_subscription": {
+      "description": "GCP Cloud Pub/Sub Subscription for receiving messages from a topic",
+      "columns": {
+        "name": {"type": "text", "description": "The resource name of the subscription"},
+        "topic": {"type": "text", "description": "The topic from which the subscription receives messages"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "ack_deadline_seconds": {"type": "bigint", "description": "The maximum time after delivery to acknowledge a message"},
+        "message_retention_duration": {"type": "text", "description": "Duration to retain unacknowledged messages"},
+        "retain_acked_messages": {"type": "boolean", "description": "Whether to retain acknowledged messages"},
+        "enable_message_ordering": {"type": "boolean", "description": "Whether message ordering is enabled"},
+        "filter": {"type": "text", "description": "Expression to filter messages delivered to the subscription"},
+        "push_config": {"type": "jsonb", "description": "Push delivery configuration"},
+        "dead_letter_policy": {"type": "jsonb", "description": "Dead letter policy for undeliverable messages"},
+        "retry_policy": {"type": "jsonb", "description": "Retry policy for message delivery"},
+        "expiration_policy": {"type": "jsonb", "description": "Expiration policy for the subscription"},
+        "labels": {"type": "jsonb", "description": "Labels assigned to the subscription as key-value pairs"}
+      }
+    },
+    "gcp_organization": {
+      "description": "GCP Organization resource at the top of the resource hierarchy",
+      "columns": {
+        "name": {"type": "text", "description": "The resource name of the organization"},
+        "display_name": {"type": "text", "description": "The display name of the organization"},
+        "directory_customer_id": {"type": "text", "description": "The Google Workspace customer ID"},
+        "lifecycle_state": {"type": "text", "description": "The lifecycle state of the organization: ACTIVE, DELETE_REQUESTED"},
+        "create_time": {"type": "timestamp", "description": "The creation timestamp of the organization"},
+        "owner": {"type": "jsonb", "description": "The owner (directory customer) of the organization"},
+        "iam_policy": {"type": "jsonb", "description": "The IAM policy for the organization"}
+      }
+    },
+    "gcp_compute_region": {
+      "description": "GCP Compute Engine Region",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the region, e.g. us-central1"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the region"},
+        "description": {"type": "text", "description": "A textual description of the region"},
+        "status": {"type": "text", "description": "The status of the region: UP or DOWN"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "zones": {"type": "jsonb", "description": "List of zones within the region"},
+        "quotas": {"type": "jsonb", "description": "Quota information for the region"}
+      }
+    },
+    "gcp_compute_zone": {
+      "description": "GCP Compute Engine Zone",
+      "columns": {
+        "name": {"type": "text", "description": "The name of the zone, e.g. us-central1-a"},
+        "id": {"type": "text", "description": "The unique numeric identifier for the zone"},
+        "description": {"type": "text", "description": "A textual description of the zone"},
+        "status": {"type": "text", "description": "The status of the zone: UP or DOWN"},
+        "region": {"type": "text", "description": "The name of the region the zone belongs to"},
+        "project": {"type": "text", "description": "The GCP project ID"},
+        "self_link": {"type": "text", "description": "The server-defined URL for this resource"},
+        "available_cpu_platforms": {"type": "jsonb", "description": "Available CPU platforms in the zone"}
+      }
+    }
+  }
+}

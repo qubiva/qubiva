@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "qubiva.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "qubiva.labels" . | nindent 4 }}
+data:
+  app_config.json: |
+    {
+      "system": {
+        "environment": "production",
+        "log_level": {{ .Values.env.LOG_LEVEL | quote }}
+      },
+      "app": {
+        "base_url": "http://{{ include "qubiva.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+      },
+      "terraform": {
+        "engine": {{ .Values.iacEngine | quote }}
+      },
+      {{- if .Values.cloudAnalyst.llm.provider }}
+      "cloud_analyst": {
+        "llm": {
+          "provider": {{ .Values.cloudAnalyst.llm.provider | quote }},
+          "model": {{ .Values.cloudAnalyst.llm.model | quote }},
+          "base_url": {{ .Values.cloudAnalyst.llm.baseUrl | quote }},
+          "api_key_env": {{ .Values.cloudAnalyst.llm.apiKeyEnv | quote }}
+        },
+        "session": {
+          "pool_size": 1,
+          "idle_timeout_seconds": 900,
+          "query_timeout_seconds": 120,
+          "max_result_rows": 500
+        }
+      },
+      {{- end }}
+      "runner_pools": {
+        "iac": {
+          "enabled": {{ .Values.runnerPools.iac.enabled }},
+          "pool_size": {{ .Values.runnerPools.iac.poolSize }},
+          "pod_timeout_seconds": {{ .Values.runnerPools.iac.podTimeoutSeconds }},
+          "execution_mode": {{ .Values.runnerPools.iac.executionMode | quote }}
+        },
+        "discovery": {
+          "enabled": {{ .Values.runnerPools.discovery.enabled }},
+          "pool_size": {{ .Values.runnerPools.discovery.poolSize }},
+          "pod_timeout_seconds": {{ .Values.runnerPools.discovery.podTimeoutSeconds }},
+          "stale_threshold_seconds": {{ .Values.runnerPools.discovery.staleThresholdSeconds }},
+          "execution_mode": {{ .Values.runnerPools.discovery.executionMode | quote }}
+        },
+        "quotas": {
+          "max_concurrent_per_project": {{ .Values.runnerPools.quotas.maxConcurrentPerProject }}
+        }
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "qubiva.fullname" . }}-env
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "qubiva.labels" . | nindent 4 }}
+data:
+  K8S_NAMESPACE: {{ .Release.Namespace | quote }}
+  APP_CONFIG_PATH: "/app/config/app_config.json"
+  ARTIFACTS_STORAGE_PATH: "/app/data/artifacts"
+  ARTIFACTS_PREFIX: "runs"
+  IAC_RUNNER_IMAGE: {{ include "qubiva.iacRunnerImage" . | quote }}
+  DISCOVERY_RUNNER_IMAGE: {{ include "qubiva.discoveryRunnerImage" . | quote }}
+  RUNNER_SERVICE_ACCOUNT: {{ .Values.runnerServiceAccount.name | quote }}
+  LOG_LEVEL: {{ .Values.env.LOG_LEVEL | quote }}
+  QUBIVA_API_ENDPOINT: "http://{{ include "qubiva.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+  INTERNAL_CIDR: {{ .Values.env.INTERNAL_CIDR | quote }}
+  TF_BACKEND_TYPE: {{ .Values.env.TF_BACKEND_TYPE | quote }}
+  MASTER_ADMIN_USER: {{ .Values.env.MASTER_ADMIN_USER | quote }}
+  JOB_TTL_SECONDS_AFTER_FINISHED: {{ .Values.env.JOB_TTL_SECONDS_AFTER_FINISHED | quote }}
+  LOKI_URL: "http://{{ include "qubiva.fullname" . }}-loki.{{ .Release.Namespace }}.svc.cluster.local:3100"
+  RELEASE_VERSION: {{ .Values.image.tag | quote }}
+  LOG_RETENTION_DAYS_TERRAFORM: {{ .Values.env.LOG_RETENTION_DAYS_TERRAFORM | quote }}
+  LOG_RETENTION_DAYS_DISCOVERY: {{ .Values.env.LOG_RETENTION_DAYS_DISCOVERY | quote }}

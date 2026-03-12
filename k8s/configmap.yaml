@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qubiva-config
+  namespace: qubiva
+  labels:
+    app: qubiva
+data:
+  # App configuration override (deep-merged on top of image defaults).
+  #
+  # The Docker image ships with a full default config at /app/app_config.default.json
+  # containing all roles_and_permissions, task_management, analysis_templates,
+  # compliance_mods, query_engine_versions, and system settings (~169KB).
+  #
+  # This ConfigMap only needs the sections you want to OVERRIDE.
+  # Anything not specified here falls through to the image defaults.
+  #
+  # To replace the full config: paste the entire JSON here.
+  # To customize specific sections: only include those sections below.
+  #
+  # The full default config structure has these top-level keys:
+  #   - roles_and_permissions  (org + project RBAC definitions)
+  #   - task_management        (status/type/priority options)
+  #   - cloud_analyst           (LLM provider + session config)
+  #   - compliance_mods        (benchmark mod definitions per cloud)
+  #   - query_engine_versions  (version mappings)
+  #   - system                 (system-level settings)
+  #
+  app_config.json: |
+    {
+      "system": {
+        "environment": "production",
+        "log_level": "INFO"
+      },
+      "app": {
+        "base_url": "http://localhost:8000"
+      },
+      "cloud_analyst": {
+        "llm": {
+          "provider": "openai",
+          "model": "llama-3.3-70b-versatile",
+          "base_url": "https://api.groq.com/openai/v1/",
+          "api_key_env": "LLM_API_KEY"
+        }
+      },
+      "runner_pools": {
+        "terraform": {
+          "enabled": true,
+          "pool_size": 1,
+          "pod_timeout_seconds": 1800,
+          "execution_mode": "pool_with_fallback"
+        },
+        "discovery": {
+          "enabled": true,
+          "pool_size": 2,
+          "pod_timeout_seconds": 1800,
+          "stale_threshold_seconds": 900,
+          "execution_mode": "pool_with_fallback"
+        },
+        "quotas": {
+          "max_concurrent_per_project": 0
+        }
+      }
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qubiva-env
+  namespace: qubiva
+  labels:
+    app: qubiva
+data:
+  # Non-sensitive environment variables
+  K8S_NAMESPACE: "qubiva"
+  APP_CONFIG_PATH: "/app/config/app_config.json"
+  ARTIFACTS_STORAGE_PATH: "/app/data/artifacts"
+  ARTIFACTS_PREFIX: "runs"
+  IAC_RUNNER_IMAGE: "qubiva/iac-runner:latest"
+  DISCOVERY_RUNNER_IMAGE: "qubiva/discovery-runner:v70"
+  RUNNER_SERVICE_ACCOUNT: "qubiva-runner"
+  LOG_LEVEL: "INFO"
+  # Set QUBIVA_API_ENDPOINT for the scheduler to call back into the app
+  QUBIVA_API_ENDPOINT: "http://qubiva.qubiva.svc.cluster.local"
+  # Kubernetes pod CIDR for internal request authentication (fallback if INTERNAL_API_KEY not used)
+  # Adjust to match your cluster's pod CIDR (e.g., 10.244.0.0/16 for Flannel, 10.0.0.0/8 for Calico)
+  INTERNAL_CIDR: "10.0.0.0/8"
+  # Terraform state backend type: kubernetes (default), s3, local, gcs, azurerm
+  TF_BACKEND_TYPE: "kubernetes"
+  # Default admin user created on first boot (password printed to logs)
+  MASTER_ADMIN_USER: "admin@qubiva.local"
+  # How long completed/failed K8s Jobs (runner pods) are retained before auto-cleanup.
+  # Pod logs are available during this window. Default: 3600 (1 hour).
+  # Set to 0 to delete immediately, or higher for longer log retention.
+  JOB_TTL_SECONDS_AFTER_FINISHED: "3600"
+  # Loki log aggregation endpoint (for persisting runner job logs beyond pod lifetime)
+  LOKI_URL: "http://loki.qubiva.svc.cluster.local:3100"
+  # Per-job-type log retention in days. Override these to customize retention per runner type.
+  # Logs older than these thresholds are automatically deleted by the daily retention scheduler.
+  LOG_RETENTION_DAYS_TERRAFORM: "90"
+  LOG_RETENTION_DAYS_DISCOVERY: "30"

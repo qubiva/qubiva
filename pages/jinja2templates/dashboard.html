@@ -1,0 +1,57 @@
+{% extends "dashboard_base.html" %}
+{% block global_stats_styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/resource-overview.css">
+{% endblock %}
+
+{% block title %}Projects - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div class="resource-overview">
+    <div class="info-box bg-docs">
+        <span class="info-box-icon"><i class="fas fa-book"></i></span>
+        <div class="info-box-content">
+          <span class="info-box-text">Provides a quick overview of your most recent projects and their resources, such as cloud accounts, workspaces, tasks, and metadata. Use the sidebar for detailed navigation.</span>
+        </div>
+      </div>
+    <h5 class="page-title">Dashboard</h5>
+    <div class="dashboard-layout">
+        <!-- Projects Column -->
+        <div class="projects-column">
+            <h2>My Cloud Projects - Overview </h2>
+            <div id="resourceMap" class="projects-list">
+                <!-- Projects will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Details Column -->
+        <div class="details-column">
+            <!-- Quick Access Section -->
+            <div id="quickAccess" class="quick-access">
+                <h2>My Tasks</h2>
+                <div class="task-list">
+                    <!-- Tasks will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not projects %}
+    <div class="welcome-message" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 50vh; text-align: center;">
+        <i class="fas fa-door-open fa-4x"></i><br/>
+        <h4>HELLO! </h4>
+        <h3 style="font-weight: bold;">{{ user }}</h3>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block global_stats_scripts %}
+<script>
+    function getCurrentUser() {
+        return "{{ user }}";
+    }
+</script>
+{{ super() }}
+<script src="{{ static_content_url }}/static/custom/js/resource-map.js"></script>
+{% endblock %}

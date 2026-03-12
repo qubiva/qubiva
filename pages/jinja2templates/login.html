@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="cache-control" content="max-age=0" />
+  <meta http-equiv="cache-control" content="no-cache" />
+  <meta http-equiv="expires" content="0" />
+  <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+  <meta http-equiv="pragma" content="no-cache" />
+  <title>Qubiva | Sign-in </title>
+  <!-- Favicons -->
+  <link rel="icon" type="image/x-icon" href="{{ static_content_url }}/static/custom/favicons/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ static_content_url }}/static/custom/favicons/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ static_content_url }}/static/custom/favicons/favicon-32x32.png">
+  <link rel="apple-touch-icon" href="{{ static_content_url }}/static/custom/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ static_content_url }}/static/custom/favicons/android-chrome-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="{{ static_content_url }}/static/custom/favicons/android-chrome-512x512.png">
+  <link rel="icon" type="image/x-icon" href="{{ static_content_url }}/static/custom/images/favicon.ico">
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="{{ static_content_url }}/static/plugins/fontawesome-free/css/all.min.css">
+  <!-- icheck bootstrap -->
+  <link rel="stylesheet" href="{{ static_content_url }}/static/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="{{ static_content_url }}/static/dist/css/adminlte.min.css">
+  
+  <style>
+    .divider-container {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .divider-container::before,
+    .divider-container::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .divider-container::before {
+      margin-right: 15px;
+    }
+    .divider-container::after {
+      margin-left: 15px;
+    }
+    .divider-text {
+      color: #6c757d;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body class="hold-transition login-page">
+<div class="login-box">
+  <!-- /.login-logo -->
+  <div class="card card-outline card-primary">
+    <div class="card-header text-center">
+      <a href="" class="h1"><b>Qubiva</b></a>
+    </div>
+    <div class="card-body">
+      <p class="login-box-msg"><b>Sign-in</b></p>
+
+      <!-- Error messages (SSO callback or general) -->
+      {% if error %}
+      <div class="alert alert-danger alert-dismissible fade show py-2 px-3" role="alert">
+        <i class="fas fa-exclamation-circle mr-1"></i> {{ error }}
+        <button type="button" class="close py-2" data-dismiss="alert"><span>&times;</span></button>
+      </div>
+      {% endif %}
+
+      {% if sso_enabled %}
+      <a href="/api/v1/sso/login" class="btn btn-block mb-2" style="background-color: #17a2b8; border-color: #17a2b8; color: #fff; font-size: 1.05rem; padding: .55rem;">
+        <i class="fas fa-shield-alt mr-2"></i> Sign in with SSO
+      </a>
+
+      <div class="divider-container">
+        <span class="divider-text">or sign in with email</span>
+      </div>
+      {% endif %}
+
+      <form action="/api/v1/web-login" id="login" method="post" autocomplete="on">
+        <div class="input-group mb-3">
+            <input type="email"
+                   id="email"
+                   name="email"
+                   class="form-control"
+                   placeholder="Email"
+                   autocomplete="email"
+                   required>
+            <div class="input-group-append">
+                <div class="input-group-text">
+                    <span class="fas fa-envelope"></span>
+                </div>
+            </div>
+        </div>
+        <div class="input-group mb-3">
+            <input type="password"
+                   id="password"
+                   name="password"
+                   class="form-control"
+                   placeholder="Password"
+                   autocomplete="current-password"
+                   required>
+            <div class="input-group-append">
+                <div class="input-group-text" id="toggle-password" style="cursor: pointer;" title="Show password">
+                    <span class="fas fa-lock"></span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+          </div>
+        </div>
+
+        <div id="messageArea"></div>
+      </form>
+
+      <p class="mt-3 mb-0 text-right">
+        <a href="/enable-password-reset">
+          <i class="fas fa-key"></i> Password Reset
+        </a>
+      </p>
+
+    </div>
+    <!-- /.card-body -->
+  </div>
+  <!-- /.card -->
+</div>
+<!-- /.login-box -->
+
+<!-- jQuery -->
+<script src="{{ static_content_url }}/static/plugins/jquery/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="{{ static_content_url }}/static/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- AdminLTE App -->
+<script src="{{ static_content_url }}/static/dist/js/adminlte.min.js"></script>
+
+<script src="{{ static_content_url }}/static/custom/js/validate_signin_form.js"></script>
+<script src="{{ static_content_url }}/static/plugins/jquery-validation/jquery.validate.min.js"></script>
+<script>
+document.getElementById('toggle-password').addEventListener('click', function() {
+    const pwd = document.getElementById('password');
+    const icon = this.querySelector('span');
+    if (pwd.type === 'password') {
+        pwd.type = 'text';
+        icon.classList.replace('fa-lock', 'fa-lock-open');
+        this.title = 'Hide password';
+    } else {
+        pwd.type = 'password';
+        icon.classList.replace('fa-lock-open', 'fa-lock');
+        this.title = 'Show password';
+    }
+});
+</script>
+</body>
+</html>

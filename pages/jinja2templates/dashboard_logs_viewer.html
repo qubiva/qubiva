@@ -1,0 +1,139 @@
+{% extends "dashboard_base.html" %} 
+{% block title %}Execution Logs - Qubiva Dashboard{% endblock %} 
+{% block terraform_logs_styles %} 
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/logs_viewer.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/toastr/toastr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+{% endblock %} 
+
+{% block content %} 
+<div class="row mb-2">
+</div>
+<div class="card-header card-secondary">
+  <h5 class="page-title">Execution Logs</h5>
+</div>
+
+<div class="card">
+  <div class="card-header">
+      <h3 class="card-title">Request Details</h3>
+      <div class="card-tools">
+        <button type="button" class="btn btn-tool" id="refresh-details">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+  </div>
+  <div class="card-body">
+      <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex align-items-center">
+              <i class="fas fa-fingerprint mr-3"></i>
+              <div>
+                  <small class="text-muted d-block">Request ID</small>
+                  <span class="font-weight-medium" id="request-id"></span>
+              </div>
+          </li>
+          <li class="list-group-item d-flex align-items-center">
+              <i class="fas fa-user mr-3"></i>
+              <div>
+                  <small class="text-muted d-block">Requested By</small>
+                  <span class="font-weight-medium" id="requested-by"></span>
+              </div>
+          </li>
+          <li class="list-group-item d-flex align-items-center">
+              <i class="fas fa-calendar mr-3"></i>
+              <div>
+                  <small class="text-muted d-block">Requested On</small>
+                  <span class="font-weight-medium" id="requested-on"></span>
+              </div>
+          </li>
+          <li class="list-group-item d-flex align-items-center">
+              <i class="fas fa-cog mr-3"></i>
+              <div>
+                  <small class="text-muted d-block">Request Type</small>
+                  <span class="font-weight-medium" id="request-type"></span>
+              </div>
+          </li>
+          <li class="list-group-item d-flex align-items-center">
+              <i class="fas fa-info-circle mr-3"></i>
+              <div>
+                  <small class="text-muted d-block">State</small>
+                  <span class="font-weight-medium" id="request-state"></span>
+              </div>
+          </li>
+          <li class="list-group-item d-flex align-items-center">
+            <i class="fas fa-file-archive mr-3"></i>
+            <div>
+                <small class="text-muted d-block">Artifacts</small>
+                <span class="font-weight-medium" id="artifacts-status">
+                    Nothing to show yet
+                </span>
+            </div>
+          </li>
+      </ul>
+  </div>
+</div>
+
+<div class="card-body">
+  <div class="row mb-3">
+    <div class="col-md-6">
+
+    </div>
+    <div class="col-md-6 text-right">
+      <button id="stop-execution" class="btn btn-danger mr-2 d-none">
+        <i class="fas fa-stop-circle mr-1"></i>Stop Execution
+      </button>
+      <button id="download-logs" class="btn btn-primary">Download Logs</button>
+    </div>
+  </div>
+  <!-- Terminal Output -->
+  <div id="console-wrapper">
+      <div id="output"></div>
+      <div id="highlight-overlay"></div>
+  </div>
+</div>
+
+<!-- Stop Execution Confirmation Modal -->
+<div class="modal fade" id="stopExecutionModal" tabindex="-1" role="dialog" aria-labelledby="stopExecutionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="stopExecutionModalLabel">Stop Execution</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to stop this execution?</p>
+        <p class="text-muted mb-0"><small>This action cannot be undone. The running job will be terminated immediately.</small></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmStopBtn">
+          <i class="fas fa-stop-circle mr-1"></i>Stop Execution
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 
+
+{% block terraform_logs_scripts %} 
+{{ super() }}
+<script src="{{ static_content_url }}/static/plugins/jquery/jquery.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/toastr/toastr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ansi_up@4.0.4/ansi_up.min.js"></script>
+
+<script>
+  if (typeof AnsiUp !== "undefined") {
+      window.AnsiUp = AnsiUp; // Ensure AnsiUp is globally accessible
+      console.log("AnsiUp loaded and attached to window.");
+  } else {
+      console.error("AnsiUp failed to load.");
+  }
+</script>
+<script src="{{ static_content_url }}/static/custom/js/logs_viewer.js?v=4"></script> 
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.7.0/lib/xterm-addon-fit.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-search@0.13.0/lib/xterm-addon-search.min.js"></script>
+{% endblock %}

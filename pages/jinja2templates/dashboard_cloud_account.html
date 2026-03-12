@@ -1,0 +1,627 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Cloud Query - Qubiva Dashboard{% endblock %}
+{% block cloud_query_styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/cloud_query.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<!-- Toastr -->
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/toastr/toastr.min.css">
+<style>
+  /* Fix toastr error message text color */
+  .toast-error .toast-message,
+  .toast-error .toast-body,
+  .toast-error,
+  #toast-container > .toast-error {
+    color: #ffffff !important;
+  }
+  #toast-container > .toast-error * {
+    color: #ffffff !important;
+  }
+</style>
+<!-- Bootstrap Dual Listbox -->
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css">
+<!-- Chart.js -->
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/chart.js/Chart.min.css">
+<!-- DataTables -->
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="row mb-2">
+  <div class="col-sm-6">
+    <h4></h4> <!-- create a neat space near header-->
+  </div>
+</div>
+
+<!-- Cloud Query Execution Form -->
+<div class="card-header card-secondary">
+  <h5 class="page-title"><span id="last-segment"></span></h5>
+</div> 
+<br>
+
+<div class="card">
+  <div class="card-header">
+      <h3 class="card-title">Cloud Account Details</h3>
+      <div class="card-tools">
+        <button type="button" class="btn btn-tool" id="refresh-account-details-btn" title="Refresh">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+  </div>
+  <div class="card-body">
+      <div class="detail-line">
+          <i class="fas fa-cloud"></i>
+          <div class="detail-content">
+              <div class="detail-label">Cloud Platform</div>
+              <div class="detail-value" id="cloud-platform">aws</div>
+          </div>
+      </div>
+
+      <div class="detail-line">
+          <i class="fas fa-id-card"></i>
+          <div class="detail-content">
+              <div class="detail-label">Account ID</div>
+              <div class="detail-value" id="account-id">test</div>
+          </div>
+      </div>
+
+      <div class="detail-line">
+          <i class="fas fa-key"></i>
+          <div class="detail-content">
+              <div class="detail-label">Authentication Type</div>
+              <div class="detail-value" id="auth-type">key_pair</div>
+          </div>
+      </div>
+
+      <div class="detail-line">
+          <i class="fas fa-bell"></i>
+          <div class="detail-content">
+              <div class="detail-label">Alert Configuration</div>
+              <div class="detail-value" id="alert-config-status">
+                <span class="text-muted">Loading...</span>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Alert Configuration Modal -->
+<div class="modal fade" id="alertConfigModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Alert Configuration</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>This will automatically configure alert forwarding from your cloud provider to Qubiva.</p>
+        <div id="alert-config-resources-list" style="margin: 20px 0;">
+          <!-- Cloud-specific resource will be shown here -->
+        </div>
+        <p class="text-muted" style="margin-bottom: 0;">You can remove this configuration at any time.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirm-configure-alerts-btn">
+          <i class="fas fa-bell"></i> Configure
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Remove Alert Configuration Modal -->
+<div class="modal fade" id="alertRemoveModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Remove Alert Configuration</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to remove the alert configuration?</p>
+        <p class="text-muted">Note: This will only remove the configuration from Qubiva. You may need to manually delete cloud resources (SNS topics, Action Groups, etc.) from your cloud provider.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirm-remove-alerts-btn">
+          Remove
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="discovery-dashboard-card">
+  <div class="card-header">
+    <h3 class="card-title">Discovery Dashboard</h3>
+    <div class="card-tools">
+      <button type="button" class="btn btn-tool" id="refresh-dashboard-btn" title="Refresh Dashboard">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    
+    <!-- Loading State -->
+    <div id="dashboard-loading" style="text-align: center; padding: 40px;">
+      <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+      <p class="mt-3">Loading dashboard data...</p>
+    </div>
+
+    <!-- No Data State -->
+    <div id="dashboard-no-data" style="display: none; text-align: center; padding: 40px;">
+      <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+      <h5>No Discovery Data Yet</h5>
+      <p class="text-muted">Run a discovery to see your cloud resources and costs.</p>
+      <button type="button" class="btn btn-primary mt-2" onclick="$('html, body').animate({scrollTop: $('#cloud-query-form').offset().top - 100}, 500);">
+        <i class="fas fa-play"></i> Run Discovery
+      </button>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div id="dashboard-content" style="display: none;">
+      
+      <!-- Summary Info Boxes -->
+      <div class="row">
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-info">
+            <div class="inner">
+              <h3 id="summary-resources">0</h3>
+              <p>Total Resources</p>
+            </div>
+            <div class="icon">
+              <i class="fas fa-cubes"></i>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-success">
+            <div class="inner">
+              <h3>$<span id="summary-cost">0</span></h3>
+              <p>Total Cost (MTD)</p>
+            </div>
+            <div class="icon">
+              <i class="fas fa-dollar-sign"></i>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-warning">
+            <div class="inner">
+              <h3 id="summary-tagging">0%</h3>
+              <p>Tagging Compliance</p>
+            </div>
+            <div class="icon">
+              <i class="fas fa-tags"></i>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-secondary">
+            <div class="inner">
+              <h3 id="summary-date">-</h3>
+              <p>Last Discovery</p>
+            </div>
+            <div class="icon">
+              <i class="fas fa-clock"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Discovery Insights Panel -->
+      <div class="row" id="insights-section" style="display: none;">
+        <div class="col-12">
+          <h5 class="mb-3"><i class="fas fa-lightbulb"></i> Discovery Insights & Recommendations</h5>
+          <div id="insights-content"></div>
+        </div>
+      </div>
+
+      <!-- Charts Row 1 -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Cost by Service</h3>
+            </div>
+            <div class="card-body">
+              <canvas id="cost-pie-chart" style="height: 250px;"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Resources by Type</h3>
+            </div>
+            <div class="card-body">
+              <canvas id="resource-donut-chart" style="height: 250px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row 2 -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Resources by Region</h3>
+            </div>
+            <div class="card-body">
+              <canvas id="region-bar-chart" style="height: 250px;"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Historical Trends Placeholder or Chart -->
+        <div class="col-md-6">
+          <div class="card" id="cost-trend-container">
+            <div class="card-header">
+              <h3 class="card-title">Cost Trend</h3>
+            </div>
+            <div class="card-body">
+              <!-- Chart (shown when data available) -->
+              <canvas id="cost-trend-chart" style="height: 250px; display: none;"></canvas>
+              
+              <!-- Placeholder (shown when no historical data) -->
+              <div id="historical-placeholder" style="text-align: center; padding: 60px 20px;">
+                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Historical Trends</h5>
+                <p class="text-muted">Available after running 2+ discoveries</p>
+                <small class="text-muted">Run another discovery to unlock trend analysis</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resource Explorer (Collapsible) -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Resource Explorer</h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+              <i class="fas fa-minus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+
+          <!-- Resources Table -->
+          <h5>Resources</h5>
+          <div class="table-responsive">
+            <table id="resources-table" class="table table-bordered table-striped table-sm">
+              <thead>
+                <tr>
+                  <th>Resource Type</th>
+                  <th>Name</th>
+                  <th>Region</th>
+                  <th>Tags</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <hr class="my-4">
+
+          <!-- Cost Breakdown Table -->
+          <h5>Cost Breakdown by Service</h5>
+          <div class="table-responsive">
+            <table id="costs-table" class="table table-bordered table-striped table-sm">
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th>Cost ($)</th>
+                  <th>% of Total</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Compliance Status Card -->
+<div class="card" id="compliance-status-card">
+  <div class="card-header">
+    <h3 class="card-title">Latest Benchmark Runs</h3>
+    <div class="card-tools">
+      <button type="button" class="btn btn-tool" id="refresh-compliance-btn" title="Refresh">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+
+    <!-- Loading State -->
+    <div id="compliance-loading" style="text-align: center; padding: 20px;">
+      <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+      <p class="mt-2 mb-0">Loading benchmark runs...</p>
+    </div>
+
+    <!-- No Runs State -->
+    <div id="compliance-no-runs" style="display: none; text-align: center; padding: 20px;">
+      <i class="fas fa-shield-alt fa-2x text-muted mb-2"></i>
+      <p class="text-muted mb-2">No compliance benchmarks run yet.</p>
+      <button type="button" class="btn btn-primary btn-sm" onclick="$('html, body').animate({scrollTop: $('#cloud-query-form').offset().top - 100}, 500);">
+        <i class="fas fa-play"></i> Run Compliance Benchmark
+      </button>
+    </div>
+
+    <!-- Compliance Data (Badge Tags) -->
+    <div id="compliance-data" style="display: none;">
+      <div id="compliance-badges" class="compliance-badge-container">
+        <!-- Badges will be inserted here dynamically -->
+      </div>
+
+      <!-- Benchmark Results Details -->
+      <div id="benchmark-results-container" style="display: none; margin-top: 20px;">
+        <!-- Summary Stats -->
+        <div id="benchmark-summary" class="row mb-3">
+          <!-- Summary cards will be inserted here -->
+        </div>
+
+        <!-- Controls Table -->
+        <h5 id="benchmark-title">Compliance Controls</h5>
+
+        <!-- Error/No Results Message -->
+        <div id="benchmark-error-message" style="display: none;"></div>
+
+        <!-- Table Container -->
+        <div id="benchmark-table-container" class="table-responsive">
+          <table id="benchmark-controls-table" class="table table-bordered table-striped table-sm">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Control Title</th>
+                <th>Service</th>
+                <th>Resources</th>
+                <th>Article/Section</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Discovery Resource Types Configuration Card -->
+<div class="card" id="discovery-config-card">
+  <div class="card-header">
+    <h3 class="card-title">Configure Resource Types for Discovery</h3>
+  </div>
+  <div class="card-body">
+
+    <!-- Loading State -->
+    <div id="discovery-config-loading" style="text-align: center; padding: 40px;">
+      <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+      <p class="mt-3">Loading resource types...</p>
+    </div>
+
+    <!-- Configuration Form (hidden until loaded) -->
+    <div id="discovery-config-form" style="display: none;">
+      <div class="form-group">
+        <select multiple="multiple" id="resource-types-duallistbox" name="resource_types[]">
+          <!-- Options will be populated dynamically -->
+        </select>
+      </div>
+      <button type="button" class="btn btn-primary mt-2" id="save-discovery-config">
+        <i class="fas fa-save"></i> Save Configuration
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Benchmarks and Reports</h3>
+  </div>
+  <div class="card-body">
+    <form id="cloud-query-form">
+      <!-- Run Type -->
+      <div class="form-group">
+        <label>Run Type</label>
+        <div class="radio">
+            <label>
+                <input type="radio" name="run-type" value="benchmark" checked> Benchmark
+            </label>
+            <label>
+                <input type="radio" name="run-type" value="query"> Query
+            </label>
+            <label>
+                <input type="radio" name="run-type" value="discovery" id="discovery-radio" disabled> Discovery
+                <a href="#" class="discovery-config-link text-primary" id="configure-discovery-link">
+                    <i class="fas fa-cog"></i> Configure
+                </a>
+                <span class="discovery-status not-configured" id="discovery-status">
+                    (Not Configured)
+                </span>
+            </label>
+        </div>
+      </div>
+
+      <!-- Compliance Engine Version -->
+      <div class="form-group" style="display: none;">
+        <label for="compliance-engine-version">Compliance Engine Version (Optional)</label>
+        <input type="text" class="form-control" id="compliance-engine-version" placeholder="Default: latest">
+      </div>
+
+      <!-- Query Engine Version -->
+      <div class="form-group" style="display: none;">
+        <label for="query-engine-version">Query Engine Version (Optional)</label>
+        <input type="text" class="form-control" id="query-engine-version" placeholder="Default: latest">
+      </div>
+
+      <!-- Plugin Version -->
+      <div class="form-group" style="display: none;">
+        <label for="plugin-version">Plugin Version (Optional)</label>
+        <input type="text" class="form-control" id="plugin-version" placeholder="Default: latest">
+      </div>
+
+      <!-- Benchmark Type Selection -->
+      <div id="benchmark-section" class="form-group" style="display: none;">
+        <label>Benchmark Type</label>
+        <div class="radio">
+            <label><input type="radio" name="benchmark-type" value="auto" checked> Auto Benchmark</label>
+            <label><input type="radio" name="benchmark-type" value="custom"> Custom Benchmark</label>
+        </div>
+      </div>
+
+      <!-- Mod Type Selection (only for auto benchmark) -->
+      <div id="mod-type-section" class="form-group" style="display: none;">
+        <label for="mod-type-select">Benchmark Category</label>
+        <select class="form-control" id="mod-type-select">
+          <option value="">Select category...</option>
+          <option value="compliance">Compliance</option>
+          <option value="public_access_risks">Public Access Risks</option>
+          <option value="cost">Cost Optimization</option>
+        </select>
+      </div>
+
+      <!-- Benchmark Selection (only for auto benchmark) -->
+      <div id="benchmark-select-section" class="form-group" style="display: none;">
+        <label for="benchmark-select">Select Benchmark</label>
+        <select class="form-control" id="benchmark-select" disabled>
+          <option value="">Select a benchmark...</option>
+        </select>
+      </div>
+
+      <!-- Git Repository Search -->
+      <div id="git-repo-section" class="form-group">
+        <label for="git-repo-search">Git Repository</label>
+        <select class="form-control select2" id="git-repo-search" style="width: 100%;">
+          <option selected="selected">Select a Git repository</option>
+        </select>
+      </div>
+
+      <!-- Schedule Options -->
+      <div class="form-group">
+        <label>Execution Type</label>
+        <div class="radio">
+            <label><input type="radio" name="execution-type" value="immediate" checked> Immediate</label>
+            <label><input type="radio" name="execution-type" value="schedule"> Schedule</label>
+        </div>
+      </div>
+
+      <!-- Schedule Expression Input -->
+      <div id="schedule-section" class="form-group" style="display: none;">
+        <label for="schedule-expression">Schedule Expression</label>
+        <input type="text" class="form-control" id="schedule-expression" placeholder="e.g., rate(1 hour), cron(0 12 * * ? *), or 30m">
+      </div>
+
+      <div class="form-group">
+        <label for="task-timeout">Task Timeout (hours)</label>
+        <input type="number" class="form-control" id="task-timeout" min="1" placeholder="Default: 2 hours">
+        <small class="form-text text-muted">Optional: Set custom timeout in hours for this task</small>
+      </div>
+
+      <button type="submit" id="execute-btn" class="btn btn-primary">Run Query</button>
+    </form>
+  </div>
+</div>
+
+<!-- Query Runs List -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Runs</h3>
+  </div>
+  <div class="card-body p-0">
+    <div id="cloud-queries-list">
+      <!-- Queries will be dynamically inserted here -->
+    </div>
+    <div class="mt-3 p-3" id="pagination-container">
+      <!-- Pagination will be dynamically inserted here -->
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="successModalLabel">Success</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="successModalMessage">
+        Query execution initiated successfully.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Failure Modal -->
+<div class="modal fade" id="failureModal" tabindex="-1" role="dialog" aria-labelledby="failureModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="failureModalLabel">Error</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="failureModalMessage">
+        Failed to initiate query execution. Please try again.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block cloud_query_scripts %}
+{{ super() }}
+<script src="{{ static_content_url }}/static/plugins/jquery/jquery.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/select2/js/select2.full.min.js"></script>
+<!-- Toastr -->
+<script src="{{ static_content_url }}/static/plugins/toastr/toastr.min.js"></script>
+<!-- Bootstrap Dual Listbox -->
+<script src="{{ static_content_url }}/static/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js"></script>
+<script src="{{ static_content_url }}/static/custom/js/cloud-query.js?v=2"></script>
+<!-- Chart.js -->
+<script src="{{ static_content_url }}/static/plugins/chart.js/Chart.min.js"></script>
+<!-- DataTables -->
+<script src="{{ static_content_url }}/static/plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+<!-- Discovery Dashboard -->
+<script src="{{ static_content_url }}/static/custom/js/discovery-dashboard.js"></script>
+<!-- Compliance Status -->
+<script src="{{ static_content_url }}/static/custom/js/compliance-status.js"></script>
+<!-- Alert Configuration -->
+<script src="{{ static_content_url }}/static/custom/js/cloud-account-alert-config.js"></script>
+<script src="{{ static_content_url }}/static/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/jszip/jszip.min.js"></script>
+<script src="{{ static_content_url }}/static/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+{% endblock %}
