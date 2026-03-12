@@ -4,81 +4,86 @@
 
 :root {
   --primary: #00d4ff;
-  --accent: #ff006e;
-  --bg-dark: #0a0a1a;
-  --bg-card: rgba(255,255,255,0.04);
-  --text: #e8e8f0;
-  --text-muted: #8888aa;
-  --gradient: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0a0a1a 100%);
+  --accent: #ff2d78;
+  --bg-dark: #0b0b1e;
+  --text: #f0f0f8;
+  --text-dim: #9999bb;
+  --card-bg: rgba(255,255,255,0.05);
+  --card-border: rgba(0,212,255,0.15);
 }
 
+/* ---- Base ---- */
 section {
-  background: var(--gradient);
+  background: linear-gradient(160deg, #0b0b1e 0%, #161638 100%);
   color: var(--text);
   font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  padding: 60px 80px;
-  justify-content: center;
+  padding: 50px 70px;
+  justify-content: flex-start;
+  font-size: 28px;
+  line-height: 1.5;
 }
 
-/* Title slide */
+/* ---- Title slide ---- */
 section.lead {
   text-align: center;
   justify-content: center;
+  background: radial-gradient(ellipse at 50% 40%, #1a1a4a 0%, #0b0b1e 70%);
 }
 
 section.lead h1 {
-  font-size: 4.5em;
-  background: linear-gradient(135deg, #00d4ff, #7b61ff, #ff006e);
+  font-size: 5em;
+  background: linear-gradient(135deg, #00d4ff 0%, #7b61ff 50%, #ff2d78 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 0.1em;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  margin: 0;
 }
 
 section.lead h2 {
-  font-size: 1.4em;
-  color: var(--text-muted);
-  border: none;
+  font-size: 1.3em;
+  color: var(--text-dim);
   font-weight: 300;
-  letter-spacing: 0.05em;
+  border: none;
+  margin-top: 0.3em;
+  letter-spacing: 0.03em;
 }
 
-/* Regular headings */
+/* ---- Headings ---- */
 h1 {
   color: var(--primary);
-  font-size: 2.8em;
+  font-size: 2.2em;
   font-weight: 700;
-  margin-bottom: 0.3em;
-  letter-spacing: -0.01em;
+  margin: 0 0 0.4em 0;
 }
 
 h2 {
   color: var(--primary);
-  font-size: 2em;
+  font-size: 1.5em;
   font-weight: 600;
-  border-bottom: 2px solid rgba(0,212,255,0.3);
-  padding-bottom: 0.2em;
-  margin-bottom: 0.6em;
+  border: none;
+  margin: 0.8em 0 0.3em 0;
 }
 
 h3 {
   color: var(--accent);
-  font-size: 1.5em;
+  font-size: 1.2em;
   font-weight: 600;
+  margin: 0.5em 0 0.2em 0;
 }
 
-/* Big statement slides */
+/* ---- Statement slides ---- */
 section.statement {
   text-align: center;
   justify-content: center;
+  background: radial-gradient(ellipse at 50% 50%, #12122e 0%, #0b0b1e 70%);
 }
 
 section.statement h1 {
-  font-size: 3.2em;
-  line-height: 1.3;
+  font-size: 2.6em;
   color: var(--text);
+  line-height: 1.4;
 }
 
 section.statement em {
@@ -90,7 +95,47 @@ section.statement strong {
   color: var(--accent);
 }
 
-/* Emphasis */
+/* ---- Divider slides ---- */
+section.divider {
+  text-align: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 50%, #1a1044 0%, #0b0b1e 70%);
+}
+
+section.divider h1 {
+  font-size: 3.5em;
+  background: linear-gradient(90deg, #00d4ff, #ff2d78);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ---- CTA slide ---- */
+section.cta {
+  text-align: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 40%, #1a0a2e 0%, #0b0b1e 70%);
+}
+
+section.cta h1 {
+  font-size: 2.8em;
+  color: var(--text);
+  margin-bottom: 0.3em;
+}
+
+section.cta h2 {
+  font-size: 1.6em;
+  color: var(--primary);
+  font-weight: 400;
+  border: none;
+}
+
+section.cta p {
+  color: var(--text-dim);
+  font-size: 0.9em;
+}
+
+/* ---- Text ---- */
 strong {
   color: var(--accent);
   font-weight: 700;
@@ -101,137 +146,116 @@ em {
   color: var(--primary);
 }
 
-/* Lists */
+/* ---- Lists ---- */
 ul, ol {
-  margin-left: 0.5em;
+  margin: 0.3em 0 0.3em 0.8em;
+  padding: 0;
 }
 
 li {
-  margin-bottom: 0.6em;
-  line-height: 1.6;
-  font-size: 1.1em;
+  margin-bottom: 0.35em;
+  line-height: 1.5;
+  font-size: 0.95em;
+  color: var(--text);
 }
 
 li::marker {
   color: var(--primary);
 }
 
-/* Code */
-code {
-  background: rgba(0,212,255,0.1);
-  color: var(--primary);
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.85em;
-}
-
-pre {
-  background: rgba(0,0,0,0.4);
-  border-left: 3px solid var(--primary);
-  border-radius: 8px;
-  padding: 1em 1.5em;
-}
-
-/* Tables */
-table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 1em 0;
-}
-
-th {
-  background: rgba(0,212,255,0.15);
-  color: var(--primary);
-  font-weight: 600;
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 2px solid rgba(0,212,255,0.3);
-}
-
-td {
-  padding: 10px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-
-tr:hover td {
-  background: rgba(255,255,255,0.02);
-}
-
-/* Links */
-a {
-  color: var(--primary);
-  text-decoration: none;
-  border-bottom: 1px solid rgba(0,212,255,0.3);
-}
-
-a:hover {
-  color: var(--accent);
-}
-
-/* Grid layout helper */
-section.grid {
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-}
-
-/* Card-style blocks */
+/* ---- Blockquotes as cards ---- */
 blockquote {
-  background: var(--bg-card);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-left: 3px solid var(--primary);
-  border-radius: 8px;
-  padding: 1em 1.5em;
-  margin: 0.5em 0;
+  border-radius: 10px;
+  padding: 0.6em 1em;
+  margin: 0.4em 0;
   font-style: normal;
+  color: var(--text);
+  font-size: 0.9em;
+}
+
+blockquote p {
+  margin: 0.2em 0;
 }
 
 blockquote strong {
   color: var(--primary);
 }
 
-/* Footer */
-footer {
-  color: var(--text-muted);
+/* ---- Code ---- */
+code {
+  background: rgba(0,212,255,0.08);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+}
+
+pre {
+  background: rgba(0,0,0,0.5);
+  border-left: 3px solid var(--primary);
+  border-radius: 8px;
+  padding: 0.8em 1.2em;
   font-size: 0.7em;
+  overflow-x: auto;
 }
 
-/* Page number */
-section::after {
-  color: var(--text-muted);
-  font-size: 0.7em;
+/* ---- Tables ---- */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  margin: 0.5em 0;
+  font-size: 0.8em;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
 }
 
-/* Divider slide */
-section.divider {
-  text-align: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #0f0f2a 0%, #1a1040 40%, #0a0a1a 100%);
+th {
+  background: rgba(0,212,255,0.1);
+  color: var(--primary);
+  font-weight: 600;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--card-border);
 }
 
-section.divider h1 {
-  font-size: 3.5em;
-  background: linear-gradient(90deg, #00d4ff, #ff006e);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* CTA slide */
-section.cta {
-  text-align: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a0a1a 100%);
-}
-
-section.cta h1 {
-  font-size: 3em;
+td {
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
   color: var(--text);
-  margin-bottom: 0.5em;
+  background: rgba(255,255,255,0.02);
 }
 
-section.cta h2 {
-  border: none;
-  font-size: 1.2em;
-  color: var(--text-muted);
-  font-weight: 300;
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---- Links ---- */
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+/* ---- Footer & page number ---- */
+footer {
+  color: var(--text-dim);
+  font-size: 0.6em;
+}
+
+section::after {
+  color: var(--text-dim);
+  font-size: 0.6em;
+}
+
+/* ---- Compact helper ---- */
+section.compact {
+  font-size: 24px;
+}
+
+section.compact li {
+  margin-bottom: 0.25em;
 }
