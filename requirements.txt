@@ -1,6 +1,6 @@
 --no-binary=lxml,xmlsec
 aiofiles==24.1.0
-aiohappyeyeballs==2.4.0
+aiohappyeyeballs>=2.5.0
 aiohttp>=3.11.12
 aioitertools==0.11.0
 aiosignal==1.3.1
@@ -46,7 +46,7 @@ uvicorn==0.30.6
 watchfiles==0.24.0
 websockets==11.0.3
 wrapt==1.16.0
-yarl==1.9.6
+yarl>=1.17.0
 azure-identity>=1.7.0
 azure-mgmt-resource>=20.0.0
 azure-mgmt-monitor>=6.0.0
