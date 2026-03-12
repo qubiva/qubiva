@@ -125,11 +125,7 @@ jobs:
 
           ```bash
           helm install qubiva oci://ghcr.io/qubiva/charts/qubiva --version ${{ steps.version.outputs.version }} \
-            --namespace qubiva --create-namespace \
-            --set secrets.localEncryptionKey="$(python3 -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')" \
-            --set secrets.localSigningKey="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')" \
-            --set secrets.jwtSecret="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')" \
-            --set secrets.internalApiKey="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+            --namespace qubiva --create-namespace
           ```
 
           ## Demo
