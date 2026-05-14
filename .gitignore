@@ -78,6 +78,10 @@ instance/
 # Sphinx documentation
 docs/_build/
 
+# Local generated content
+docs/pitch/
+screenshots/
+
 # PyBuilder
 .pybuilder/
 target/
