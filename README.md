@@ -30,12 +30,7 @@ Most cloud tools do one thing — IaC execution, compliance scanning, or resourc
 
 ## Screenshots
 
-| | |
-|---|---|
-| ![Dashboard](screenshots/screenshot_01_dashboard.png) | ![Cloud Discovery](screenshots/screenshot_03_discovery.png) |
-| *Unified dashboard* | *Query live cloud resources with SQL* |
-| ![Cloud Analyst](screenshots/screenshot_06_analyst.png) | ![IaC Run](screenshots/screenshot_09_tfapply.png) |
-| *AI-powered cloud analysis (bring your own LLM)* | *OpenTofu/Terraform execution with real-time logs* |
+![Qubiva demo — dashboard, cloud discovery, compliance, IaC execution, AI analyst, tasks, and more](screenshots/demo.gif)
 
 ## Features
 
