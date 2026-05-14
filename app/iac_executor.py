@@ -299,6 +299,10 @@ class IaCJobTrigger:
                 if v is not None:
                     env_vars.append({'name': k, 'value': str(v)})
 
+            # Pass selected execution phases to runner
+            if phases:
+                env_vars.append({'name': 'TF_PHASES', 'value': ','.join(phases)})
+
             # Pass backend type (kubernetes, s3, local, gcs, azurerm)
             env_vars.append({'name': 'TF_BACKEND_TYPE', 'value': backend_type})
 

@@ -80,7 +80,6 @@ docs/_build/
 
 # Local generated content
 docs/pitch/
-screenshots/
 
 # Local Helm overrides (contain secrets, never commit)
 helm/local-values.yaml

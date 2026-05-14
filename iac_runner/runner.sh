@@ -467,7 +467,15 @@ if [ $? -ne 0 ]; then
     handle_error "Failed to create backend.tf configuration"
 fi
 
-# Initialize IaC engine
+# Phase selection: comma-separated list of phases to execute.
+# Defaults to validate,plan,apply if not specified.
+TF_PHASES="${TF_PHASES:-validate,plan,apply}"
+echo "Executing phases: $TF_PHASES"
+
+# Helper: check if a phase is selected
+phase_enabled() { [[ ",$TF_PHASES," == *",$1,"* ]]; }
+
+# Initialize IaC engine (always required)
 echo "Initializing $TF_ENGINE..."
 $TF_ENGINE init
 init_exit=$?
@@ -475,86 +483,124 @@ if [ $init_exit -ne 0 ]; then
     handle_error "$TF_ENGINE initialization failed (exit code: $init_exit)"
 fi
 
-# Generate plan
-echo "Generating $TF_ENGINE plan..."
-$TF_ENGINE plan -out=tfplan
-plan_exit=$?
-if [ $plan_exit -ne 0 ]; then
-    handle_error "$TF_ENGINE plan failed (exit code: $plan_exit)"
+# Validate
+if phase_enabled "validate"; then
+    echo "Validating $TF_ENGINE configuration..."
+    $TF_ENGINE validate
+    validate_exit=$?
+    if [ $validate_exit -ne 0 ]; then
+        handle_error "$TF_ENGINE validation failed (exit code: $validate_exit)"
+    fi
 fi
 
-# Run policy governance checks if configured
-if [[ -n "$REPO_POLICY_PATH" || -n "$ORG_POLICY_REPO_URL" ]]; then
-    echo "Running policy governance checks..."
-    
-    POLICY_DIRS=()
-    
-    if [[ -n "$ORG_POLICY_REPO_URL" ]]; then
-        ORG_POLICY_FULL_PATH="/workspace/org-policies${ORG_POLICY_PATH:+/$ORG_POLICY_PATH}"
-        if [[ -d "$ORG_POLICY_FULL_PATH" ]]; then
-            POLICY_DIRS+=("$ORG_POLICY_FULL_PATH")
-            echo "Added org-level policies from: $ORG_POLICY_FULL_PATH"
-        else
-            echo "Warning: Org policy path not found: $ORG_POLICY_FULL_PATH"
-        fi
+# Refresh (update state to match real infrastructure)
+if phase_enabled "refresh"; then
+    echo "Refreshing $TF_ENGINE state..."
+    $TF_ENGINE apply -refresh-only --auto-approve
+    refresh_exit=$?
+    if [ $refresh_exit -ne 0 ]; then
+        handle_error "$TF_ENGINE refresh failed (exit code: $refresh_exit)"
     fi
-    
-    if [[ -n "$REPO_POLICY_PATH" ]]; then        
-        if [[ "$REPO_POLICY_PATH" == /* ]]; then
-            REPO_POLICY_FULL_PATH="/workspace/repo${REPO_POLICY_PATH}"
-        else
-            REPO_POLICY_FULL_PATH="/workspace/repo${TF_CONFIG_PATH:+/$TF_CONFIG_PATH}/${REPO_POLICY_PATH}"
-        fi
-        
-        if [[ -d "$REPO_POLICY_FULL_PATH" ]]; then
-            POLICY_DIRS+=("$REPO_POLICY_FULL_PATH")
-            echo "Added repo-level policies from: $REPO_POLICY_FULL_PATH"
-        else
-            echo "Warning: Repo policy path not found: $REPO_POLICY_FULL_PATH"
-        fi
+fi
+
+# Plan (required for apply and destroy too)
+if phase_enabled "plan" || phase_enabled "apply" || phase_enabled "destroy"; then
+    echo "Generating $TF_ENGINE plan..."
+    if phase_enabled "destroy"; then
+        $TF_ENGINE plan -destroy -out=tfplan
+    else
+        $TF_ENGINE plan -out=tfplan
     fi
-    
-    if [[ ${#POLICY_DIRS[@]} -gt 0 ]]; then
-        echo "Running Conftest with ${#POLICY_DIRS[@]} policy directory(ies)..."
-        
-        $TF_ENGINE show -json tfplan > tfplan.json
-        show_exit=$?
-        if [ $show_exit -ne 0 ]; then
-            handle_error "Failed to convert plan to JSON (exit code: $show_exit)"
-        fi
-        
-        CONFTEST_CMD="conftest test tfplan.json"
-        for policy_dir in "${POLICY_DIRS[@]}"; do
-            CONFTEST_CMD+=" --policy $policy_dir"
-        done
-        
-        echo "Running: $CONFTEST_CMD"
-        
-        conftest_output=$(eval $CONFTEST_CMD 2>&1)
-        conftest_exit=$?
-        
-        echo "$conftest_output"
-        
-        if [ $conftest_exit -ne 0 ]; then
-            if echo "$conftest_output" | grep -q "no policies found"; then
-                echo "Warning: No valid policy files found in policy directories - skipping policy checks"
+    plan_exit=$?
+    if [ $plan_exit -ne 0 ]; then
+        handle_error "$TF_ENGINE plan failed (exit code: $plan_exit)"
+    fi
+
+    # Run policy governance checks if configured (only when plan ran)
+    if [[ -n "$REPO_POLICY_PATH" || -n "$ORG_POLICY_REPO_URL" ]]; then
+        echo "Running policy governance checks..."
+
+        POLICY_DIRS=()
+
+        if [[ -n "$ORG_POLICY_REPO_URL" ]]; then
+            ORG_POLICY_FULL_PATH="/workspace/org-policies${ORG_POLICY_PATH:+/$ORG_POLICY_PATH}"
+            if [[ -d "$ORG_POLICY_FULL_PATH" ]]; then
+                POLICY_DIRS+=("$ORG_POLICY_FULL_PATH")
+                echo "Added org-level policies from: $ORG_POLICY_FULL_PATH"
             else
-                handle_error "Policy governance checks failed - plan violates policies (exit code: $conftest_exit)"
+                echo "Warning: Org policy path not found: $ORG_POLICY_FULL_PATH"
+            fi
+        fi
+
+        if [[ -n "$REPO_POLICY_PATH" ]]; then
+            if [[ "$REPO_POLICY_PATH" == /* ]]; then
+                REPO_POLICY_FULL_PATH="/workspace/repo${REPO_POLICY_PATH}"
+            else
+                REPO_POLICY_FULL_PATH="/workspace/repo${TF_CONFIG_PATH:+/$TF_CONFIG_PATH}/${REPO_POLICY_PATH}"
+            fi
+
+            if [[ -d "$REPO_POLICY_FULL_PATH" ]]; then
+                POLICY_DIRS+=("$REPO_POLICY_FULL_PATH")
+                echo "Added repo-level policies from: $REPO_POLICY_FULL_PATH"
+            else
+                echo "Warning: Repo policy path not found: $REPO_POLICY_FULL_PATH"
+            fi
+        fi
+
+        if [[ ${#POLICY_DIRS[@]} -gt 0 ]]; then
+            echo "Running Conftest with ${#POLICY_DIRS[@]} policy directory(ies)..."
+
+            $TF_ENGINE show -json tfplan > tfplan.json
+            show_exit=$?
+            if [ $show_exit -ne 0 ]; then
+                handle_error "Failed to convert plan to JSON (exit code: $show_exit)"
+            fi
+
+            CONFTEST_CMD="conftest test tfplan.json"
+            for policy_dir in "${POLICY_DIRS[@]}"; do
+                CONFTEST_CMD+=" --policy $policy_dir"
+            done
+
+            echo "Running: $CONFTEST_CMD"
+
+            conftest_output=$(eval $CONFTEST_CMD 2>&1)
+            conftest_exit=$?
+
+            echo "$conftest_output"
+
+            if [ $conftest_exit -ne 0 ]; then
+                if echo "$conftest_output" | grep -q "no policies found"; then
+                    echo "Warning: No valid policy files found in policy directories - skipping policy checks"
+                else
+                    handle_error "Policy governance checks failed - plan violates policies (exit code: $conftest_exit)"
+                fi
+            else
+                echo "Policy governance checks passed successfully!"
             fi
         else
-            echo "Policy governance checks passed successfully!"
+            echo "Warning: No valid policy directories found, skipping policy checks"
         fi
-    else
-        echo "Warning: No valid policy directories found, skipping policy checks"
     fi
 fi
 
-# Apply configuration
-echo "Applying $TF_ENGINE configuration..."
-$TF_ENGINE apply --auto-approve
-apply_exit=$?
-if [ $apply_exit -ne 0 ]; then
-    handle_error "$TF_ENGINE apply failed (exit code: $apply_exit)"
+# Apply
+if phase_enabled "apply" && ! phase_enabled "destroy"; then
+    echo "Applying $TF_ENGINE configuration..."
+    $TF_ENGINE apply --auto-approve tfplan
+    apply_exit=$?
+    if [ $apply_exit -ne 0 ]; then
+        handle_error "$TF_ENGINE apply failed (exit code: $apply_exit)"
+    fi
+fi
+
+# Destroy
+if phase_enabled "destroy"; then
+    echo "Destroying $TF_ENGINE resources..."
+    $TF_ENGINE apply --auto-approve tfplan
+    destroy_exit=$?
+    if [ $destroy_exit -ne 0 ]; then
+        handle_error "$TF_ENGINE destroy failed (exit code: $destroy_exit)"
+    fi
 fi
 
 # Success - mark as completed
