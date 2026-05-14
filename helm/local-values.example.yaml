@@ -1,0 +1,29 @@
+# Local development overrides for Docker Desktop K8s
+# Copy this file to local-values.yaml and fill in your values.
+# local-values.yaml is gitignored and should never be committed.
+#
+# Usage:
+#   helm install qubiva ./helm/qubiva -f helm/local-values.yaml
+
+image:
+  repository: qubiva/app
+  tag: "latest"
+  pullPolicy: Never
+
+runners:
+  iac:
+    image: qubiva/iac-runner
+    tag: latest
+  discovery:
+    image: qubiva/discovery-runner
+    tag: latest
+
+secrets:
+  databaseUrl: "mongodb://qubiva-mongo:27017/qubiva?replicaSet=rs0"
+  # Generate: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+  localEncryptionKey: ""
+  localSigningKey: ""
+  # Generate: python -c "import secrets; print(secrets.token_urlsafe(32))"
+  jwtSecret: ""
+  internalApiKey: ""
+  llmApiKey: ""

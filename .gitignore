@@ -82,6 +82,9 @@ docs/_build/
 docs/pitch/
 screenshots/
 
+# Local Helm overrides (contain secrets, never commit)
+helm/local-values.yaml
+
 # PyBuilder
 .pybuilder/
 target/
