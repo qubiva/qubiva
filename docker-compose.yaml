@@ -68,8 +68,10 @@ services:
       RELEASE_VERSION: "v0.1.0-demo"
       APP_BANNER_MESSAGE: "Demo environment with sample data. Some features require Kubernetes and are not available here. Do not enter real cloud credentials. Data will be lost when containers are removed. Deploy via Helm for the full experience."
       ARTIFACTS_STORAGE_PATH: "/app/data/artifacts"
+      LLM_API_KEY: "${LLM_API_KEY}"
     volumes:
       - artifacts:/app/data/artifacts
+      - ./demo/app_config.json:/app/config/app_config.json:ro
 
 volumes:
   mongodb-data:

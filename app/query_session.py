@@ -100,6 +100,11 @@ class QuerySessionManager:
         running, but NO cloud credentials. Pods are claimed instantly when
         a user starts a new chat.
         """
+        # Skip pool if no Kubernetes client (e.g. docker-compose demo)
+        if self.core_v1 is None:
+            logger.info("Session pod pool skipped (no Kubernetes client)")
+            return
+
         # Skip pool if LLM provider is not configured (no API key = analyst unusable)
         from app.deps import is_analyst_ready
         if not is_analyst_ready():
@@ -141,6 +146,9 @@ class QuerySessionManager:
 
     async def _replenish_pool(self):
         """Ensure the pool has enough ready pods."""
+        if self.core_v1 is None:
+            return
+
         # Skip if LLM provider is not configured
         from app.deps import is_analyst_ready
         if not is_analyst_ready():
@@ -423,6 +431,15 @@ class QuerySessionManager:
             user=user,
         )
         self._sessions[conversation_id] = session
+
+        if self.core_v1 is None:
+            session.status = "error"
+            session.error_message = (
+                "Live query sessions require Kubernetes. "
+                "Deploy via Helm for the full experience."
+            )
+            logger.warning("Cannot create session pod — no Kubernetes client available")
+            return session
 
         try:
             # Build minimal env vars — no credentials, just query engine setup
@@ -1155,21 +1172,22 @@ while true; do sleep 60; done
                 pass
 
         # Delete the K8s pod
-        try:
-            self.core_v1.delete_namespaced_pod(
-                name=session.pod_name,
-                namespace=self.namespace,
-                body=k8s_client.V1DeleteOptions(
-                    grace_period_seconds=5,
-                ),
-            )
-            logger.info("Destroyed session pod: %s", session.pod_name)
-        except k8s_client.ApiException as e:
-            if e.status != 404:
-                logger.warning(
-                    "Error deleting session pod %s: %s",
-                    session.pod_name, e.reason,
+        if self.core_v1 is not None:
+            try:
+                self.core_v1.delete_namespaced_pod(
+                    name=session.pod_name,
+                    namespace=self.namespace,
+                    body=k8s_client.V1DeleteOptions(
+                        grace_period_seconds=5,
+                    ),
                 )
+                logger.info("Destroyed session pod: %s", session.pod_name)
+            except k8s_client.ApiException as e:
+                if e.status != 404:
+                    logger.warning(
+                        "Error deleting session pod %s: %s",
+                        session.pod_name, e.reason,
+                    )
 
         session.status = "terminated"
 

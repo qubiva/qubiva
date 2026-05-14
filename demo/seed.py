@@ -1791,6 +1791,136 @@ def seed(db, fernet):
     db.alerts.insert_many(finops_alerts)
     print("  Created finops alerts")
 
+    # ── Analyst Conversations ────────────────────────────────────────────
+    conversations = [
+        {
+            "conversation_id": "demo-conv-0001-0000-0000-000000000001",
+            "user": "admin@qubiva.local",
+            "title": "EC2 encryption audit",
+            "project_name": "acme-platform",
+            "account_id": "123456789012",
+            "cloud_platform": "aws",
+            "scope": "project",
+            "pod_name": "analyst-democonvdemo",
+            "created_at": iso(NOW - timedelta(hours=3)),
+            "updated_at": iso(NOW - timedelta(hours=3)),
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Which EC2 instances are running without encryption on their root volumes?"
+                },
+                {
+                    "role": "assistant",
+                    "content": (
+                        "I found **4 EC2 instances** with unencrypted root volumes in your AWS account:\n\n"
+                        "| Instance ID | Name | Region | State |\n"
+                        "|---|---|---|---|\n"
+                        "| i-0a1b2c3d4e5f60006 | monitoring-server | us-east-1 | running |\n"
+                        "| i-0a1b2c3d4e5f60007 | dev-sandbox | us-west-2 | running |\n"
+                        "| i-0a1b2c3d4e5f60003 | worker-prod-1 | us-east-1 | running |\n"
+                        "| i-0a1b2c3d4e5f60004 | worker-prod-2 | us-west-2 | running |\n\n"
+                        "**Recommendation:** Enable EBS default encryption for your account to ensure all new volumes "
+                        "are automatically encrypted. For existing instances, you'll need to create encrypted snapshots "
+                        "and replace the volumes. The production workers (`worker-prod-1` and `worker-prod-2`) should "
+                        "be prioritised — they may be handling sensitive data."
+                    ),
+                    "tool_calls": None,
+                },
+            ],
+        },
+        {
+            "conversation_id": "demo-conv-0002-0000-0000-000000000002",
+            "user": "admin@qubiva.local",
+            "title": "S3 public access review",
+            "project_name": "acme-platform",
+            "account_id": "123456789012",
+            "cloud_platform": "aws",
+            "scope": "project",
+            "pod_name": "analyst-democonvdemo2",
+            "created_at": iso(NOW - timedelta(hours=1, minutes=30)),
+            "updated_at": iso(NOW - timedelta(minutes=45)),
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Show me all S3 buckets and whether they have public access blocked."
+                },
+                {
+                    "role": "assistant",
+                    "content": (
+                        "Here's the public access status for all S3 buckets in your account:\n\n"
+                        "| Bucket | Public Access Blocked | Versioning | Region |\n"
+                        "|---|---|---|---|\n"
+                        "| acme-prod-assets | ✅ Yes | Enabled | us-east-1 |\n"
+                        "| acme-prod-backups | ✅ Yes | Enabled | us-east-1 |\n"
+                        "| acme-prod-logs | ✅ Yes | Disabled | us-east-1 |\n"
+                        "| acme-dev-uploads | ⚠️ **No** | Disabled | us-west-2 |\n"
+                        "| acme-staging-assets | ✅ Yes | Enabled | us-west-2 |\n\n"
+                        "**⚠️ Action required:** `acme-dev-uploads` does not have public access blocked. "
+                        "Even if no objects are currently public, this configuration is a risk — a misconfigured "
+                        "bucket policy or ACL could accidentally expose data. I recommend enabling Block Public Access "
+                        "on this bucket immediately."
+                    ),
+                    "tool_calls": None,
+                },
+                {
+                    "role": "user",
+                    "content": "How many objects are in acme-dev-uploads and what's the total size?"
+                },
+                {
+                    "role": "assistant",
+                    "content": (
+                        "The `acme-dev-uploads` bucket contains:\n\n"
+                        "- **1,247 objects**\n"
+                        "- **Total size: 38.4 GB**\n\n"
+                        "The objects appear to be a mix of user-uploaded files (images, PDFs, CSVs) based on the "
+                        "key prefixes. Given the public access risk, I'd recommend auditing the object ACLs and "
+                        "enabling Block Public Access before any of these are accidentally exposed."
+                    ),
+                    "tool_calls": None,
+                },
+            ],
+        },
+        {
+            "conversation_id": "demo-conv-0003-0000-0000-000000000003",
+            "user": "admin@qubiva.local",
+            "title": "AWS spend by service",
+            "project_name": "finops-dashboard",
+            "account_id": "987654321098",
+            "cloud_platform": "aws",
+            "scope": "project",
+            "pod_name": "analyst-democonvdemo3",
+            "created_at": iso(NOW - timedelta(minutes=30)),
+            "updated_at": iso(NOW - timedelta(minutes=30)),
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "What's our AWS spend by service this month and which services are over budget?"
+                },
+                {
+                    "role": "assistant",
+                    "content": (
+                        "Here's your AWS spend breakdown for this month:\n\n"
+                        "| Service | Spend (MTD) | Budget | Status |\n"
+                        "|---|---|---|---|\n"
+                        "| EC2 | $1,842 | $1,500 | 🔴 **+23% over** |\n"
+                        "| RDS | $634 | $700 | ✅ On track |\n"
+                        "| S3 | $218 | $300 | ✅ On track |\n"
+                        "| CloudFront | $187 | $200 | ✅ On track |\n"
+                        "| Lambda | $43 | $100 | ✅ On track |\n"
+                        "| Other | $118 | $200 | ✅ On track |\n"
+                        "| **Total** | **$3,042** | **$3,000** | 🟡 **+1.4% over** |\n\n"
+                        "**EC2 is the main culprit** — $342 over budget. The spike correlates with 3 new `m5.xlarge` "
+                        "instances launched on the 14th for the data pipeline migration. If the migration is complete, "
+                        "consider downsizing or terminating those instances to bring EC2 spend back in line."
+                    ),
+                    "tool_calls": None,
+                },
+            ],
+        },
+    ]
+    db.analyst_conversations.insert_many(conversations)
+    print("  Created analyst conversations")
+
     # ── Update admin user's project list ────────────────────────────────
     db.users.update_one(
         {"username": "admin@qubiva.local"},
