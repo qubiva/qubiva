@@ -18,3 +18,8 @@ keywords:
   - compliance
 maintainers:
   - name: vijayvat
+annotations:
+  artifacthub.io/license: AGPL-3.0
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/recommendations: |
+    - url: https://artifacthub.io/packages/helm/qubiva/qubiva
