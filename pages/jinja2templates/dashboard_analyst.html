@@ -7,8 +7,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="analyst-container{% if not analyst_ready %} analyst-disabled{% endif %}">
-    {% if not analyst_ready %}
+<div class="analyst-container{% if not analyst_ready and not is_demo %} analyst-disabled{% endif %}">
+    {% if not analyst_ready and not is_demo %}
     <div class="analyst-not-configured">
         <div class="not-configured-content">
             <i class="fas fa-robot" style="font-size: 2.5rem; color: #adb5bd; margin-bottom: 1rem;"></i>
@@ -28,6 +28,11 @@
                 <code>LLM_API_KEY</code> in your app configuration to get started.
             </p>
         </div>
+    </div>
+    {% elif not analyst_ready and is_demo %}
+    <div class="alert alert-warning m-2" style="font-size:0.85rem;">
+        <i class="fas fa-info-circle mr-1"></i>
+        LLM not configured — existing conversations are read-only. Set <code>LLM_API_KEY</code> to enable new chats.
     </div>
     {% endif %}
     <!-- Sidebar: Conversation List -->

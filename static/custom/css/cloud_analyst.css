@@ -1,6 +1,6 @@
 /* Cloud Analyst — Chat UI Styles */
 
-/* Disabled state when LLM is not configured */
+/* Disabled state when LLM is not configured (non-demo deployments) */
 .analyst-container.analyst-disabled {
     position: relative;
 }

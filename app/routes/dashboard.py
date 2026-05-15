@@ -749,8 +749,10 @@ async def dashboard_analyst(
 ):
     """Top-level Cloud Analyst page -- user picks project/scope in the UI."""
     # Check if LLM is properly configured (provider + model + API key)
+    import os
     from app.deps import is_analyst_ready
     analyst_ready = is_analyst_ready()
+    is_demo = bool(os.getenv("APP_BANNER_MESSAGE"))
     return templates.TemplateResponse(
         "dashboard_analyst.html",
         {
@@ -758,5 +760,6 @@ async def dashboard_analyst(
             "user": user["username"],
             "permissions": user_permissions,
             "analyst_ready": analyst_ready,
+            "is_demo": is_demo,
         },
     )
