@@ -3,54 +3,148 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![CI](https://github.com/Qubiva/qubiva/actions/workflows/ci.yaml/badge.svg)](https://github.com/Qubiva/qubiva/actions/workflows/ci.yaml)
 
-Open-source multi-cloud governance platform. Execute OpenTofu/Terraform runs, discover cloud resources via SQL, enforce OPA policies and compliance benchmarks, manage tasks and sprints, and query your infrastructure with AI (bring your own LLM). Built-in RBAC, SSO, alerts, and automation for AWS, Azure, and GCP.
+Open-source Kubernetes-native platform for OpenTofu/Terraform operations, cloud governance, compliance, resource discovery, and AI-assisted infrastructure analysis.
 
-## Try it
+Qubiva helps platform teams stop stitching together separate tools for IaC execution, cloud inventory, policy enforcement, compliance scanning, dashboards, and operational workflows.
+
+Built for AWS, Azure, and GCP with self-hosted deployment, unified RBAC, SSO, audit trails, automation, and bring-your-own LLM support.
+
+---
+
+## Try Qubiva in 2 Minutes
+
+Launch a fully working demo instantly in GitHub Codespaces.
+
+- No cloud account required
+- No Kubernetes setup required
+- Pre-loaded with sample infrastructure data
+- Explore discovery, compliance, IaC runs, AI querying, tasks, and more immediately
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/qubiva/qubiva?quickstart=1)
 
-Try a fully loaded demo — pre-loaded with sample cloud data, ready to explore.
+Click the button above, then **"Create new codespace"**. Wait for setup to complete. A browser tab will open automatically with the app.
 
-Click the button above, then **"Create new codespace"**. Wait for setup to complete. A browser tab will open automatically with the app. If your browser blocks the popup, go to the **Ports** tab in the Codespaces editor and click the URL for port 80. Login: `admin@qubiva.local` / `Demo@2026`
+If your browser blocks the popup, go to the **Ports** tab in the Codespaces editor and open the URL for port 80.
 
-> Codespaces is free for up to 60 hours/month. Remember to delete your codespace at [github.com/codespaces](https://github.com/codespaces) when you're done to conserve your free hours.
+### Demo credentials
 
-Or run the demo locally: `git clone https://github.com/qubiva/qubiva.git && cd qubiva && docker compose up` — then open **http://localhost** with the same credentials.
+```text
+Email: admin@qubiva.local
+Password: Demo@2026
+```
 
-> **Note:** The demo runs with pre-loaded sample data for evaluation only. To connect real cloud accounts, deploy on Kubernetes using the [Helm chart](#deploy-helm).
+> Codespaces is free for up to 60 hours/month. Remember to delete your codespace at https://github.com/codespaces when you're done to conserve your free hours.
+
+---
+
+## Run Locally
+
+```bash
+git clone https://github.com/qubiva/qubiva.git
+cd qubiva
+docker compose up
+```
+
+Then open:
+
+```text
+http://localhost
+```
+
+Use the same demo credentials above.
+
+> The local demo runs with pre-loaded sample data for evaluation only. To connect real cloud accounts, deploy on Kubernetes using the Helm chart below.
+
+---
 
 ## Why Qubiva?
 
-Most cloud tools do one thing — IaC execution, compliance scanning, or resource inventory. Qubiva brings them together in a single self-hosted platform with unified credentials, consistent RBAC, and no vendor lock-in.
+Modern platform teams often end up stitching together:
 
-- **One platform instead of five** — IaC execution, cloud discovery, compliance benchmarks, policy enforcement, and AI-powered querying under one roof
-- **Bring your own LLM** — Cloud Analyst works with any OpenAI-compatible API (OpenAI, Groq, Azure OpenAI, Google Gemini, and more). No AI vendor lock-in.
-- **Self-hosted, open source** — Runs on any Kubernetes cluster. OpenTofu by default, Terraform optional. AGPL-3.0 licensed.
-- **Enterprise-ready** — SAML 2.0 SSO, organization and project-level RBAC, full audit trail, scheduled automation, and email alerts out of the box
+- Terraform/OpenTofu execution tools
+- Cloud inventory and discovery tools
+- Compliance scanners
+- OPA policy enforcement
+- Internal dashboards
+- Operational workflows and approvals
+- AI tooling bolted onto infrastructure later
+
+Qubiva brings these capabilities together into a single self-hosted Kubernetes-native platform with unified credentials, consistent RBAC, centralized auditability, and no vendor lock-in.
+
+### What Qubiva provides
+
+- Infrastructure as Code execution
+- Multi-cloud resource discovery using SQL
+- Compliance benchmarks and policy enforcement
+- AI-powered infrastructure querying
+- Operational workflows and task management
+- Shared credentials and project isolation
+- Scheduled automation and alerts
+- SSO, RBAC, and audit trails
+
+---
 
 ## Screenshots
 
 ![Qubiva demo — dashboard, cloud discovery, compliance, IaC execution, AI analyst, tasks, and more](screenshots/demo.gif)
 
-## Features
+---
 
-- **Infrastructure as Code** — Execute OpenTofu/Terraform plans with state management, run history, and real-time log streaming
-- **Cloud discovery** — Query live cloud resources using SQL across all connected accounts
-- **Compliance benchmarks** — Run compliance checks against industry standards (CIS, SOC 2, HIPAA, PCI DSS, NIST 800-53, and more)
-- **Policy enforcement** — Conftest/OPA policy checks on infrastructure changes before they deploy
-- **Cloud Analyst** — AI-powered chat that queries your cloud infrastructure in natural language (bring your own LLM)
-- **Task management** — Create tasks with priorities, due dates, assignments, and custom tags. Organize work into sprints. Add comments with @mentions and email notifications. Link tasks with relationships (parent/child, blocks/blocked-by, related)
-- **Multi-cloud management** — Projects, cloud accounts, workspaces, and shared credentials across AWS, Azure, and GCP
-- **Scheduled runs** — Cron-based automation for discovery, compliance, and IaC execution
-- **GitHub integration** — Connect GitHub App for IaC template repositories
-- **Alerts and notifications** — Configurable cloud resource alerts with email notifications
-- **User management** — Invite users, assign project roles, manage organization-level access
-- **RBAC** — Organization and project-level roles with granular permissions
-- **SSO** — SAML 2.0 single sign-on (Azure AD, Okta, etc.)
-- **Audit trail** — Full audit log of all user and system actions
-- **Real-time logs** — Live log streaming for running jobs with full history via Loki
+## Core Features
 
-### Supported clouds
+### Infrastructure as Code
+
+- Execute OpenTofu/Terraform plans and applies
+- State management
+- Run history
+- Real-time log streaming
+- Kubernetes Job-based isolated execution
+
+### Cloud Discovery
+
+- Query live cloud resources using SQL
+- Multi-cloud inventory visibility
+- Shared cloud credentials across projects
+- AWS, Azure, and GCP support
+
+### Compliance & Policy Enforcement
+
+- CIS, SOC 2, HIPAA, PCI DSS, NIST 800-53, and more
+- OPA/Conftest policy checks
+- Pre-deployment policy enforcement
+- Scheduled compliance automation
+
+### Cloud Analyst (Bring Your Own LLM)
+
+Query infrastructure in natural language using any OpenAI-compatible provider.
+
+Supports:
+
+- OpenAI
+- Azure OpenAI
+- Groq
+- Google Gemini
+- Other OpenAI-compatible APIs
+
+### Operational Workflows
+
+- Tasks, sprints, priorities, assignments
+- Comments with @mentions
+- Email notifications
+- Task relationships (blocks, parent/child, related)
+
+### Enterprise Features
+
+- SAML 2.0 SSO
+- Organization and project-level RBAC
+- Full audit trails
+- Scheduled automation
+- Email alerts
+- GitHub integration
+
+---
+
+## Supported Clouds
 
 | Capability | AWS | Azure | GCP |
 |------------|-----|-------|-----|
@@ -60,36 +154,45 @@ Most cloud tools do one thing — IaC execution, compliance scanning, or resourc
 | AI-powered querying | ✓ | ✓ | ✓ |
 | Credential management | ✓ | ✓ | ✓ |
 
+---
+
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────┐
-│              Qubiva App                    │
-│  FastAPI + Jinja2 │ MongoDB (replica set)   │
-│  K8s-native       │ Artifacts on PVC        │
-└────────┬──────────┴──────────┬──────────────┘
+│                  Qubiva                    │
+│ FastAPI + Jinja2 │ MongoDB Replica Set     │
+│ Kubernetes-native │ Artifacts on PVC       │
+└────────┬──────────┴──────────┬─────────────┘
          │                     │
     ┌────▼────┐          ┌─────▼─────┐
     │ IaC     │          │ Discovery │
     │ Runner  │          │ Runner    │
     │ (K8s    │          │ (K8s      │
-    │  Jobs)  │          │  Jobs)    │
+    │ Jobs)   │          │ Jobs)     │
     └─────────┘          └───────────┘
 ```
 
-- **App** runs as a Deployment — serves UI, API, manages state
-- **Runners** are K8s Jobs launched on demand — isolated execution for IaC and cloud queries
-- **MongoDB** stores projects, accounts, users, tasks (replica set required for change streams)
-- **Loki** aggregates runner logs for retention and history beyond pod lifetime
+### Components
 
-## Deploy (Helm)
+- **App Deployment** — Serves UI/API and orchestrates workflows
+- **IaC Runner Jobs** — Isolated OpenTofu/Terraform execution
+- **Discovery Runner Jobs** — Cloud discovery and compliance execution
+- **MongoDB** — Stores users, projects, tasks, credentials, and metadata
+- **Loki** — Retains logs beyond Kubernetes pod lifetime
+
+---
+
+## Deploy on Kubernetes (Helm)
 
 ```bash
 helm install qubiva oci://ghcr.io/qubiva/charts/qubiva \
   --namespace qubiva --create-namespace
 ```
 
-Encryption keys and secrets are auto-generated on first install and preserved across upgrades. To provide your own encryption key:
+Encryption keys and secrets are auto-generated on first install and preserved across upgrades.
+
+### Provide your own encryption key
 
 ```bash
 # Generate a Fernet-compatible encryption key
@@ -101,28 +204,42 @@ helm install qubiva oci://ghcr.io/qubiva/charts/qubiva \
   --set secrets.localEncryptionKey="YOUR_KEY_HERE"
 ```
 
-Then access the dashboard:
+### Access the dashboard
 
 ```bash
 kubectl port-forward -n qubiva svc/qubiva 8000:80
-# Open http://localhost:8000
-# Default admin: admin@qubiva.local
-# Retrieve password:
+```
+
+Open:
+
+```text
+http://localhost:8000
+```
+
+Retrieve the generated admin password:
+
+```bash
 kubectl get secret qubiva-initial-admin-secret -n qubiva \
   -o jsonpath='{.data.password}' | base64 -d
 ```
+
+---
 
 ## Configuration
 
 Qubiva uses a layered configuration system:
 
-1. **Image defaults** — `app_config.default.json` baked into the Docker image
-2. **ConfigMap override** — Mount a ConfigMap at `/app/config/app_config.json` (deep-merged on top of defaults)
-3. **Environment variables** — Secrets and runtime settings via env vars
+1. Image defaults (`app_config.default.json`)
+2. ConfigMap overrides (`/app/config/app_config.json`)
+3. Environment variables and secrets
 
-### IaC Engine
+---
 
-Default engine is **OpenTofu** (open source). Switch to Terraform by setting:
+## IaC Engine
+
+OpenTofu is the default engine.
+
+Switch to Terraform:
 
 ```json
 {
@@ -132,9 +249,13 @@ Default engine is **OpenTofu** (open source). Switch to Terraform by setting:
 }
 ```
 
-### Cloud Analyst (AI Chat)
+---
 
-Bring your own LLM. Supports any OpenAI-compatible API (OpenAI, Groq, Azure OpenAI, Google Gemini, etc.).
+## Cloud Analyst Configuration
+
+Bring your own LLM.
+
+Supports any OpenAI-compatible API.
 
 ```json
 {
@@ -150,9 +271,11 @@ Bring your own LLM. Supports any OpenAI-compatible API (OpenAI, Groq, Azure Open
 }
 ```
 
-Set the `LLM_API_KEY` environment variable (or Kubernetes secret) to your provider's API key.
+Set `LLM_API_KEY` using an environment variable or Kubernetes secret.
 
-## Helm chart values
+---
+
+## Helm Chart Values
 
 | Value | Default | Description |
 |-------|---------|-------------|
@@ -164,45 +287,75 @@ Set the `LLM_API_KEY` environment variable (or Kubernetes secret) to your provid
 | `mongodb.enabled` | `true` | Deploy bundled MongoDB |
 | `secrets.*` | (required) | Database URL, encryption keys, API keys |
 
-See [helm/qubiva/values.yaml](helm/qubiva/values.yaml) for the full list.
+See `helm/qubiva/values.yaml` for the complete list.
 
-## Development setup
+---
+
+## Development Setup
+
+### Prerequisites
+
+- Python 3.11+
+- MongoDB 7+ with replica set enabled
+
+### Setup
 
 ```bash
-# Prerequisites: Python 3.11+, MongoDB 7+ (replica set)
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
 python main.py
 ```
 
-Set `DATABASE_URL`, `LOCAL_ENCRYPTION_KEY`, `LOCAL_SIGNING_KEY`, `JWT_SECRET` as environment variables.
+Windows:
 
-## Project structure
-
+```bash
+venv\Scripts\activate
 ```
+
+Required environment variables:
+
+- `DATABASE_URL`
+- `LOCAL_ENCRYPTION_KEY`
+- `LOCAL_SIGNING_KEY`
+- `JWT_SECRET`
+
+---
+
+## Project Structure
+
+```text
 app/
-  app.py              # FastAPI entry point
-  deps.py             # Shared dependencies and managers
-  routes/             # 16 route modules
-  llm/                # LLM provider abstraction (OpenAI, Azure, Groq, etc.)
-  chat_manager.py     # Cloud Analyst chat orchestration
-  runner_pool.py      # Pre-warmed K8s runner pod pools
-helm/qubiva/        # Helm chart
-iac_runner/           # IaC runner Docker image
-discovery_runner/     # Discovery/compliance runner Docker image
-pages/jinja2templates/# UI templates
-static/               # CSS, JS, images
+  app.py               # FastAPI entry point
+  deps.py              # Shared dependencies and managers
+  routes/              # Route modules
+  llm/                 # LLM provider abstraction
+  chat_manager.py      # Cloud Analyst orchestration
+  runner_pool.py       # Pre-warmed K8s runner pools
+
+helm/qubiva/           # Helm chart
+iac_runner/            # IaC runner image
+discovery_runner/      # Discovery/compliance runner image
+pages/jinja2templates/ # UI templates
+static/                # CSS, JS, images
 ```
+
+---
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and pull request guidelines.
 
+---
+
 ## Security
 
 To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
+---
+
 ## License
 
-[GNU Affero General Public License v3.0](LICENSE) — see [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md) for dependency attributions.
+[GNU Affero General Public License v3.0](LICENSE)
+
+See [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md) for dependency attributions.
