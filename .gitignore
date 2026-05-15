@@ -80,6 +80,10 @@ docs/_build/
 
 # Local generated content
 docs/pitch/
+docs/deck/
+
+# IDE/tool local settings
+.claude/
 
 # Local Helm overrides (contain secrets, never commit)
 helm/local-values.yaml
