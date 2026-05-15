@@ -29,11 +29,6 @@
             </p>
         </div>
     </div>
-    {% elif not analyst_ready and is_demo %}
-    <div class="alert alert-warning m-2" style="font-size:0.85rem;">
-        <i class="fas fa-info-circle mr-1"></i>
-        LLM not configured — existing conversations are read-only. Set <code>LLM_API_KEY</code> to enable new chats.
-    </div>
     {% endif %}
     <!-- Sidebar: Conversation List -->
     <div class="analyst-sidebar">
