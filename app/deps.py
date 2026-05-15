@@ -127,6 +127,20 @@ discovery_pool_manager = RunnerPoolManager(
 
 templates = Jinja2Templates(directory="pages/jinja2templates")
 
+# Starlette 0.36+ changed TemplateResponse to require request as the first
+# positional arg instead of inside the context dict. This shim keeps all
+# existing call sites working without modification.
+_orig_tr = templates.TemplateResponse
+
+def _compat_tr(name_or_request, context_or_name=None, *args, **kwargs):
+    if isinstance(name_or_request, str):
+        ctx = dict(context_or_name or {})
+        request = ctx.pop("request", None)
+        return _orig_tr(request, name_or_request, ctx, *args, **kwargs)
+    return _orig_tr(name_or_request, context_or_name, *args, **kwargs)
+
+templates.TemplateResponse = _compat_tr
+
 # Static content URL for CDN override
 static_content_url = os.getenv("STATIC_CONTENT_URL", "")
 if static_content_url and not static_content_url.startswith("http"):
