@@ -132,12 +132,14 @@ templates = Jinja2Templates(directory="pages/jinja2templates")
 # existing call sites working without modification.
 _orig_tr = templates.TemplateResponse
 
+
 def _compat_tr(name_or_request, context_or_name=None, *args, **kwargs):
     if isinstance(name_or_request, str):
         ctx = dict(context_or_name or {})
         request = ctx.pop("request", None)
         return _orig_tr(request, name_or_request, ctx, *args, **kwargs)
     return _orig_tr(name_or_request, context_or_name, *args, **kwargs)
+
 
 templates.TemplateResponse = _compat_tr
 
