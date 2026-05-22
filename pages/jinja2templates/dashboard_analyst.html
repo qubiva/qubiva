@@ -34,7 +34,7 @@
     <div class="analyst-sidebar">
         <div class="sidebar-header">
             <h5>Conversations</h5>
-            <button class="btn btn-primary btn-sm btn-new-chat" id="btn-new-chat"{% if not analyst_ready %} disabled{% endif %}>
+            <button class="btn btn-primary btn-sm btn-new-chat" id="btn-new-chat"{% if not analyst_ready and not is_demo %} disabled{% endif %}>
                 <i class="fas fa-plus mr-1"></i> New Chat
             </button>
         </div>
@@ -75,8 +75,8 @@
                       placeholder="Ask about your cloud infrastructure..."
                       rows="1"
                       maxlength="10000"
-                      {% if not analyst_ready %}disabled{% endif %}></textarea>
-            <button class="btn btn-primary btn-send" id="btn-send"{% if not analyst_ready %} disabled{% endif %}>
+                      {% if not analyst_ready and not is_demo %}disabled{% endif %}></textarea>
+            <button class="btn btn-primary btn-send" id="btn-send"{% if not analyst_ready and not is_demo %} disabled{% endif %}>
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
