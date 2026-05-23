@@ -19,6 +19,8 @@
     --icon-api: #352312;
     --icon-credentials: #5aa39d;
     --icon-license: #af7716;
+    --icon-ai-governance: #0d6e6e;
+    --icon-project-tokens: #5b4a8b;
 
 
 
@@ -105,8 +107,10 @@ body, .main-sidebar, .main-header, .content-wrapper {
 .nav-icon-settings { color: var(--icon-settings) !important; }
 .nav-icon-org-policy { color: var(--icon-settings) !important; }
 .nav-icon-credentials { color: var(--icon-credentials) !important; }
+.nav-icon-ai-governance { color: var(--icon-ai-governance) !important; }
 .nav-icon-github-app { color: var(--icon-github-app) !important; }
 .nav-icon-license { color: var(--icon-license) !important; }
+.nav-icon-project-tokens { color: var(--icon-project-tokens) !important; }
 
 
 

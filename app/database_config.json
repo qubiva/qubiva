@@ -17,6 +17,8 @@
     "project_tags": "project_tags",
     "alerts": "alerts",
     "system_locks": "system_locks",
-    "analyst_conversations": "analyst_conversations"
+    "analyst_conversations": "analyst_conversations",
+    "ai_gateway_credentials": "ai_gateway_credentials",
+    "ai_gateway_model_bindings": "ai_gateway_model_bindings"
   }
 }

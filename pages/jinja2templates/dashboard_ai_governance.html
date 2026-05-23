@@ -1,0 +1,650 @@
+{% extends "dashboard_base.html" %}
+{% block title %}AI Governance - Qubiva Dashboard{% endblock %}
+
+{% block ai_governance_styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/ai_governance.css">
+<!-- Toastr -->
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/toastr/toastr.min.css">
+<!-- Daterangepicker -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+<style>
+  .toast-error .toast-message, .toast-error { color: #ffffff !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-2">
+  <div class="col-sm-6"><h4></h4></div>
+</div>
+
+<div class="card-header card-secondary">
+  <div class="info-box bg-docs">
+    <span class="info-box-icon"><i class="fas fa-shield-alt"></i></span>
+    <div class="info-box-content">
+      <span class="info-box-text">Manage LLM model routing, virtual access keys, and spend controls for your organisation. Requires the AI Gateway to be enabled in your deployment configuration.</span>
+    </div>
+  </div>
+  <h5 class="page-title">AI Governance</h5>
+</div>
+
+<!-- Gateway Status -->
+<div class="card mt-3">
+  <div class="card-header">
+    <h3 class="card-title">Gateway Status</h3>
+    <div class="card-tools">
+      <button type="button" class="btn btn-tool" id="refresh-status-btn" title="Refresh">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    </div>
+  </div>
+  <div class="card-body">
+    <div id="status-loading" style="text-align:center; padding:20px;">
+      <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+    </div>
+    <div id="status-content" style="display:none;">
+      <div class="detail-line">
+        <i class="fas fa-power-off" style="color:#276da3;"></i>
+        <div class="detail-content">
+          <div class="detail-label">Enabled</div>
+          <div class="detail-value" id="status-enabled">—</div>
+        </div>
+      </div>
+      <div class="detail-line">
+        <i class="fas fa-heartbeat" style="color:#276da3;"></i>
+        <div class="detail-content">
+          <div class="detail-label">Health</div>
+          <div class="detail-value" id="status-health">—</div>
+        </div>
+      </div>
+      <div class="detail-line" id="status-url-row" style="display:none;">
+        <i class="fas fa-link" style="color:#276da3;"></i>
+        <div class="detail-content">
+          <div class="detail-label">Gateway URL</div>
+          <div class="detail-value" id="status-url">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main tabs — always visible; JS overlays when gateway not configured -->
+<div id="gateway-enabled-section" class="ag-tabs-wrapper mt-3">
+
+  <ul class="nav nav-tabs ai-governance-tabs mt-3" id="agTabs" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="tab-credentials" data-toggle="tab" href="#pane-credentials" role="tab">
+        <i class="fas fa-key mr-1"></i> Credentials
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="tab-models" data-toggle="tab" href="#pane-models" role="tab">
+        <i class="fas fa-cubes mr-1"></i> Models
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="tab-keys" data-toggle="tab" href="#pane-keys" role="tab">
+        <i class="fas fa-ticket-alt mr-1"></i> Virtual Keys
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="tab-spend" data-toggle="tab" href="#pane-spend" role="tab">
+        <i class="fas fa-dollar-sign mr-1"></i> Spend
+      </a>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="agTabContent">
+
+    <!-- ================================================================
+         CREDENTIALS TAB
+    ================================================================ -->
+    <div class="tab-pane fade show active" id="pane-credentials" role="tabpanel">
+      <div class="card" style="border-top:none; border-radius:0;">
+        <div class="card-header">
+          <h3 class="card-title">LLM Provider Credentials</h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-add-credential">
+              <i class="fas fa-plus mr-1"></i> Add Credential
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div id="credentials-loading" style="text-align:center; padding:30px;">
+            <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+          </div>
+          <div id="credentials-empty" style="display:none; text-align:center; padding:40px;">
+            <i class="fas fa-key fa-3x text-muted mb-3"></i>
+            <h5>No credentials stored</h5>
+            <p class="text-muted">Add an LLM provider API key to get started.</p>
+          </div>
+          <div id="credentials-table-wrap" style="display:none;" class="table-responsive">
+            <table class="table table-bordered table-striped table-sm mb-0">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Provider</th>
+                  <th>Created By</th>
+                  <th>Last Updated</th>
+                  <th style="width:130px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="credentials-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         MODELS TAB
+    ================================================================ -->
+    <div class="tab-pane fade" id="pane-models" role="tabpanel">
+      <div class="card" style="border-top:none; border-radius:0;">
+        <div class="card-header">
+          <h3 class="card-title">Configured Models</h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-add-model">
+              <i class="fas fa-plus mr-1"></i> Add Model
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div id="models-loading" style="text-align:center; padding:30px;">
+            <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+          </div>
+          <div id="models-empty" style="display:none; text-align:center; padding:40px;">
+            <i class="fas fa-cubes fa-3x text-muted mb-3"></i>
+            <h5>No models configured</h5>
+            <p class="text-muted">Add a model to start routing LLM requests through the gateway.</p>
+          </div>
+          <div id="models-table-wrap" style="display:none;" class="table-responsive">
+            <table class="table table-bordered table-striped table-sm mb-0">
+              <thead>
+                <tr>
+                  <th>Model Alias</th>
+                  <th>Provider</th>
+                  <th>Model</th>
+                  <th style="width:80px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="models-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         VIRTUAL KEYS TAB
+    ================================================================ -->
+    <div class="tab-pane fade" id="pane-keys" role="tabpanel">
+      <div class="card" style="border-top:none; border-radius:0;">
+        <div class="card-header">
+          <h3 class="card-title">Virtual Keys</h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-create-key">
+              <i class="fas fa-plus mr-1"></i> Create Key
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div id="keys-loading" style="text-align:center; padding:30px;">
+            <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+          </div>
+          <div id="keys-empty" style="display:none; text-align:center; padding:40px;">
+            <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+            <h5>No virtual keys issued</h5>
+            <p class="text-muted">Create a key to give a team or user controlled access to the gateway.</p>
+          </div>
+          <div id="keys-table-wrap" style="display:none;" class="table-responsive">
+            <table class="table table-bordered table-striped table-sm mb-0">
+              <thead>
+                <tr>
+                  <th>Alias</th>
+                  <th>Owner</th>
+                  <th>Key (prefix)</th>
+                  <th>Budget (USD)</th>
+                  <th>Spend (USD)</th>
+                  <th>RPM</th>
+                  <th>TPM</th>
+                  <th>Models</th>
+                  <th style="width:130px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="keys-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         SPEND TAB
+    ================================================================ -->
+    <div class="tab-pane fade" id="pane-spend" role="tabpanel">
+      <div class="card" style="border-top:none; border-radius:0;">
+        <div class="card-header">
+          <h3 class="card-title">Spend Overview</h3>
+          <div class="card-tools d-flex align-items-center">
+            <input type="text" id="spend-date-range" class="form-control form-control-sm mr-2"
+                   style="width:230px;" placeholder="Last 30 days" readonly>
+            <button class="btn btn-sm btn-secondary mr-1" id="btn-spend-date-apply">Apply</button>
+            <button class="btn btn-sm btn-outline-secondary mr-2" id="btn-spend-date-clear">Clear</button>
+            <button type="button" class="btn btn-tool" id="btn-refresh-spend" title="Refresh">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="spend-loading" style="text-align:center; padding:30px;">
+            <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+          </div>
+          <div id="spend-content" style="display:none;">
+
+            <!-- Daily spend trend chart (visible when date range active) -->
+            <div class="row mb-3" id="spend-chart-row" style="display:none;">
+              <div class="col-12">
+                <canvas id="spend-trend-chart" height="80"></canvas>
+              </div>
+            </div>
+
+            <!-- Summary small-boxes -->
+            <div class="row spend-summary-cards" id="spend-summary-row">
+              <div class="col-lg-4 col-6">
+                <div class="small-box bg-success">
+                  <div class="inner">
+                    <h3>$<span id="spend-total">0.00</span></h3>
+                    <p>Total Spend</p>
+                  </div>
+                  <div class="icon"><i class="fas fa-dollar-sign"></i></div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-6">
+                <div class="small-box bg-info">
+                  <div class="inner">
+                    <h3 id="spend-keys-count">0</h3>
+                    <p>Active Keys</p>
+                  </div>
+                  <div class="icon"><i class="fas fa-ticket-alt"></i></div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-6">
+                <div class="small-box bg-warning">
+                  <div class="inner">
+                    <h3 id="spend-models-count">0</h3>
+                    <p>Models with Spend</p>
+                  </div>
+                  <div class="icon"><i class="fas fa-cubes"></i></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Spend by Model -->
+            <h5 class="mt-2"><i class="fas fa-cubes mr-1"></i> Spend by Model</h5>
+            <div class="table-responsive mb-4">
+              <table class="table table-bordered table-striped table-sm">
+                <thead>
+                  <tr><th>Model</th><th>Spend (USD)</th><th>Requests</th></tr>
+                </thead>
+                <tbody id="spend-by-model-tbody">
+                  <tr><td colspan="3" class="text-center text-muted">No data</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Spend by Key -->
+            <h5><i class="fas fa-ticket-alt mr-1"></i> Spend by Key</h5>
+            <div class="table-responsive mb-4">
+              <table class="table table-bordered table-striped table-sm">
+                <thead>
+                  <tr><th>Key (prefix)</th><th>Alias</th><th>Spend (USD)</th></tr>
+                </thead>
+                <tbody id="spend-by-key-tbody">
+                  <tr><td colspan="3" class="text-center text-muted">No data</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Call Logs -->
+            <h5><i class="fas fa-list mr-1"></i> Call Logs</h5>
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped table-sm">
+                <thead>
+                  <tr><th>Time</th><th>Model</th><th>Key</th><th>Tokens</th><th>Cost (USD)</th></tr>
+                </thead>
+                <tbody id="spend-logs-tbody">
+                  <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="spend-logs-pagination" class="mt-2"></div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-content -->
+</div><!-- /gateway-enabled-section -->
+
+<!-- ====================================================================
+     MODALS
+==================================================================== -->
+
+<!-- Add Credential Modal -->
+<div class="modal fade" id="modal-add-credential" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-key mr-2"></i>Add LLM Credential</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-add-credential" autocomplete="off">
+          <div class="autofill-dummy" aria-hidden="true">
+            <input type="text" name="username" tabindex="-1">
+            <input type="password" name="password" tabindex="-1">
+          </div>
+          <div class="form-group">
+            <label for="cred-name">Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="cred-name" placeholder="e.g. prod-openai" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="cred-provider">Provider <span class="text-danger">*</span></label>
+            <select class="form-control" id="cred-provider" required>
+              <option value="" disabled selected>Select provider</option>
+            </select>
+          </div>
+          <div id="cred-dynamic-fields"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-save-credential">
+          <i class="fas fa-save mr-1"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rotate Credential Modal -->
+<div class="modal fade" id="modal-rotate-credential" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-sync-alt mr-2"></i>Rotate API Key</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <p>Updating the credential for <strong id="rotate-cred-name"></strong>. Updated values will be pushed to all models referencing this credential.</p>
+        <div id="rotate-dynamic-fields"></div>
+        <input type="hidden" id="rotate-cred-id">
+        <input type="hidden" id="rotate-cred-provider">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" id="btn-confirm-rotate">
+          <i class="fas fa-sync-alt mr-1"></i> Rotate &amp; Sync
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Credential Modal -->
+<div class="modal fade" id="modal-delete-credential" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Credential</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        Delete credential <strong id="delete-cred-name"></strong>? Any models using this credential will lose their key reference.
+        <input type="hidden" id="delete-cred-id">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="btn-confirm-delete-credential">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Model Modal -->
+<div class="modal fade" id="modal-add-model" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-cubes mr-2"></i>Add Model</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-add-model" autocomplete="off">
+          <div class="form-group">
+            <label for="model-alias">Model Alias <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="model-alias" placeholder="e.g. gpt-4o" required autocomplete="off">
+            <small class="form-text text-muted">The name callers use in requests.</small>
+          </div>
+          <div class="form-group">
+            <label for="model-provider">Provider <span class="text-danger">*</span></label>
+            <select class="form-control" id="model-provider" required>
+              <option value="" disabled selected>Select provider</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="model-name">Model <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="model-name" placeholder="e.g. gpt-4o, claude-3-5-sonnet-20241022" required autocomplete="off">
+            <small class="form-text text-muted">The actual model identifier sent to the provider.</small>
+          </div>
+          <!-- Provider-specific fields rendered here by JS from config schema -->
+          <div id="model-dynamic-fields"></div>
+          <!-- Credential section shown only for providers that have a credential field -->
+          <div id="model-credential-section" style="display:none;">
+            <hr>
+            <div class="form-group">
+              <label>Credential Source <span class="text-danger">*</span></label>
+              <div class="radio">
+                <label><input type="radio" name="key-source" value="credential" id="key-source-credential" checked> Use stored credential</label>
+              </div>
+              <div class="radio">
+                <label><input type="radio" name="key-source" value="direct" id="key-source-direct"> Enter directly</label>
+              </div>
+            </div>
+            <div class="form-group" id="model-credential-group">
+              <label for="model-credential-select">Credential <span class="text-danger">*</span></label>
+              <select class="form-control" id="model-credential-select">
+                <option value="" disabled selected>Select credential</option>
+              </select>
+            </div>
+            <div id="model-direct-key-group" style="display:none;">
+              <div id="model-direct-fields"></div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-save-model">
+          <i class="fas fa-save mr-1"></i> Add Model
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Model Modal -->
+<div class="modal fade" id="modal-delete-model" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Model</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        Remove model <strong id="delete-model-name"></strong> from the gateway?
+        <input type="hidden" id="delete-model-id">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="btn-confirm-delete-model">Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Key Modal -->
+<div class="modal fade" id="modal-create-key" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-ticket-alt mr-2"></i>Create Virtual Key</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-create-key" autocomplete="off">
+          <div class="form-group">
+            <label for="key-alias">Alias</label>
+            <input type="text" class="form-control" id="key-alias" placeholder="e.g. team-platform" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="key-type">Key Type</label>
+            <select class="form-control" id="key-type">
+              <option value="">Unscoped (no owner binding)</option>
+              <option value="project">Project Key</option>
+              <option value="user">User Key</option>
+            </select>
+            <small class="form-text text-muted">Project Key: shared by all project members with AI access. User Key: bound to a specific user.</small>
+          </div>
+          <div class="form-group" id="key-project-group" style="display:none;">
+            <label for="key-project-name">Project <span class="text-danger">*</span></label>
+            <select class="form-control" id="key-project-name">
+              <option value="" disabled selected>Loading projects...</option>
+            </select>
+          </div>
+          <div class="form-group" id="key-user-group" style="display:none;">
+            <label for="key-owner-username">Username <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="key-owner-username" placeholder="user@example.com" autocomplete="off">
+          </div>
+          <hr>
+          <div class="form-group">
+            <label for="key-budget">Monthly Budget (USD)</label>
+            <input type="number" class="form-control" id="key-budget" min="0" step="0.01" placeholder="Leave blank for unlimited">
+          </div>
+          <div class="form-group">
+            <label for="key-rpm">Rate Limit (requests/min)</label>
+            <input type="number" class="form-control" id="key-rpm" min="0" placeholder="Leave blank for unlimited">
+          </div>
+          <div class="form-group">
+            <label for="key-tpm">Token Rate Limit (tokens/min)</label>
+            <input type="number" class="form-control" id="key-tpm" min="0" placeholder="Leave blank for unlimited">
+          </div>
+          <div class="form-group">
+            <label for="key-models">Restrict to Models</label>
+            <input type="text" class="form-control" id="key-models" placeholder="Comma-separated aliases, blank = all">
+            <small class="form-text text-muted">e.g. gpt-4o, claude-3-5-sonnet</small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-create-key">
+          <i class="fas fa-plus mr-1"></i> Create Key
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Key Created Modal (shows the key once) -->
+<div class="modal fade" id="modal-key-created" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-check-circle mr-2 text-success"></i>Key Created</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted">Copy this key now — it will not be shown again.</p>
+        <div class="key-revealed" id="created-key-value"></div>
+        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="btn-copy-key">
+          <i class="fas fa-copy mr-1"></i> Copy
+        </button>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Key Modal -->
+<div class="modal fade" id="modal-delete-key" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Virtual Key</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        Delete key <strong id="delete-key-alias"></strong>? Any callers using this key will lose access immediately.
+        <input type="hidden" id="delete-key-id">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="btn-confirm-delete-key">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Update Key Modal -->
+<div class="modal fade" id="modal-update-key" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-edit mr-2"></i>Update Key Limits</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-update-key" autocomplete="off">
+          <div class="form-group">
+            <label for="update-key-budget">Monthly Budget (USD)</label>
+            <input type="number" class="form-control" id="update-key-budget" min="0" step="0.01" placeholder="Leave blank to clear">
+          </div>
+          <div class="form-group">
+            <label for="update-key-rpm">Rate Limit (req/min)</label>
+            <input type="number" class="form-control" id="update-key-rpm" min="0" placeholder="Leave blank to clear">
+          </div>
+          <div class="form-group">
+            <label for="update-key-tpm">Token Rate Limit (tokens/min)</label>
+            <input type="number" class="form-control" id="update-key-tpm" min="0" placeholder="Leave blank to clear">
+          </div>
+          <input type="hidden" id="update-key-id">
+          <input type="hidden" id="update-key-alias-hidden">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-update-key">
+          <i class="fas fa-save mr-1"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block ai_governance_scripts %}
+{{ super() }}
+<script src="{{ static_content_url }}/static/plugins/toastr/toastr.min.js"></script>
+<!-- Moment + Daterangepicker (used for spend date filter) -->
+<script src="https://cdn.jsdelivr.net/npm/moment/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<!-- Chart.js (used for spend trend chart) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="{{ static_content_url }}/static/custom/js/ai-governance.js"></script>
+{% endblock %}

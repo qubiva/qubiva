@@ -57,9 +57,14 @@ if [[ "$POOL_MODE" == "true" ]]; then
         else
             curl -fsSL https://raw.githubusercontent.com/vijayvat/powerpipe/main/scripts/install.sh | sh -s "$PP_VER" 2>/dev/null
         fi
-        find /tmp -name "powerpipe" -type f -exec cp {} "$HOME/bin/pp" \; 2>/dev/null
-        chmod +x "$HOME/bin/pp" 2>/dev/null
-        echo "Compliance engine installed: $(pp --version 2>/dev/null || echo 'ok')"
+        local _pp_bin
+        _pp_bin=$(find /tmp /home/steampipe "$HOME" -name "powerpipe" -type f 2>/dev/null | head -1)
+        if [[ -n "$_pp_bin" ]]; then
+            cp "$_pp_bin" "$HOME/bin/pp" && chmod +x "$HOME/bin/pp"
+        elif [[ -x "$HOME/.powerpipe/bin/powerpipe" ]]; then
+            ln -sf "$HOME/.powerpipe/bin/powerpipe" "$HOME/bin/pp"
+        fi
+        echo "Compliance engine installed: $(pp --version 2>/dev/null || echo 'not found')"
     else
         echo "Compliance engine binary already present"
     fi
@@ -524,7 +529,7 @@ run_query_mode() {
             local timestamp
             timestamp=$(date +%H%M%S)
             local output_file="${OUTPUT_DIR}/${query_file%.sql}_${timestamp}.csv"
-            sp query "$(cat $query_file)" --output csv > "$output_file" 2> /tmp/query_error
+            sp query "$query_file" --output csv > "$output_file" 2> /tmp/query_error
             local query_exit=$?
             
             if [[ -f "$output_file" ]]; then
@@ -557,12 +562,20 @@ setup_compliance_engine() {
         | sh -s "$COMPLIANCE_ENGINE_VERSION" 2> /tmp/powerpipe_error
     fi
 
-    # Find the downloaded binary and copy it to our location
-    if find /tmp -name "powerpipe" -type f -exec cp {} "$HOME/bin/pp" \; 2>/dev/null; then
+    # Find the downloaded binary — install script may place it in /tmp or ~/.powerpipe/bin/
+    local pp_bin
+    pp_bin=$(find /tmp /home/steampipe "$HOME" -name "powerpipe" -type f 2>/dev/null | head -1)
+    if [[ -n "$pp_bin" ]]; then
+        cp "$pp_bin" "$HOME/bin/pp"
         chmod +x "$HOME/bin/pp"
         echo "Compliance engine installed successfully to $HOME/bin"
+    elif [[ -x "$HOME/.powerpipe/bin/powerpipe" ]]; then
+        ln -sf "$HOME/.powerpipe/bin/powerpipe" "$HOME/bin/pp"
+        echo "Compliance engine linked from ~/.powerpipe/bin"
     else
-        handle_error "Failed to find downloaded compliance engine binary"
+        local error_msg
+        error_msg=$(cat /tmp/powerpipe_error 2>/dev/null || echo "binary not found after install")
+        handle_error "Failed to find downloaded compliance engine binary: $error_msg"
     fi
 }
 
@@ -741,21 +754,27 @@ run_discovery_mode() {
     # Run resource discovery query
     echo "Running resource discovery query..."
     local resources_file="${OUTPUT_DIR}/resources_${timestamp}.json"
-    sp query "$DISCOVERY_QUERY" --output json > "$resources_file" 2> /tmp/discovery_error
+    local discovery_sql_file="/tmp/discovery_query_$$.sql"
+    printf '%s' "$DISCOVERY_QUERY" > "$discovery_sql_file"
+    sp query "$discovery_sql_file" --output json > "$resources_file" 2> /tmp/discovery_error
     local discovery_exit=$?
-    
+    rm -f "$discovery_sql_file"
+
     if [[ $discovery_exit -ne 0 ]]; then
         local error_msg
         error_msg=$(cat /tmp/discovery_error)
         handle_error "Resource discovery query failed (exit code: $discovery_exit, error: $error_msg)"
     fi
-    
+
     # Run cost discovery query
     echo "Running cost discovery query..."
     local costs_file="${OUTPUT_DIR}/costs_${timestamp}.json"
-    sp query "$COST_QUERY" --output json > "$costs_file" 2> /tmp/cost_error
+    local cost_sql_file="/tmp/cost_query_$$.sql"
+    printf '%s' "$COST_QUERY" > "$cost_sql_file"
+    sp query "$cost_sql_file" --output json > "$costs_file" 2> /tmp/cost_error
     local cost_exit=$?
-    
+    rm -f "$cost_sql_file"
+
     if [[ $cost_exit -ne 0 ]]; then
         local error_msg
         error_msg=$(cat /tmp/cost_error)

@@ -163,9 +163,6 @@ class DiscoveryManager:
 
         cloud = cloud_platform.lower()
         if cloud == "aws":
-            acct_col = "account_id"
-            region_col = "region"
-
             def title_json_expr(rt): return (
                 f"COALESCE("
                 f"  to_jsonb({rt})->>'title',"
@@ -174,11 +171,17 @@ class DiscoveryManager:
                 f"  to_jsonb({rt})->>'id'"
                 f")"
             )
-            tags_expr = "COALESCE(tags::text, '{}')"
+
+            def region_expr(rt): return (
+                f"COALESCE(to_jsonb({rt})->>'region', 'global') AS region"
+            )
+
+            def tags_expr(rt): return f"COALESCE(to_jsonb({rt})->>'tags', '{{}}')"
+
+            def acct_expr(rt): return (
+                f"COALESCE(to_jsonb({rt})->>'account_id', '') AS account_id"
+            )
         elif cloud == "azure":
-            acct_col = "subscription_id"
-            region_col = "region"
-
             def title_json_expr(rt): return (
                 f"COALESCE("
                 f"  to_jsonb({rt})->>'title',"
@@ -186,11 +189,18 @@ class DiscoveryManager:
                 f"  to_jsonb({rt})->>'id'"
                 f")"
             )
-            tags_expr = "COALESCE(tags::text, '{}')"
+
+            def region_expr(rt): return (
+                f"COALESCE(to_jsonb({rt})->>'region',"
+                f" to_jsonb({rt})->>'location', 'global') AS region"
+            )
+
+            def tags_expr(rt): return f"COALESCE(to_jsonb({rt})->>'tags', '{{}}')"
+
+            def acct_expr(rt): return (
+                f"COALESCE(to_jsonb({rt})->>'subscription_id', '') AS account_id"
+            )
         elif cloud == "gcp":
-            acct_col = "project"
-            region_col = "location"
-
             def title_json_expr(rt): return (
                 f"COALESCE("
                 f"  to_jsonb({rt})->>'title',"
@@ -198,26 +208,34 @@ class DiscoveryManager:
                 f"  to_jsonb({rt})->>'id'"
                 f")"
             )
-            tags_expr = "COALESCE(tags::text, '{}')"
+
+            def region_expr(rt): return (
+                f"COALESCE(to_jsonb({rt})->>'location',"
+                f" to_jsonb({rt})->>'region', 'global') AS region"
+            )
+
+            # GCP uses 'labels' for resource metadata; fall back to 'tags' then empty
+            def tags_expr(rt): return (
+                f"COALESCE(to_jsonb({rt})->>'labels', to_jsonb({rt})->>'tags', '{{}}')"
+            )
+
+            def acct_expr(rt): return (
+                f"COALESCE(to_jsonb({rt})->>'project', '') AS account_id"
+            )
         else:
             raise ValueError(f"Unsupported cloud platform: {cloud_platform}")
 
         union_parts = []
         for rt in resource_types:
-            if cloud == "azure":
-                region_select = f"COALESCE({region_col}, location, 'global') AS region"
-            else:
-                region_select = f"COALESCE({region_col}, 'global') AS region"
-
             select_query = f"""
             (
             SELECT
                 '{rt}' AS resource_type,
                 {title_json_expr(rt)} AS resource_id,
                 {title_json_expr(rt)} AS resource_name,
-                {region_select},
-                {tags_expr} AS tags,
-                {acct_col} AS account_id
+                {region_expr(rt)},
+                {tags_expr(rt)} AS tags,
+                {acct_expr(rt)}
             FROM {rt}
             )
             """.strip()

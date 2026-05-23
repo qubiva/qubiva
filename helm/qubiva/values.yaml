@@ -126,6 +126,11 @@ secrets:
   smtpFromEmail: ""
   # GitHub token (optional, for template repos)
   githubToken: ""
+  # AI Gateway master key (auto-generated if empty, required when aiGateway.enabled)
+  aiGatewayMasterKey: ""
+  # AI Gateway PostgreSQL credentials (used when aiGateway.postgresql.enabled)
+  aiGatewayDbUsername: "litellm"
+  aiGatewayDbPassword: ""
 
 # -- Use an existing secret instead of creating one from values above
 existingSecret: ""
@@ -142,6 +147,152 @@ mongodb:
     limits:
       cpu: 1000m
       memory: 2Gi
+
+# -- AI Governance Gateway (LiteLLM proxy — optional, disabled by default)
+# Enable to activate the AI governance control plane.
+# Requires aiGateway.postgresql.enabled or an external PostgreSQL instance.
+aiGateway:
+  enabled: false
+  image: ghcr.io/berriai/litellm:main-stable
+  replicaCount: 1
+  service:
+    port: 4000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  ingress:
+    enabled: false
+    className: nginx
+    host: ""
+    annotations: {}
+    tls: []
+  # -- LLM provider definitions exposed to the Add Model UI.
+  # Each entry drives the provider dropdown and its dynamic form fields.
+  # litellmProvider overrides the value sent as custom_llm_provider to LiteLLM
+  # (defaults to id when omitted). Fields with credential: true are offered
+  # via the stored-credential picker in addition to direct entry.
+  providers:
+    - id: openai
+      label: OpenAI
+      fields:
+        - id: api_key
+          label: API Key
+          type: password
+          required: true
+          credential: true
+    - id: anthropic
+      label: Anthropic
+      fields:
+        - id: api_key
+          label: API Key
+          type: password
+          required: true
+          credential: true
+    - id: groq
+      label: Groq
+      fields:
+        - id: api_key
+          label: API Key
+          type: password
+          required: true
+          credential: true
+    - id: azure
+      label: Azure OpenAI
+      fields:
+        - id: api_base
+          label: Endpoint URL
+          type: text
+          placeholder: "https://myorg.openai.azure.com"
+          required: true
+        - id: api_version
+          label: API Version
+          type: text
+          placeholder: "2024-02-01"
+          required: true
+        - id: api_key
+          label: API Key
+          type: password
+          required: true
+          credential: true
+    - id: bedrock
+      label: Amazon Bedrock
+      fields:
+        - id: aws_region_name
+          label: AWS Region
+          type: text
+          placeholder: "us-east-1"
+          required: true
+        - id: aws_access_key_id
+          label: Access Key ID
+          type: text
+          required: false
+        - id: aws_secret_access_key
+          label: Secret Access Key
+          type: password
+          required: false
+          credential: true
+    - id: vertex_ai
+      label: Google Vertex AI
+      fields:
+        - id: vertex_project
+          label: GCP Project ID
+          type: text
+          required: true
+        - id: vertex_location
+          label: Region
+          type: text
+          placeholder: "us-central1"
+          required: true
+        - id: vertex_credentials
+          label: Service Account JSON
+          type: password
+          required: false
+          credential: true
+    - id: openai-compatible
+      label: OpenAI-Compatible (Self-hosted)
+      litellmProvider: openai
+      fields:
+        - id: api_base
+          label: Endpoint URL
+          type: text
+          placeholder: "http://10.0.0.1:8000/v1"
+          required: true
+        - id: api_key
+          label: API Key
+          type: password
+          required: false
+          credential: true
+    - id: ollama
+      label: Ollama
+      fields:
+        - id: api_base
+          label: Endpoint URL
+          type: text
+          placeholder: "http://localhost:11434"
+          required: true
+  # -- Bundled PostgreSQL for LiteLLM state (spend, virtual keys, budgets)
+  postgresql:
+    enabled: true
+    image: postgres:16
+    storageSize: 10Gi
+    database: litellm
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+  # -- Bring your own PostgreSQL (set postgresql.enabled: false and fill these)
+  externalPostgresql:
+    host: ""
+    port: 5432
+    database: litellm
+    secretName: ""   # must contain keys: username, password
 
 # -- Loki log aggregation (required for log persistence and audit trail)
 loki:

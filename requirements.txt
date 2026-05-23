@@ -64,6 +64,9 @@ PyJWT==2.12.1
 markdown>=3.5.0
 croniter>=2.0.0
 # Kubernetes client for job orchestration and log streaming
+# NOTE: v29+ has a bug where auth_settings() checks api_key['BearerToken'] but
+# load_incluster_config() writes api_key['authorization'] — fixed in code via
+# _apply_k8s_auth_fix() wrapper in each executor that initialises the k8s client.
 kubernetes>=28.0.0
 kubernetes_asyncio>=28.0.0
 boto3>=1.34.0

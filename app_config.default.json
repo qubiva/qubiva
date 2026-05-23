@@ -39,7 +39,8 @@
         "project_cloud_account_*",
         "project_workspace_*",
         "project_git_repo_*",
-        "project_credential_*"
+        "project_credential_*",
+        "project_ai_key_use"
       ],
       "project_viewer": [
         "project_get"
@@ -108,6 +109,14 @@
       ],
       "project_credential_viewer": [
         "project_credential_get"
+      ],
+      "project_token_user": [
+        "project_token_create",
+        "project_token_list",
+        "project_token_revoke"
+      ],
+      "project_ai_user": [
+        "project_ai_key_use"
       ]
     }
   },
@@ -1544,6 +1553,23 @@
       "aws": "1.23.0",
       "azure": "1.8.0",
       "gcp": "0.52.0"
+    }
+  },
+  "ai_governance": {
+    "enabled": false,
+    "gateway": {
+      "url": "http://qubiva-ai-gateway:4000",
+      "master_key_env": "AI_GATEWAY_MASTER_KEY",
+      "timeout_seconds": 30,
+      "max_retries": 2
+    },
+    "virtual_keys": {
+      "prefix": "qbv_"
+    },
+    "defaults": {
+      "monthly_budget_usd": null,
+      "rpm_limit": null,
+      "tpm_limit": null
     }
   },
   "system": {

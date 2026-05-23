@@ -1158,6 +1158,16 @@ async def get_benchmark_results(
         # Parse and aggregate the results for remediation focus
         aggregated_data = aggregate_benchmark_results(benchmark_data)
 
+        if aggregated_data.get('credential_error'):
+            return JSONResponse(
+                status_code=422,
+                content={
+                    "error": "All benchmark controls failed with execution errors. "
+                             "This typically indicates invalid or missing cloud credentials.",
+                    "credential_error": True
+                }
+            )
+
         return JSONResponse(content=aggregated_data)
 
     except json.JSONDecodeError as e:
@@ -1195,6 +1205,22 @@ def aggregate_benchmark_results(benchmark_data):
     # Extract summary from root
     if 'summary' in benchmark_data and 'status' in benchmark_data['summary']:
         summary_stats = benchmark_data['summary']['status']
+
+    # Detect credential/connectivity failure: nothing ran, every control errored
+    total_ran = (summary_stats.get('alarm', 0) + summary_stats.get('ok', 0) +
+                 summary_stats.get('skip', 0) + summary_stats.get('info', 0))
+    if total_ran == 0 and summary_stats.get('error', 0) > 0:
+        return {
+            'credential_error': True,
+            'summary': {
+                'alarm': 0, 'ok': 0, 'skip': 0,
+                'error': summary_stats.get('error', 0),
+                'info': 0, 'total_applicable': 0, 'compliance_score': 0
+            },
+            'benchmark_title': benchmark_data.get('title', 'Compliance Benchmark'),
+            'failed_controls': [],
+            'total_failed_controls': 0
+        }
 
     # Recursively extract controls from groups
     def extract_controls(node, article_path=""):

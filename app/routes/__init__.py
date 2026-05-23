@@ -20,6 +20,7 @@ from app.routes import (
     sso,
     analyst,
     dashboard,
+    project_tokens,
 )
 
 __all__ = [
@@ -39,4 +40,5 @@ __all__ = [
     "sso",
     "analyst",
     "dashboard",
+    "project_tokens",
 ]

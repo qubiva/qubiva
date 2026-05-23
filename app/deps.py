@@ -38,6 +38,7 @@ from app.cloud_schema import CloudSchemaRegistry
 from app.query_session import QuerySessionManager
 from app.chat_manager import ChatManager
 from app.audit_logger import AuditLogger
+from app.ai_gateway.manager import AIGatewayManager
 
 load_dotenv()
 logger = logging.getLogger("uvicorn.error")
@@ -110,6 +111,8 @@ chat_manager = ChatManager(
     log_streamer=logstreamer,
     audit_logger=audit_logger,
 )
+
+ai_gateway_manager = AIGatewayManager(ConfigManager, db_manager, kms_manager)
 
 # Runner pod pools (pre-warmed pods for IaC/discovery batch runs)
 from app.runner_pool import RunnerPoolManager, RunnerType

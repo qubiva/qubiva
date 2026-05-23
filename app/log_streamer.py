@@ -23,6 +23,7 @@ class CloudWatchLogStreamer:
         self.retry_delay = 5
         self.namespace = os.getenv('K8S_NAMESPACE', 'default')
         self._k8s_initialized = False
+        self._k8s_cfg = None  # fixed Configuration for in-cluster auth workaround
 
     async def _query_persisted_logs(self, request_id: str) -> Optional[str]:
         """Fetch historical logs from Loki if available."""
@@ -59,7 +60,8 @@ class CloudWatchLogStreamer:
 
         pod_name, container_name = await self.get_log_stream_details(request_id)
         if pod_name:
-            v1 = k8s_client.CoreV1Api()
+            _api = k8s_client.ApiClient(configuration=self._k8s_cfg) if self._k8s_cfg else k8s_client.ApiClient()
+            v1 = k8s_client.CoreV1Api(api_client=_api)
             try:
                 kwargs = {
                     'name': pod_name,
@@ -92,6 +94,23 @@ class CloudWatchLogStreamer:
                     k8s_config.load_incluster_config()
                 except k8s_config.ConfigException:
                     await k8s_config.load_kube_config()
+                # kubernetes-python-client v29+ bug: auth_settings() checks
+                # api_key['BearerToken'] but load_incluster_config() writes
+                # api_key['authorization'], so no auth header is sent (system:anonymous).
+                # Fix: wrap the refresh hook to keep both keys in sync.
+                cfg = k8s_client.Configuration.get_default_copy()
+                if 'authorization' in cfg.api_key and 'BearerToken' not in cfg.api_key:
+                    orig_hook = cfg.refresh_api_key_hook
+                    def _make_hook(h):
+                        def _hook(c):
+                            if h:
+                                h(c)
+                            if 'authorization' in c.api_key:
+                                c.api_key['BearerToken'] = c.api_key['authorization']
+                        return _hook
+                    cfg.refresh_api_key_hook = _make_hook(orig_hook)
+                    cfg.refresh_api_key_hook(cfg)
+                self._k8s_cfg = cfg
                 self._k8s_initialized = True
             except k8s_config.ConfigException:
                 logger.warning("No Kubernetes config found — live log streaming disabled")
@@ -136,7 +155,8 @@ class CloudWatchLogStreamer:
                     return
 
             # Stream logs from Kubernetes pod
-            v1 = k8s_client.CoreV1Api()
+            _api = k8s_client.ApiClient(configuration=self._k8s_cfg) if self._k8s_cfg else k8s_client.ApiClient()
+            v1 = k8s_client.CoreV1Api(api_client=_api)
             try:
                 kwargs = {
                     'name': pod_name,

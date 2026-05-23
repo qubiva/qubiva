@@ -121,8 +121,23 @@ async def stop_request_execution(
             k8s_config.load_incluster_config()
         except k8s_config.ConfigException:
             k8s_config.load_kube_config()
-
-        batch_v1 = k8s_client.BatchV1Api()
+        # kubernetes-python-client v29+ bug: auth_settings() checks
+        # api_key['BearerToken'] but load_incluster_config() writes
+        # api_key['authorization'], so no auth header is sent (system:anonymous).
+        # Fix: wrap the refresh hook to keep both keys in sync.
+        _cfg = k8s_client.Configuration.get_default_copy()
+        if 'authorization' in _cfg.api_key and 'BearerToken' not in _cfg.api_key:
+            _orig = _cfg.refresh_api_key_hook
+            def _make_hook(h):
+                def _hook(c):
+                    if h:
+                        h(c)
+                    if 'authorization' in c.api_key:
+                        c.api_key['BearerToken'] = c.api_key['authorization']
+                return _hook
+            _cfg.refresh_api_key_hook = _make_hook(_orig)
+            _cfg.refresh_api_key_hook(_cfg)
+        batch_v1 = k8s_client.BatchV1Api(api_client=k8s_client.ApiClient(configuration=_cfg))
         namespace = os.environ.get('K8S_NAMESPACE', 'default')
         batch_v1.delete_namespaced_job(
             name=job_name,

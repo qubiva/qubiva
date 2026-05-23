@@ -34,6 +34,15 @@ data:
         }
       },
       {{- end }}
+      {{- if .Values.aiGateway.enabled }}
+      "ai_governance": {
+        "enabled": true,
+        "gateway": {
+          "url": {{ if .Values.aiGateway.ingress.enabled }}{{ printf "https://%s" .Values.aiGateway.ingress.host | quote }}{{ else }}{{ printf "http://%s-ai-gateway.%s.svc.cluster.local:%d" (include "qubiva.fullname" .) .Release.Namespace (.Values.aiGateway.service.port | int) | quote }}{{ end }}
+        },
+        "providers": {{ .Values.aiGateway.providers | toJson }}
+      },
+      {{- end }}
       "runner_pools": {
         "iac": {
           "enabled": {{ .Values.runnerPools.iac.enabled }},

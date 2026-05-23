@@ -12,8 +12,8 @@ RUN apk add --no-cache \
 
 # Create runner user and set up directories
 RUN adduser -D -s /bin/bash runner && \
-    mkdir -p /workspace /usr/local/terraform-versions /usr/local/conftest-versions && \
-    chown -R runner:runner /workspace /usr/local/terraform-versions /usr/local/conftest-versions && \
+    mkdir -p /workspace /home/runner /usr/local/terraform-versions /usr/local/conftest-versions && \
+    chown -R runner:runner /workspace /home/runner /usr/local/terraform-versions /usr/local/conftest-versions && \
     chown runner:runner /usr/local/bin
 
 # Switch to runner user

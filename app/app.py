@@ -50,6 +50,8 @@ from app.routes import (
     sso,
     analyst,
     dashboard,
+    ai_governance,
+    project_tokens,
 )
 
 log_level = getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO)
@@ -397,6 +399,8 @@ app.include_router(alerts.router)
 app.include_router(sso.router)
 app.include_router(analyst.router)
 app.include_router(dashboard.router)
+app.include_router(ai_governance.router)
+app.include_router(project_tokens.router)
 
 
 if __name__ == "__main__":

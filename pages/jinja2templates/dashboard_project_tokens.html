@@ -1,0 +1,354 @@
+{% extends "dashboard_base.html" %}
+{% block title %}Project Tokens - {{ project_name }} - Qubiva Dashboard{% endblock %}
+
+{% block content %}
+<div class="card-header card-secondary">
+  <h5 class="page-title">Project Tokens — {{ project_name }}</h5>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-key mr-2"></i>Project Tokens
+    </h3>
+    <div class="card-tools">
+      <button type="button" class="btn btn-primary btn-sm" id="btn-create-project-token">
+        <i class="fas fa-plus mr-1"></i> Create Token
+      </button>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="px-3 pt-3 pb-2">
+      <p class="text-muted mb-0" style="font-size:0.9em;">
+        Project tokens are identity-less JWTs scoped to this project. Assign roles at creation time — the token inherits those project permissions.
+        Use them in applications and CI/CD pipelines to authenticate against the AI gateway without binding to a personal user account.
+        <strong>Token values are shown once only</strong> — store them securely.
+      </p>
+    </div>
+    <div id="tokens-loading" style="text-align:center; padding:30px;">
+      <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+    </div>
+    <div id="tokens-empty" style="display:none; text-align:center; padding:40px;">
+      <i class="fas fa-key fa-3x text-muted mb-3"></i>
+      <h5>No project tokens</h5>
+      <p class="text-muted">Create a token to give applications or CI/CD pipelines access to this project.</p>
+    </div>
+    <div id="tokens-table-wrap" style="display:none;" class="table-responsive">
+      <table class="table table-bordered table-striped table-sm mb-0">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Roles</th>
+            <th>Expires</th>
+            <th>Created By</th>
+            <th>Created</th>
+            <th style="width:80px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tokens-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     MODALS
+==================================================================== -->
+
+<!-- Create Token Modal -->
+<div class="modal fade" id="modal-create-token" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-key mr-2"></i>Create Project Token</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-create-token" autocomplete="off">
+          <div class="form-group">
+            <label for="pt-name">Token Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="pt-name" placeholder="e.g. ci-pipeline-token" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="pt-roles">Roles <span class="text-danger">*</span></label>
+            <div id="pt-roles-checkboxes" class="border rounded p-2" style="max-height:180px; overflow-y:auto;">
+              <div class="text-muted small">Loading roles...</div>
+            </div>
+            <small class="form-text text-muted">Select the project roles this token will carry.</small>
+          </div>
+          <div class="form-group">
+            <label for="pt-expiry">Expiry (days) <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="pt-expiry" min="1" max="365" value="90" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-create-token">
+          <i class="fas fa-plus mr-1"></i> Create Token
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Token Created Modal (shows value once) -->
+<div class="modal fade" id="modal-token-created" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-check-circle mr-2 text-success"></i>Token Created</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted">Copy this token now — it will not be shown again.</p>
+        <div id="created-token-value" style="word-break:break-all; background:#f4f4f4; border:1px solid #ddd; border-radius:4px; padding:10px; font-family:monospace; font-size:0.82em;"></div>
+        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="btn-copy-token">
+          <i class="fas fa-copy mr-1"></i> Copy
+        </button>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Revoke Token Modal -->
+<div class="modal fade" id="modal-revoke-token" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Revoke Token</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        Revoke token <strong id="revoke-token-name"></strong>? Any application using this token will lose access immediately.
+        <input type="hidden" id="revoke-token-id">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="btn-confirm-revoke-token">Revoke</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block global_stats_scripts %}
+{{ super() }}
+<script>
+var PT_PROJECT_NAME = {{ project_name | tojson }};
+</script>
+<script>
+/* ---- Project Tokens page JS ---- */
+
+var ptState = {
+    loaded: false,
+    projectRoles: [],
+};
+
+$(document).ready(function () {
+    loadProjectRoles();
+    loadTokens();
+});
+
+/* ---- Load available project roles ---- */
+function loadProjectRoles() {
+    $.ajax({
+        url: '/api/v1/projects/roles/list',
+        method: 'GET',
+        success: function (data) {
+            ptState.projectRoles = Array.isArray(data) ? data : [];
+            buildRolesCheckboxes();
+        },
+        error: function () {
+            // Fallback: render a text input if roles API not available
+            $('#pt-roles-checkboxes').html(
+                '<input type="text" class="form-control" id="pt-roles-text" placeholder="Comma-separated roles, e.g. project_editor,project_token_user">'
+            );
+        }
+    });
+}
+
+function buildRolesCheckboxes() {
+    var container = $('#pt-roles-checkboxes').empty();
+    if (!ptState.projectRoles.length) {
+        container.html('<div class="text-muted small">No roles available</div>');
+        return;
+    }
+    ptState.projectRoles.forEach(function (role) {
+        var id = 'role-cb-' + role;
+        container.append(
+            '<div class="form-check">' +
+              '<input class="form-check-input pt-role-cb" type="checkbox" value="' + escPt(role) + '" id="' + id + '">' +
+              '<label class="form-check-label" for="' + id + '">' + escPt(role) + '</label>' +
+            '</div>'
+        );
+    });
+}
+
+/* ---- Load tokens ---- */
+function loadTokens() {
+    $('#tokens-loading').show();
+    $('#tokens-empty, #tokens-table-wrap').hide();
+
+    $.ajax({
+        url: '/api/v1/projects/' + encodeURIComponent(PT_PROJECT_NAME) + '/tokens',
+        method: 'GET',
+        success: function (data) {
+            ptState.loaded = true;
+            $('#tokens-loading').hide();
+            renderTokens(data.tokens || []);
+        },
+        error: function (xhr) {
+            $('#tokens-loading').hide();
+            showPtAlert('danger', extractPtError(xhr, 'Failed to load tokens'));
+        }
+    });
+}
+
+function renderTokens(list) {
+    if (!list.length) {
+        $('#tokens-empty').show();
+        return;
+    }
+    var tbody = $('#tokens-tbody').empty();
+    list.forEach(function (t) {
+        var roles = (t.roles && t.roles.length) ? t.roles.join(', ') : '—';
+        var expiry = t.expiry_hours ? Math.round(t.expiry_hours / 24) + ' days' : '—';
+        tbody.append(
+            '<tr>' +
+            '<td>' + escPt(t.token_name) + '</td>' +
+            '<td><small>' + escPt(roles) + '</small></td>' +
+            '<td>' + expiry + '</td>' +
+            '<td>' + escPt(t.created_by || '—') + '</td>' +
+            '<td><small>' + fmtPtDate(t.created_at) + '</small></td>' +
+            '<td>' +
+              '<button class="btn btn-danger btn-sm btn-revoke-token" ' +
+                      'data-id="' + escPt(t.token_id) + '" data-name="' + escPt(t.token_name) + '" title="Revoke">' +
+                '<i class="fas fa-ban"></i>' +
+              '</button>' +
+            '</td>' +
+            '</tr>'
+        );
+    });
+    $('#tokens-table-wrap').show();
+}
+
+/* ---- Create token ---- */
+$('#btn-create-project-token').on('click', function () {
+    $('#form-create-token')[0].reset();
+    $('.pt-role-cb').prop('checked', false);
+    $('#modal-create-token').modal('show');
+});
+
+$('#btn-confirm-create-token').on('click', function () {
+    var name    = $.trim($('#pt-name').val());
+    var expiry  = parseInt($('#pt-expiry').val());
+
+    if (!name) { alert('Token name is required.'); return; }
+    if (!expiry || expiry < 1 || expiry > 365) { alert('Expiry must be between 1 and 365 days.'); return; }
+
+    // Collect selected roles
+    var roles = [];
+    // Checkbox UI
+    $('.pt-role-cb:checked').each(function () { roles.push($(this).val()); });
+    // Text fallback
+    if (!roles.length && $('#pt-roles-text').length) {
+        var txt = $.trim($('#pt-roles-text').val());
+        if (txt) roles = txt.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    }
+
+    if (!roles.length) { alert('Assign at least one role.'); return; }
+
+    $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Creating...');
+
+    $.ajax({
+        url: '/api/v1/projects/' + encodeURIComponent(PT_PROJECT_NAME) + '/tokens',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ token_name: name, roles: roles, expiry_days: expiry }),
+        success: function (data) {
+            $('#modal-create-token').modal('hide');
+            if (data.token) {
+                $('#created-token-value').text(data.token);
+                $('#modal-token-created').modal('show');
+            }
+            ptState.loaded = false;
+            loadTokens();
+        },
+        error: function (xhr) {
+            showPtAlert('danger', extractPtError(xhr, 'Failed to create token'));
+        },
+        complete: function () {
+            $('#btn-confirm-create-token').prop('disabled', false).html('<i class="fas fa-plus mr-1"></i> Create Token');
+        }
+    });
+});
+
+/* ---- Copy token ---- */
+$('#btn-copy-token').on('click', function () {
+    var text = $('#created-token-value').text();
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function () {
+            $('#btn-copy-token').html('<i class="fas fa-check mr-1"></i> Copied');
+            setTimeout(function () { $('#btn-copy-token').html('<i class="fas fa-copy mr-1"></i> Copy'); }, 2000);
+        });
+    }
+});
+
+/* ---- Revoke token ---- */
+$(document).on('click', '.btn-revoke-token', function () {
+    $('#revoke-token-id').val($(this).data('id'));
+    $('#revoke-token-name').text($(this).data('name'));
+    $('#modal-revoke-token').modal('show');
+});
+
+$('#btn-confirm-revoke-token').on('click', function () {
+    var id = $('#revoke-token-id').val();
+    $(this).prop('disabled', true).text('Revoking...');
+
+    $.ajax({
+        url: '/api/v1/projects/' + encodeURIComponent(PT_PROJECT_NAME) + '/tokens/' + encodeURIComponent(id),
+        method: 'DELETE',
+        success: function () {
+            $('#modal-revoke-token').modal('hide');
+            ptState.loaded = false;
+            loadTokens();
+        },
+        error: function (xhr) {
+            showPtAlert('danger', extractPtError(xhr, 'Failed to revoke token'));
+        },
+        complete: function () {
+            $('#btn-confirm-revoke-token').prop('disabled', false).text('Revoke');
+        }
+    });
+});
+
+/* ---- Helpers ---- */
+function escPt(str) {
+    if (str == null) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function fmtPtDate(val) {
+    if (!val) return '—';
+    try { var d = new Date(val); return isNaN(d) ? String(val) : d.toLocaleString(); } catch (e) { return String(val); }
+}
+
+function extractPtError(xhr, fallback) {
+    try { var b = JSON.parse(xhr.responseText); return b.detail || b.message || fallback; } catch (e) { return fallback; }
+}
+
+function showPtAlert(type, msg) {
+    var cls = type === 'danger' ? 'alert-danger' : 'alert-success';
+    var el = $('<div class="alert ' + cls + ' alert-dismissible mt-2">' +
+               '<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>' +
+               escPt(msg) + '</div>');
+    $('.card-body').first().prepend(el);
+    setTimeout(function () { el.fadeOut(function () { el.remove(); }); }, 6000);
+}
+</script>
+{% endblock %}

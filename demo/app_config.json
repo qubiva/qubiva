@@ -1,4 +1,7 @@
 {
+  "ai_governance": {
+    "enabled": false
+  },
   "cloud_analyst": {
     "enabled": true,
     "llm": {

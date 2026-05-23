@@ -293,6 +293,54 @@ See `helm/qubiva/values.yaml` for the complete list.
 
 ## Development Setup
 
+### Local Helm development (Docker Desktop Kubernetes)
+
+**Namespace:** `qubiva` | **Image:** `qubiva:dev` | **Release:** `qubiva`
+
+Build and deploy:
+
+```bash
+docker build -t qubiva:dev .
+helm upgrade qubiva ./helm/qubiva -n qubiva --reuse-values
+kubectl rollout restart deployment/qubiva -n qubiva
+kubectl rollout status deployment/qubiva -n qubiva
+```
+
+Port-forward (run this every session before opening the app):
+
+```bash
+kubectl port-forward svc/qubiva -n qubiva 8080:80
+```
+
+App is at **http://localhost:8080**
+
+**Admin credentials — `admin@qubiva.local`**
+
+On first install the password is stored in a K8s secret:
+
+```bash
+kubectl get secret qubiva-initial-admin-secret -n qubiva \
+  -o jsonpath="{.data.password}" | python -c "import sys,base64; print(base64.b64decode(sys.stdin.read()).decode())"
+```
+
+If that secret is missing (admin existed from a prior install), reset via MongoDB:
+
+```bash
+kubectl exec -n qubiva deployment/qubiva -- python -c "
+import asyncio, os, bcrypt
+async def main():
+    from motor.motor_asyncio import AsyncIOMotorClient
+    client = AsyncIOMotorClient(os.environ['DATABASE_URL'])
+    db = client['qubiva']
+    hashed = bcrypt.hashpw(b'NewPassword123!', bcrypt.gensalt(rounds=12)).decode()
+    await db.users.update_one({'username': 'admin@qubiva.local'}, {'\$set': {'hashed_password': hashed}})
+    print('Password reset.')
+asyncio.run(main())
+"
+```
+
+---
+
 ### Prerequisites
 
 - Python 3.11+

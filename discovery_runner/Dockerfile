@@ -46,9 +46,10 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
     rm -rf /var/lib/apt/lists/*
 
 # Create runner user and set up directories with correct permissions
+# /home/steampipe is created so the powerpipe install script can write to it
 RUN useradd -m -s /bin/bash runner && \
-    mkdir -p /workspace && \
-    chown -R runner:runner /workspace
+    mkdir -p /workspace /home/steampipe && \
+    chown -R runner:runner /workspace /home/steampipe
 
 # Switch to runner user
 USER runner

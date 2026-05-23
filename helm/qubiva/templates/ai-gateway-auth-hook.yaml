@@ -1,0 +1,63 @@
+{{- if .Values.aiGateway.enabled }}
+---
+# LiteLLM custom auth hook: validates Qubiva identity token + LiteLLM virtual key
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "qubiva.fullname" . }}-ai-gateway-auth
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "qubiva.labels" . | nindent 4 }}
+    component: ai-gateway
+data:
+  # Python module mounted at /app/custom_auth.py inside the LiteLLM container.
+  # LiteLLM loads this via general_settings.custom_auth = "custom_auth.user_api_key_auth".
+  custom_auth.py: |
+    """
+    Qubiva dual-token auth hook for LiteLLM proxy.
+
+    Validates:
+      1. The LiteLLM virtual key (Authorization: Bearer sk-...)
+      2. The Qubiva identity token (X-Qubiva-Token header)
+
+    Calls Qubiva's internal validate-token endpoint for the actual validation logic.
+    """
+    import os
+    import httpx
+    from fastapi import Request
+
+    QUBIVA_URL = os.environ.get("QUBIVA_URL", "http://qubiva")
+    VALIDATE_ENDPOINT = f"{QUBIVA_URL}/api/v1/internal/validate-token"
+
+
+    async def user_api_key_auth(request: Request, api_key: str):
+        from litellm.proxy._types import UserAPIKeyAuth
+
+        qubiva_token = request.headers.get("X-Qubiva-Token", "")
+        if not qubiva_token:
+            raise Exception("Missing X-Qubiva-Token header")
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(
+                    VALIDATE_ENDPOINT,
+                    json={"token": qubiva_token, "virtual_key": api_key},
+                )
+            if resp.status_code != 200:
+                raise Exception(f"Token validation failed ({resp.status_code}): {resp.text}")
+            data = resp.json()
+        except Exception as exc:
+            raise Exception(f"Qubiva auth failed: {exc}")
+
+        return UserAPIKeyAuth(
+            api_key=api_key,
+            team_id=data.get("project_name"),
+            user_id=data.get("username"),
+        )
+
+  # LiteLLM proxy config.yaml — configures custom_auth and disables built-in key enforcement
+  litellm_config.yaml: |
+    general_settings:
+      custom_auth: custom_auth.user_api_key_auth
+      store_model_in_db: true
+{{- end }}

@@ -48,6 +48,19 @@ async def dashboard_home(
     )
 
 
+@router.get("/dashboard/ai-governance")
+@permissions(["org_admin"])
+async def dashboard_ai_governance(
+    request: Request,
+    user: dict = Depends(authenticate_http_user),
+    user_permissions: List[str] = Depends(lambda: []),
+):
+    return templates.TemplateResponse(
+        "dashboard_ai_governance.html",
+        {"request": request, "user": user["username"], "permissions": user_permissions},
+    )
+
+
 @router.get("/dashboard/api-tokens")
 @permissions([])
 async def dashboard_api_tokens(
@@ -701,6 +714,26 @@ async def dashboard_project_credentials(
     )
 
 
+@router.get("/dashboard/projects/{project_name}/tokens")
+@validate_resource(check_only_project=True)
+@permissions(["project_token_list"])
+async def dashboard_project_tokens(
+    request: Request,
+    project_name: str,
+    user: dict = Depends(authenticate_http_user),
+    user_permissions: List[str] = Depends(lambda: []),
+):
+    return templates.TemplateResponse(
+        "dashboard_project_tokens.html",
+        {
+            "request": request,
+            "project_name": project_name,
+            "user": user["username"],
+            "permissions": user_permissions,
+        },
+    )
+
+
 @router.get("/dashboard/projects/{project_name}/credentials/create")
 @validate_resource(check_only_project=True)
 @permissions(["project_credential_create"])
@@ -741,7 +774,7 @@ async def dashboard_edit_credential(
 
 
 @router.get("/dashboard/analyst")
-@permissions([])
+@permissions(["org_analyst_use"])
 async def dashboard_analyst(
     request: Request,
     user: dict = Depends(authenticate_http_user),

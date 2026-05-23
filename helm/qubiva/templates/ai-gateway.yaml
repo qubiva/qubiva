@@ -1,0 +1,256 @@
+{{- if .Values.aiGateway.enabled }}
+---
+# AI Governance Gateway — PostgreSQL (bundled)
+{{- if .Values.aiGateway.postgresql.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "qubiva.fullname" . }}-ai-gateway-db
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "qubiva.labels" . | nindent 4 }}
+    component: ai-gateway-db
+spec:
+  serviceName: {{ include "qubiva.fullname" . }}-ai-gateway-db
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "qubiva.selectorLabels" . | nindent 6 }}
+      component: ai-gateway-db
+  template:
+    metadata:
+      labels:
+        {{- include "qubiva.selectorLabels" . | nindent 8 }}
+        component: ai-gateway-db
+    spec:
+      containers:
+        - name: postgresql
+          image: {{ .Values.aiGateway.postgresql.image }}
+          ports:
+            - containerPort: 5432
+              name: postgresql
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.aiGateway.postgresql.database }}
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "qubiva.secretName" . }}
+                  key: AI_GATEWAY_DB_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "qubiva.secretName" . }}
+                  key: AI_GATEWAY_DB_PASSWORD
+          volumeMounts:
+            - name: ai-gateway-db-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            {{- toYaml .Values.aiGateway.postgresql.resources | nindent 12 }}
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "litellm"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "litellm"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+  volumeClaimTemplates:
+    - metadata:
+        name: ai-gateway-db-data
+        labels:
+          {{- include "qubiva.selectorLabels" . | nindent 10 }}
+          component: ai-gateway-db
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.aiGateway.postgresql.storageSize }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "qubiva.fullname" . }}-ai-gateway-db
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "qubiva.labels" . | nindent 4 }}
+    component: ai-gateway-db
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "qubiva.selectorLabels" . | nindent 4 }}
+    component: ai-gateway-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgresql
+{{- end }}
+{{- if .Values.aiGateway.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "qubiva.fullname" . }}-ai-gateway
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "qubiva.labels" . | nindent 4 }}
+    component: ai-gateway
+  {{- with .Values.aiGateway.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.aiGateway.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.aiGateway.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "qubiva.fullname" . }}-ai-gateway
+                port:
+                  number: {{ .Values.aiGateway.service.port }}
+  {{- with .Values.aiGateway.ingress.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+---
+# AI Governance Gateway — LiteLLM proxy
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "qubiva.fullname" . }}-ai-gateway
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "qubiva.labels" . | nindent 4 }}
+    component: ai-gateway
+spec:
+  replicas: {{ .Values.aiGateway.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "qubiva.selectorLabels" . | nindent 6 }}
+      component: ai-gateway
+  template:
+    metadata:
+      labels:
+        {{- include "qubiva.selectorLabels" . | nindent 8 }}
+        component: ai-gateway
+    spec:
+      containers:
+        - name: ai-gateway
+          image: {{ .Values.aiGateway.image }}
+          args:
+            - "--port"
+            - {{ .Values.aiGateway.service.port | quote }}
+            - "--config"
+            - "/app/config/litellm_config.yaml"
+          ports:
+            - containerPort: {{ .Values.aiGateway.service.port }}
+              name: http
+          env:
+            - name: LITELLM_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "qubiva.secretName" . }}
+                  key: AI_GATEWAY_MASTER_KEY
+            {{- if .Values.aiGateway.postgresql.enabled }}
+            - name: _AG_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "qubiva.secretName" . }}
+                  key: AI_GATEWAY_DB_USERNAME
+            - name: _AG_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "qubiva.secretName" . }}
+                  key: AI_GATEWAY_DB_PASSWORD
+            - name: DATABASE_URL
+              value: "postgresql://$(_AG_DB_USER):$(_AG_DB_PASS)@{{ include "qubiva.fullname" . }}-ai-gateway-db:5432/{{ .Values.aiGateway.postgresql.database }}"
+            {{- else if .Values.aiGateway.externalPostgresql.host }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.aiGateway.externalPostgresql.secretName }}
+                  key: url
+            {{- end }}
+            - name: STORE_MODEL_IN_DB
+              value: "True"
+            - name: LITELLM_LOG
+              value: "ERROR"
+            # URL of the Qubiva service — used by the custom auth hook
+            - name: QUBIVA_URL
+              value: "http://{{ include "qubiva.fullname" . }}"
+            # Ensure /app is on the Python path so custom_auth.py is importable
+            - name: PYTHONPATH
+              value: "/app"
+          volumeMounts:
+            - name: ai-gateway-auth
+              mountPath: /app/config/litellm_config.yaml
+              subPath: litellm_config.yaml
+            - name: ai-gateway-auth
+              mountPath: /app/custom_auth.py
+              subPath: custom_auth.py
+          resources:
+            {{- toYaml .Values.aiGateway.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: {{ .Values.aiGateway.service.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health/liveliness
+              port: {{ .Values.aiGateway.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+      volumes:
+        - name: ai-gateway-auth
+          configMap:
+            name: {{ include "qubiva.fullname" . }}-ai-gateway-auth
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "qubiva.fullname" . }}-ai-gateway
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "qubiva.labels" . | nindent 4 }}
+    component: ai-gateway
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "qubiva.selectorLabels" . | nindent 4 }}
+    component: ai-gateway
+  ports:
+    - port: {{ .Values.aiGateway.service.port }}
+      targetPort: {{ .Values.aiGateway.service.port }}
+      name: http
+---
+# Secret: PostgreSQL connection URL (constructed from credentials)
+{{- if .Values.aiGateway.postgresql.enabled }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "qubiva.fullname" . }}-ai-gateway-db-url
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "qubiva.labels" . | nindent 4 }}
+    component: ai-gateway
+type: Opaque
+stringData:
+  url: "postgresql://{{ .Values.secrets.aiGatewayDbUsername }}:{{ .Values.secrets.aiGatewayDbPassword }}@{{ include "qubiva.fullname" . }}-ai-gateway-db:5432/{{ .Values.aiGateway.postgresql.database }}"
+{{- end }}
+{{- end }}

@@ -75,7 +75,24 @@ class QuerySessionManager:
                 k8s_config.load_incluster_config()
             except k8s_config.ConfigException:
                 k8s_config.load_kube_config()
-            self.core_v1 = k8s_client.CoreV1Api()
+            # kubernetes-python-client v29+ bug: auth_settings() checks
+            # api_key['BearerToken'] but load_incluster_config() writes
+            # api_key['authorization'], so no auth header is sent (system:anonymous).
+            # Fix: wrap the refresh hook to keep both keys in sync.
+            cfg = k8s_client.Configuration.get_default_copy()
+            if 'authorization' in cfg.api_key and 'BearerToken' not in cfg.api_key:
+                orig_hook = cfg.refresh_api_key_hook
+                def _make_hook(h):
+                    def _hook(c):
+                        if h:
+                            h(c)
+                        if 'authorization' in c.api_key:
+                            c.api_key['BearerToken'] = c.api_key['authorization']
+                    return _hook
+                cfg.refresh_api_key_hook = _make_hook(orig_hook)
+                cfg.refresh_api_key_hook(cfg)
+            api_client = k8s_client.ApiClient(configuration=cfg)
+            self.core_v1 = k8s_client.CoreV1Api(api_client=api_client)
         except k8s_config.ConfigException:
             logger.warning("No Kubernetes config found — query session features disabled")
             self.core_v1 = None
