@@ -224,13 +224,19 @@ async def renew_session(
         renewal_count=current_renewal_count + 1
     )
 
+    # Calculate seconds remaining from the new token's actual expiry
+    new_payload = authenticator.get_token_payload(new_token)
+    current_time = int(datetime.utcnow().timestamp())
+    seconds_remaining = max(0, new_payload.get("exp", 0) - current_time) if new_payload else 3600
+
     # Create response with JSON content
     json_response = JSONResponse(
         content={
             "message": "Session renewed successfully",
             "renewal_count": current_renewal_count + 1,
             "max_renewals": MAX_RENEWALS,
-            "renewals_remaining": MAX_RENEWALS - (current_renewal_count + 1)
+            "renewals_remaining": MAX_RENEWALS - (current_renewal_count + 1),
+            "seconds_remaining": seconds_remaining,
         }
     )
 

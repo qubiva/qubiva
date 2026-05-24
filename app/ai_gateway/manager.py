@@ -221,11 +221,17 @@ class AIGatewayManager:
 
     async def list_keys(self) -> List[Dict]:
         """Return LiteLLM keys enriched with Qubiva owner binding data."""
+        import hashlib
         keys = await self._client_or_raise().list_keys()
         if not self._key_binding_store:
             return keys
         bindings = await self._key_binding_store.list_bindings()
-        bindings_by_key = {b["litellm_key"]: b for b in bindings}
+        # Index by both the raw key and its SHA-256 hash (LiteLLM stores/returns hashes)
+        bindings_by_key = {}
+        for b in bindings:
+            raw = b["litellm_key"]
+            bindings_by_key[raw] = b
+            bindings_by_key[hashlib.sha256(raw.encode()).hexdigest()] = b
         for key in keys:
             key_value = key.get("token") or key.get("key") or ""
             binding = bindings_by_key.get(key_value)
@@ -234,11 +240,13 @@ class AIGatewayManager:
                 key["project_name"] = binding.get("project_name")
                 key["owner_username"] = binding.get("owner_username")
                 key["created_by"] = binding.get("created_by")
+                key["alias"] = binding.get("alias")
             else:
                 key["key_type"] = None
                 key["project_name"] = None
                 key["owner_username"] = None
                 key["created_by"] = None
+                key["alias"] = None
         return keys
 
     async def create_key(
@@ -262,6 +270,26 @@ class AIGatewayManager:
             params.setdefault("rpm_limit", defaults["rpm_limit"])
         if "tpm_limit" not in params and defaults.get("tpm_limit") is not None:
             params.setdefault("tpm_limit", defaults["tpm_limit"])
+
+        # Enforce per-project and per-user key quotas
+        virtual_keys_cfg = cfg.get("virtual_keys", {})
+        if self._key_binding_store:
+            if key_type == "project" and project_name:
+                max_per_project = virtual_keys_cfg.get("max_per_project")
+                if max_per_project is not None:
+                    current = await self._key_binding_store.count_bindings_for_project(project_name)
+                    if current >= max_per_project:
+                        raise ValueError(
+                            f"Project '{project_name}' has reached the maximum of {max_per_project} virtual keys"
+                        )
+            elif key_type == "user" and owner_username:
+                max_per_user = virtual_keys_cfg.get("max_per_user")
+                if max_per_user is not None:
+                    current = await self._key_binding_store.count_bindings_for_user(owner_username)
+                    if current >= max_per_user:
+                        raise ValueError(
+                            f"User '{owner_username}' has reached the maximum of {max_per_user} virtual keys"
+                        )
 
         # Set LiteLLM scoping params based on key type
         if key_type == "project" and project_name:
@@ -351,14 +379,46 @@ class AIGatewayManager:
     # ------------------------------------------------------------------
 
     async def get_spend_summary(self) -> Dict:
+        import hashlib
         client = self._client_or_raise()
         global_spend = await client.get_global_spend()
         by_key = await client.get_spend_by_key()
         by_model = await client.get_spend_by_model()
+
+        # Enrich by_key with Qubiva binding data (alias, key_type, owner)
+        if self._key_binding_store:
+            bindings = await self._key_binding_store.list_bindings()
+            bindings_by_key = {}
+            for b in bindings:
+                raw = b["litellm_key"]
+                bindings_by_key[raw] = b
+                bindings_by_key[hashlib.sha256(raw.encode()).hexdigest()] = b
+            for key in by_key:
+                key_value = key.get("token") or key.get("key") or ""
+                binding = bindings_by_key.get(key_value)
+                if binding:
+                    key["alias"] = binding.get("alias")
+                    key["key_type"] = binding["key_type"]
+                    key["project_name"] = binding.get("project_name")
+                    key["owner_username"] = binding.get("owner_username")
+
+        # Aggregate spend by project from enriched by_key data
+        project_map: Dict = {}
+        for key in by_key:
+            pname = key.get("project_name")
+            if not pname:
+                continue
+            if pname not in project_map:
+                project_map[pname] = {"project_name": pname, "spend": 0.0, "key_count": 0}
+            project_map[pname]["spend"] += float(key.get("spend") or 0)
+            project_map[pname]["key_count"] += 1
+        by_project = sorted(project_map.values(), key=lambda x: x["spend"], reverse=True)
+
         return {
             "global": global_spend,
             "by_key": by_key,
             "by_model": by_model,
+            "by_project": by_project,
         }
 
     async def get_spend_logs(
@@ -368,3 +428,35 @@ class AIGatewayManager:
         return await self._client_or_raise().get_spend_logs(
             limit=limit, offset=offset, start_date=start_date, end_date=end_date
         )
+
+    async def purge_old_spend_logs(self, days: int) -> Dict:
+        """Delete LiteLLM_SpendLogs rows older than `days` days via direct DB connection.
+
+        Requires AI_GATEWAY_DATABASE_URL env var (postgresql:// DSN).
+        Returns gracefully with skipped=True if the env var is absent.
+        """
+        import asyncpg
+        from datetime import datetime, timedelta, timezone
+
+        db_url = os.environ.get("AI_GATEWAY_DATABASE_URL", "")
+        if not db_url:
+            logger.warning("AI_GATEWAY_DATABASE_URL not set; skipping spend log retention purge")
+            return {"rows_deleted": 0, "skipped": True}
+
+        cutoff = datetime.now(tz=timezone.utc) - timedelta(days=days)
+        try:
+            conn = await asyncpg.connect(db_url)
+            try:
+                result = await conn.execute(
+                    'DELETE FROM "LiteLLM_SpendLogs" WHERE "startTime" < $1',
+                    cutoff,
+                )
+                # asyncpg returns a status string like "DELETE 5"
+                rows = int(result.split()[-1]) if result else 0
+                logger.info("Spend log purge: deleted %d rows older than %d days", rows, days)
+                return {"rows_deleted": rows}
+            finally:
+                await conn.close()
+        except Exception as exc:
+            logger.error("Spend log purge failed: %s", exc)
+            return {"rows_deleted": 0, "error": str(exc)}

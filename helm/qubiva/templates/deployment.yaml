@@ -68,6 +68,14 @@ spec:
                 name: {{ include "qubiva.fullname" . }}-env
             - secretRef:
                 name: {{ include "qubiva.secretName" . }}
+          {{- if .Values.aiGateway.postgresql.enabled }}
+          env:
+            - name: AI_GATEWAY_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "qubiva.fullname" . }}-ai-gateway-db-url
+                  key: url
+          {{- end }}
           volumeMounts:
             - name: app-config
               mountPath: /app/config

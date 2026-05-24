@@ -559,3 +559,22 @@ input[disabled], .form-control[disabled] {
 @media (max-width: 576px) {
   .logout-pill { gap: 4px; padding: 2px 5px; }
 }
+
+/* Project sub-menu divider between sections and standalone items */
+.nav-treeview .nav-divider {
+    border-top: 1px solid #ccc;
+    margin: 6px 16px;
+    padding: 0;
+    pointer-events: none;
+}
+
+/* Project sub-menu section labels */
+.nav-treeview .nav-header {
+    color: #888;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 8px 8px 2px 16px;
+    margin-top: 4px;
+    pointer-events: none;
+}

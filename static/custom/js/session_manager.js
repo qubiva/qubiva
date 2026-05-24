@@ -25,7 +25,8 @@ $(document).ready(function() {
             const response = await fetch('/api/v1/session/info', {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
-                }
+                },
+                cache: 'no-store'
             });
 
             console.log('Session Manager: Response status:', response.status);

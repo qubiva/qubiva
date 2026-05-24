@@ -3,7 +3,7 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![CI](https://github.com/Qubiva/qubiva/actions/workflows/ci.yaml/badge.svg)](https://github.com/Qubiva/qubiva/actions/workflows/ci.yaml)
 
-Open-source Kubernetes-native platform for OpenTofu/Terraform operations, cloud governance, compliance, resource discovery, and AI-assisted infrastructure analysis.
+Open-source Kubernetes-native platform for OpenTofu/Terraform operations, cloud governance, compliance, resource discovery, AI-assisted infrastructure analysis, and LLM spend governance.
 
 Qubiva helps platform teams stop stitching together separate tools for IaC execution, cloud inventory, policy enforcement, compliance scanning, dashboards, and operational workflows.
 
@@ -18,7 +18,7 @@ Launch a fully working demo instantly in GitHub Codespaces.
 - No cloud account required
 - No Kubernetes setup required
 - Pre-loaded with sample infrastructure data
-- Explore discovery, compliance, IaC runs, AI querying, tasks, and more immediately
+- Explore discovery, compliance, IaC runs, AI querying, LLM governance, tasks, and more immediately
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/qubiva/qubiva?quickstart=1)
 
@@ -77,6 +77,7 @@ Qubiva brings these capabilities together into a single self-hosted Kubernetes-n
 - Multi-cloud resource discovery using SQL
 - Compliance benchmarks and policy enforcement
 - AI-powered infrastructure querying
+- LLM spend governance and virtual key access control
 - Operational workflows and task management
 - Shared credentials and project isolation
 - Scheduled automation and alerts
@@ -125,6 +126,18 @@ Supports:
 - Groq
 - Google Gemini
 - Other OpenAI-compatible APIs
+
+### AI Governance
+
+Manage and control LLM access across your organisation through an integrated AI Gateway (LiteLLM proxy).
+
+- **Model management** — configure and route across multiple LLM providers from one place
+- **Virtual keys** — issue scoped access keys to teams with per-key budget limits and rate limits
+- **Spend tracking** — real-time and historical spend by model, by key, and per-request logs
+- **Date-range filtering** — drill into spend for any time window with a visual trend chart
+- **Spend log retention** — configurable automatic purge of old spend logs (default: 90 days)
+
+Requires the AI Gateway (LiteLLM proxy) to be enabled in your Helm deployment. Fully visible in the demo with pre-generated spend data.
 
 ### Operational Workflows
 
@@ -272,6 +285,31 @@ Supports any OpenAI-compatible API.
 ```
 
 Set `LLM_API_KEY` using an environment variable or Kubernetes secret.
+
+---
+
+## AI Governance Configuration
+
+AI Governance requires the bundled LiteLLM AI Gateway. Enable it in your Helm values:
+
+```yaml
+aiGateway:
+  enabled: true
+  postgresql:
+    enabled: true
+```
+
+The gateway URL and master key are wired automatically when `aiGateway.enabled: true`.
+
+Configure spend log retention (default: 90 days):
+
+```json
+{
+  "ai_governance": {
+    "spend_logs_retention_days": 90
+  }
+}
+```
 
 ---
 

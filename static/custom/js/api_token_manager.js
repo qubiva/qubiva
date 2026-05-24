@@ -1,222 +1,221 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const tokenListContainer = document.getElementById("api-tokens-list");
-    const noTokensMessage = document.getElementById("no-tokens-message");
-    const createTokenForm = document.getElementById("create-api-token-form");
-    const revocationFeedback = document.getElementById("revocation-feedback");
+    const tokensLoading   = document.getElementById("tokens-loading");
+    const tokensEmpty     = document.getElementById("tokens-empty");
+    const tokenListWrap   = document.getElementById("api-tokens-list-wrap");
+    const tokenList       = document.getElementById("api-tokens-list");
+    const revocationFb    = document.getElementById("revocation-feedback");
 
-    // Copy button handler
-    document.getElementById('copyTokenButton').addEventListener('click', function() {
-        const tokenInput = document.getElementById('apiToken');
-        const token = tokenInput.value;
-        
-        navigator.clipboard.writeText(token).then(() => {
-            const button = this;
-            const originalContent = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            button.classList.replace('btn-outline-secondary', 'btn-success');
-            
-            setTimeout(() => {
-                button.innerHTML = originalContent;
-                button.classList.replace('btn-success', 'btn-outline-secondary');
-            }, 2000);
-        }).catch(err => {
-            console.error('Failed to copy text:', err);
-        });
+    // ----------------------------------------------------------------
+    // Open create modal
+    // ----------------------------------------------------------------
+    function openCreateModal() {
+        document.getElementById("create-api-token-form").reset();
+        $("#modal-create-api-token").modal("show");
+    }
+
+    document.getElementById("btn-open-create-token").addEventListener("click", openCreateModal);
+    document.getElementById("btn-open-create-token-empty").addEventListener("click", openCreateModal);
+
+    // ----------------------------------------------------------------
+    // Confirm create
+    // ----------------------------------------------------------------
+    document.getElementById("btn-confirm-create-api-token").addEventListener("click", async () => {
+        const btn        = document.getElementById("btn-confirm-create-api-token");
+        const tokenName  = document.getElementById("token-name").value.trim();
+        const expiryType = document.getElementById("expiry-type").value;
+        const expiryVal  = parseInt(document.getElementById("expiry-value").value.trim(), 10);
+
+        if (!/^[a-zA-Z0-9]+$/.test(tokenName)) {
+            alert("Token name must be alphanumeric (no spaces or special characters).");
+            return;
+        }
+        if (!tokenName || isNaN(expiryVal) || expiryVal < 1) {
+            alert("Please fill in all fields correctly.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Creating...';
+
+        const payload = { token_name: tokenName };
+        if (expiryType === "days") { payload.expiry_days  = expiryVal; }
+        else                       { payload.expiry_hours = expiryVal; }
+
+        try {
+            const resp = await fetch("/api/v1/api-tokens/generate", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+                body: JSON.stringify(payload),
+            });
+            const data = await resp.json();
+            if (!resp.ok) {
+                const d = data.detail;
+                throw new Error(typeof d === "string" ? d : d ? JSON.stringify(d) : "Failed to create token");
+            }
+            $("#modal-create-api-token").modal("hide");
+            showSuccessModal(data.api_token);
+            await fetchTokens();
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus mr-1"></i> Create Token';
+        }
     });
 
-    function showSuccessModal(message, token) {
-        const modal = $('#apiTokenModal');
-        const modalTitle = document.getElementById('apiTokenModalLabel');
-        const successContent = document.getElementById('successContent');
-        const errorContent = document.getElementById('errorContent');
-        const successMessage = document.getElementById('successMessage');
-        const tokenInput = document.getElementById('apiToken');
-    
-        modalTitle.textContent = 'Success';
-        successMessage.textContent = message;
-        tokenInput.value = token;
-        
-        successContent.style.display = 'block';
-        errorContent.style.display = 'none';
-    
-        modal.modal('show');
-    }
-    
-    function showErrorModal(message) {
-        const modal = $('#apiTokenModal');
-        const modalTitle = document.getElementById('apiTokenModalLabel');
-        const successContent = document.getElementById('successContent');
-        const errorContent = document.getElementById('errorContent');
-        const errorMessage = document.getElementById('errorMessage');
-    
-        modalTitle.textContent = 'Error';
-        errorMessage.textContent = message;
-        
-        successContent.style.display = 'none';
-        errorContent.style.display = 'block';
-    
-        modal.modal('show');
+    // ----------------------------------------------------------------
+    // Success modal
+    // ----------------------------------------------------------------
+    function showSuccessModal(token) {
+        const modal = $("#apiTokenModal");
+        document.getElementById("apiTokenModalLabel").textContent = "Token Created";
+        document.getElementById("apiToken").value = token;
+        document.getElementById("successContent").style.display = "block";
+        document.getElementById("errorContent").style.display   = "none";
+        modal.modal("show");
     }
 
+    // Copy button
+    document.getElementById("copyTokenButton").addEventListener("click", function () {
+        const val = document.getElementById("apiToken").value;
+        navigator.clipboard.writeText(val).then(() => {
+            const btn = this;
+            btn.innerHTML = '<i class="fas fa-check mr-1"></i> Copied';
+            btn.classList.replace("btn-outline-secondary", "btn-success");
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-copy mr-1"></i> Copy';
+                btn.classList.replace("btn-success", "btn-outline-secondary");
+            }, 2000);
+        }).catch(() => {});
+    });
+
+    // ----------------------------------------------------------------
+    // Fetch & render tokens
+    // ----------------------------------------------------------------
     async function fetchTokens() {
+        tokensLoading.style.display  = "block";
+        tokensEmpty.style.display    = "none";
+        tokenListWrap.style.display  = "none";
+
         try {
-            const response = await fetch(`/api/v1/api-tokens/list`, {
+            const resp = await fetch("/api/v1/api-tokens/list", {
                 method: "GET",
                 credentials: "include",
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
+                headers: { "X-Requested-With": "XMLHttpRequest" },
             });
-
-            if (!response.ok) {
-                const textError = await response.text();
-                throw new Error("Failed to fetch tokens. Server returned an error.");
-            }
-
-            const data = await response.json();
+            if (!resp.ok) throw new Error("Failed to fetch tokens.");
+            const data = await resp.json();
             renderTokenList(data.api_tokens || []);
-        } catch (error) {
-            tokenListContainer.innerHTML = `
-                <div class="alert alert-danger" role="alert">
-                    Failed to load tokens: ${error.message}
-                </div>`;
+        } catch (err) {
+            tokenList.innerHTML = `<div class="alert alert-danger m-3">Failed to load tokens: ${err.message}</div>`;
+            tokenListWrap.style.display = "block";
+        } finally {
+            tokensLoading.style.display = "none";
         }
     }
 
     function renderTokenList(tokens) {
-        tokenListContainer.innerHTML = "";
-        if (tokens.length === 0) {
-            noTokensMessage.style.display = "block";
-        } else {
-            noTokensMessage.style.display = "none";
-            tokens.forEach((token) => {
-                const tokenElement = document.createElement("div");
-                tokenElement.className = "list-group-item d-flex justify-content-between align-items-center";
-
-                // Format expiration info
-                let expiryHtml = '';
-                if (token.expires_at) {
-                    const expiresDate = new Date(token.expires_at + 'Z');
-                    const now = new Date();
-                    if (token.expired) {
-                        expiryHtml = `<span class="badge badge-danger ml-2">Expired</span>
-                            <br><small class="text-muted"><strong>Expired:</strong> ${expiresDate.toLocaleString()}</small>`;
-                    } else {
-                        const diffMs = expiresDate - now;
-                        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                        const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const remaining = diffDays > 0 ? `${diffDays}d ${diffHours}h` : `${diffHours}h`;
-                        expiryHtml = `<span class="badge badge-success ml-2">Active</span>
-                            <br><small class="text-muted"><strong>Expires:</strong> ${expiresDate.toLocaleString()} (${remaining} remaining)</small>`;
-                    }
-                } else {
-                    expiryHtml = '<br><small class="text-muted"><strong>Expires:</strong> Unknown</small>';
-                }
-
-                tokenElement.innerHTML = `
-                    <div>
-                        <strong>Token Name:</strong> ${token.token_name} ${expiryHtml.split('<br>')[0]}
-                        <br><small class="text-muted"><strong>Created:</strong> ${new Date(token.created_at + 'Z').toLocaleString()}</small>
-                        ${expiryHtml.includes('<br>') ? expiryHtml.substring(expiryHtml.indexOf('<br>')) : ''}
-                    </div>
-                    <button class="btn btn-danger btn-sm revoke-token-button" data-token-name="${token.token_name}">
-                        <i class="fas fa-trash"></i> Revoke
-                    </button>
-                `;
-                tokenListContainer.appendChild(tokenElement);
-            });
-
-            document.querySelectorAll(".revoke-token-button").forEach((button) => {
-                button.addEventListener("click", async (event) => {
-                    const tokenName = event.target.closest("button").dataset.tokenName;
-                    await revokeToken(tokenName);
-                });
-            });
-        }
-    }
-
-    async function revokeToken(tokenName) {
-        if (!tokenName) {
-            alert("Error: Unable to identify the token to revoke.");
+        tokenList.innerHTML = "";
+        if (!tokens.length) {
+            tokensEmpty.style.display = "block";
             return;
         }
 
-        try {
-            const response = await fetch(`/api/v1/api-tokens/revoke`, {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({ token_name: tokenName }),
-            });
+        tokenListWrap.style.display = "block";
+        tokens.forEach((token) => {
+            const el = document.createElement("div");
+            el.className = "list-group-item d-flex justify-content-between align-items-start mb-2";
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                const d = errorData.detail;
-                throw new Error(typeof d === 'string' ? d : d ? JSON.stringify(d) : "An unexpected error occurred while revoking the token.");
+            let expiryHtml = "";
+            if (token.expires_at) {
+                const expiresDate = new Date(token.expires_at + "Z");
+                const now = new Date();
+                if (token.expired) {
+                    expiryHtml = `<span class="badge badge-danger ml-1">Expired</span>` +
+                                 `<br><small class="text-muted"><strong>Expired:</strong> ${expiresDate.toLocaleString()}</small>`;
+                } else {
+                    const diffMs   = expiresDate - now;
+                    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    const diffHrs  = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const remaining = diffDays > 0 ? `${diffDays}d ${diffHrs}h` : `${diffHrs}h`;
+                    expiryHtml = `<span class="badge badge-success ml-1">Active</span>` +
+                                 `<br><small class="text-muted"><strong>Expires:</strong> ${expiresDate.toLocaleString()} (${remaining} remaining)</small>`;
+                }
+            } else {
+                expiryHtml = `<br><small class="text-muted"><strong>Expires:</strong> Unknown</small>`;
             }
 
-            revocationFeedback.style.display = "block";
-            setTimeout(() => {
-                revocationFeedback.style.display = "none";
-            }, 3000);
+            const badge = expiryHtml.split("<br>")[0];
+            const meta  = expiryHtml.includes("<br>") ? expiryHtml.substring(expiryHtml.indexOf("<br>")) : "";
 
+            el.innerHTML = `
+                <div>
+                    <strong>${escHtml(token.token_name)}</strong>${badge}
+                    <br><small class="text-muted"><strong>Created:</strong> ${new Date(token.created_at + "Z").toLocaleString()}</small>
+                    ${meta}
+                </div>
+                <button class="btn btn-danger btn-sm revoke-token-button" data-token-name="${escHtml(token.token_name)}">Revoke</button>`;
+            tokenList.appendChild(el);
+        });
+
+        document.querySelectorAll(".revoke-token-button").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                const name = e.currentTarget.dataset.tokenName;
+                document.getElementById("revoke-api-token-name").textContent = name;
+                document.getElementById("btn-confirm-revoke-api-token").dataset.tokenName = name;
+                $("#modal-revoke-api-token").modal("show");
+            });
+        });
+    }
+
+    // Confirmation modal — confirm revoke
+    document.getElementById("btn-confirm-revoke-api-token").addEventListener("click", async function () {
+        const name = this.dataset.tokenName;
+        this.disabled = true;
+        this.textContent = "Revoking...";
+        $("#modal-revoke-api-token").modal("hide");
+        await revokeToken(name);
+        this.disabled = false;
+        this.textContent = "Revoke";
+    });
+
+    // ----------------------------------------------------------------
+    // Revoke
+    // ----------------------------------------------------------------
+    async function revokeToken(tokenName) {
+        if (!tokenName) return;
+        try {
+            const resp = await fetch("/api/v1/api-tokens/revoke", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+                body: JSON.stringify({ token_name: tokenName }),
+            });
+            if (!resp.ok) {
+                const err = await resp.json();
+                const d = err.detail;
+                throw new Error(typeof d === "string" ? d : d ? JSON.stringify(d) : "Error revoking token");
+            }
+            revocationFb.style.display = "block";
+            setTimeout(() => { revocationFb.style.display = "none"; }, 3000);
             await fetchTokens();
-        } catch (error) {
-            alert("Error revoking token: " + error.message);
+        } catch (err) {
+            alert("Error revoking token: " + err.message);
         }
     }
 
-    createTokenForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-    
-        const tokenName = document.getElementById("token-name").value.trim();
-        const expiryType = document.getElementById("expiry-type").value;
-        const expiryValue = parseInt(document.getElementById("expiry-value").value.trim(), 10);
-    
-        try {
-            const isAlphanumeric = /^[a-zA-Z0-9]+$/.test(tokenName);
-            if (!isAlphanumeric) {
-                throw new Error("Token name must be alphanumeric and cannot contain spaces or special characters.");
-            }
-    
-            if (!tokenName || isNaN(expiryValue) || expiryValue < 1) {
-                throw new Error("Invalid input. Please ensure all fields are correctly filled.");
-            }
-    
-            const payload = { token_name: tokenName };
-            if (expiryType === "days") {
-                payload.expiry_days = expiryValue;
-            } else {
-                payload.expiry_hours = expiryValue;
-            }
-    
-            const response = await fetch(`/api/v1/api-tokens/generate`, {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(payload),
-            });
-        
-            const data = await response.json();
-            
-            if (!response.ok) {
-                const d = data.detail;
-                throw new Error(typeof d === 'string' ? d : d ? JSON.stringify(d) : "Failed to create token");
-            }
-        
-            showSuccessModal("API token created successfully!", data.api_token);
-            await fetchTokens();
-            event.target.reset();
-        } catch (error) {
-            showErrorModal(error.message);
-        }
-    });
+    // ----------------------------------------------------------------
+    // Helpers
+    // ----------------------------------------------------------------
+    function escHtml(str) {
+        if (str == null) return "";
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+    }
 
     fetchTokens();
 });

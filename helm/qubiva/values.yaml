@@ -126,7 +126,13 @@ secrets:
   smtpFromEmail: ""
   # GitHub token (optional, for template repos)
   githubToken: ""
-  # AI Gateway master key (auto-generated if empty, required when aiGateway.enabled)
+  # AI Gateway master key — auto-generated on first install if empty.
+  # The generated key is stored in the Kubernetes Secret and persists across upgrades
+  # because the secret.yaml template reads the existing value before regenerating.
+  # To rotate: set a new value here and run:
+  #   helm upgrade <release> . --set secrets.aiGatewayMasterKey=<new-key> --reuse-values
+  # All Qubiva management calls use this key internally (never exposed to end users).
+  # End-user access is controlled via LiteLLM virtual keys, not the master key.
   aiGatewayMasterKey: ""
   # AI Gateway PostgreSQL credentials (used when aiGateway.postgresql.enabled)
   aiGatewayDbUsername: "litellm"

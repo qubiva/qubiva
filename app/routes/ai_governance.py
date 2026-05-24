@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from typing import Any, Dict, List, Optional
 
-from app.deps import ai_gateway_manager, audit_logger
+from app.deps import ai_gateway_manager, audit_logger, project_manager, rbac
 from app.auth_helpers import authenticate_http_user
 
 router = APIRouter(prefix="/api/v1/ai-governance", tags=["ai-governance"])
@@ -316,6 +316,217 @@ async def delete_key(
             "delete_ai_key", user["username"], "ai_key", key_id
         )
         return result
+    except RuntimeError as exc:
+        raise _gateway_error(exc)
+
+
+# ---------------------------------------------------------------------------
+# Project-scoped key self-service (project admin or org admin)
+# ---------------------------------------------------------------------------
+
+async def _require_project_key_admin(user: dict, project_name: str):
+    """Allow org_admin OR a user with project_ai_key_create permission in the project."""
+    org_roles = user.get("org_roles") or []
+    if "org_admin" in org_roles:
+        return
+    username = user.get("username", "")
+    success, proj_roles = await project_manager.get_user_roles_by_project(
+        username=username, project_name=project_name, is_org_user=bool(org_roles)
+    )
+    if not success:
+        raise HTTPException(status_code=403, detail=f"Access denied to project '{project_name}'")
+    has_perm, _ = rbac.check_permissions(["project_ai_key_create"], proj_roles, org_roles)
+    if not has_perm:
+        raise HTTPException(status_code=403, detail="Project admin role required")
+
+
+@router.get("/keys/project/{project_name}")
+async def list_project_keys(
+    project_name: str,
+    user: dict = Depends(authenticate_http_user),
+):
+    """List virtual keys scoped to a specific project. Requires project admin or org admin."""
+    await _require_project_key_admin(user, project_name)
+    try:
+        all_keys = await ai_gateway_manager.list_keys()
+        project_keys = [k for k in all_keys if k.get("project_name") == project_name]
+        return {"keys": project_keys}
+    except RuntimeError as exc:
+        raise _gateway_error(exc)
+
+
+@router.post("/keys/project/{project_name}", status_code=201)
+async def create_project_key(
+    project_name: str,
+    body: CreateKeyRequest,
+    user: dict = Depends(authenticate_http_user),
+):
+    """Create a virtual key scoped to a project. Requires project admin or org admin."""
+    await _require_project_key_admin(user, project_name)
+    try:
+        excluded = {"key_type", "project_name", "owner_username"}
+        params = {k: v for k, v in body.model_dump(exclude_none=True).items() if k not in excluded}
+        result = await ai_gateway_manager.create_key(
+            params=params,
+            key_type="project",
+            project_name=project_name,
+            owner_username=None,
+            created_by=user["username"],
+        )
+        await audit_logger.log_event(
+            "create_ai_key", user["username"], "ai_key", body.alias or "unnamed"
+        )
+        return result
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except RuntimeError as exc:
+        raise _gateway_error(exc)
+
+
+@router.delete("/keys/project/{project_name}/{key_id}")
+async def delete_project_key(
+    project_name: str,
+    key_id: str,
+    user: dict = Depends(authenticate_http_user),
+):
+    """Delete a project-scoped virtual key. Requires project admin or org admin."""
+    await _require_project_key_admin(user, project_name)
+    try:
+        # Verify key belongs to this project before deleting
+        binding = await ai_gateway_manager.get_key_binding(key_id)
+        if binding and binding.get("project_name") != project_name:
+            raise HTTPException(status_code=403, detail="Key does not belong to this project")
+        result = await ai_gateway_manager.delete_key(key_id)
+        await audit_logger.log_event(
+            "delete_ai_key", user["username"], "ai_key", key_id
+        )
+        return result
+    except HTTPException:
+        raise
+    except RuntimeError as exc:
+        raise _gateway_error(exc)
+
+
+# ---------------------------------------------------------------------------
+# User self-service keys (any authenticated user, user-scoped)
+# ---------------------------------------------------------------------------
+
+@router.get("/keys/mine")
+async def list_my_keys(user: dict = Depends(authenticate_http_user)):
+    """List virtual keys owned by the current user."""
+    username = user.get("username", "")
+    try:
+        all_keys = await ai_gateway_manager.list_keys()
+        my_keys = [k for k in all_keys if k.get("owner_username") == username]
+        return {"keys": my_keys}
+    except RuntimeError as exc:
+        raise _gateway_error(exc)
+
+
+@router.post("/keys/mine", status_code=201)
+async def create_my_key(
+    body: CreateKeyRequest,
+    user: dict = Depends(authenticate_http_user),
+):
+    """Create a user-scoped virtual key for the authenticated user."""
+    username = user.get("username", "")
+    try:
+        excluded = {"key_type", "project_name", "owner_username"}
+        params = {k: v for k, v in body.model_dump(exclude_none=True).items() if k not in excluded}
+        result = await ai_gateway_manager.create_key(
+            params=params,
+            key_type="user",
+            project_name=None,
+            owner_username=username,
+            created_by=username,
+        )
+        await audit_logger.log_event(
+            "create_ai_key", username, "ai_key", body.alias or "unnamed"
+        )
+        return result
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except RuntimeError as exc:
+        raise _gateway_error(exc)
+
+
+@router.delete("/keys/mine/{key_id}")
+async def delete_my_key(
+    key_id: str,
+    user: dict = Depends(authenticate_http_user),
+):
+    """Delete a user-scoped key owned by the authenticated user."""
+    username = user.get("username", "")
+    try:
+        binding = await ai_gateway_manager.get_key_binding(key_id)
+        if binding and binding.get("owner_username") != username:
+            raise HTTPException(status_code=403, detail="Key does not belong to you")
+        result = await ai_gateway_manager.delete_key(key_id)
+        await audit_logger.log_event(
+            "delete_ai_key", username, "ai_key", key_id
+        )
+        return result
+    except HTTPException:
+        raise
+    except RuntimeError as exc:
+        raise _gateway_error(exc)
+
+
+# ---------------------------------------------------------------------------
+# Key rotation
+# ---------------------------------------------------------------------------
+
+@router.post("/keys/{key_id}/rotate", status_code=201)
+async def rotate_key(
+    key_id: str,
+    body: CreateKeyRequest,
+    user: dict = Depends(authenticate_http_user),
+):
+    """Rotate a virtual key: create a replacement and delete the old one.
+
+    Org admin can rotate any key. Project admin can rotate project keys they manage.
+    A user can rotate their own user-scoped keys.
+    """
+    username = user.get("username", "")
+    org_roles = user.get("org_roles") or []
+    is_org_admin = "org_admin" in org_roles
+
+    # Determine if the caller is authorized to rotate this key
+    binding = await ai_gateway_manager.get_key_binding(key_id)
+    if not is_org_admin:
+        if binding is None:
+            raise HTTPException(status_code=404, detail="Key not found or not managed by Qubiva")
+        key_type = binding.get("key_type")
+        if key_type == "user":
+            if binding.get("owner_username") != username:
+                raise HTTPException(status_code=403, detail="You can only rotate your own keys")
+        elif key_type == "project":
+            project_name = binding.get("project_name")
+            await _require_project_key_admin(user, project_name)
+        else:
+            raise HTTPException(status_code=403, detail="org_admin role required to rotate this key")
+
+    try:
+        # Carry over binding metadata to new key
+        new_key_type = binding.get("key_type") if binding else body.key_type
+        new_project = binding.get("project_name") if binding else body.project_name
+        new_owner = binding.get("owner_username") if binding else body.owner_username
+
+        excluded = {"key_type", "project_name", "owner_username"}
+        params = {k: v for k, v in body.model_dump(exclude_none=True).items() if k not in excluded}
+        new_key = await ai_gateway_manager.create_key(
+            params=params,
+            key_type=new_key_type,
+            project_name=new_project,
+            owner_username=new_owner,
+            created_by=username,
+        )
+        # Delete old key
+        await ai_gateway_manager.delete_key(key_id)
+        await audit_logger.log_event("rotate_ai_key", username, "ai_key", key_id)
+        return {"rotated": True, "new_key": new_key}
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
     except RuntimeError as exc:
         raise _gateway_error(exc)
 

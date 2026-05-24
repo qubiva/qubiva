@@ -64,3 +64,15 @@ class KeyBindingStore:
             KEY_BINDINGS_COLLECTION, {"litellm_key": litellm_key}
         )
         return count > 0
+
+    async def count_bindings_for_project(self, project_name: str) -> int:
+        docs = await self._db.find_documents(
+            KEY_BINDINGS_COLLECTION, {"key_type": "project", "project_name": project_name}
+        )
+        return len(docs)
+
+    async def count_bindings_for_user(self, username: str) -> int:
+        docs = await self._db.find_documents(
+            KEY_BINDINGS_COLLECTION, {"key_type": "user", "owner_username": username}
+        )
+        return len(docs)

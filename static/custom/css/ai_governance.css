@@ -192,9 +192,52 @@
   margin-bottom: 16px;
 }
 
+/* ---- Spend Breakdown section sub-labels ---- */
+.spend-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6c757d;
+  margin-bottom: 8px;
+}
+
 /* ---- Table action buttons ---- */
 .btn-action {
   padding: 2px 8px;
   font-size: 0.78rem;
   border-radius: 0;
+}
+
+/* ---- Delete / edit icon buttons ---- */
+.btn-delete-cred,
+.btn-delete-model,
+.btn-delete-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+/* ---- Floating typeahead results inside modals ---- */
+.ag-typeahead-wrap {
+  position: relative;
+}
+
+.ag-typeahead-results {
+  display: none;
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  z-index: 1060;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, .15);
+  border-radius: 0.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+  background: #fff;
 }

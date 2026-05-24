@@ -30,6 +30,8 @@ const agState = {
     spendStartDate: null,  // YYYY-MM-DD or null
     spendEndDate: null,    // YYYY-MM-DD or null
     spendTrendChart: null, // Chart.js instance
+    allLogs: [],           // all fetched logs (client-side filtering)
+    selectedModels: [],    // models selected in create-key modal
     credentials: [],       // cached for the model modal dropdown
     providers: [],         // loaded from /api/v1/ai-governance/providers
 };
@@ -48,10 +50,10 @@ $(document).ready(function () {
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         if (!agState.healthy) return;
         const target = $(e.target).attr('href');
-        if (target === '#pane-credentials' && !agState.credentialsLoaded) loadCredentials();
-        if (target === '#pane-models'      && !agState.modelsLoaded)      loadModels();
-        if (target === '#pane-keys'        && !agState.keysLoaded)        loadKeys();
-        if (target === '#pane-spend'       && !agState.spendLoaded)       loadSpend();
+        if (target === '#pane-credentials'    && !agState.credentialsLoaded)           loadCredentials();
+        if (target === '#pane-models'         && !agState.modelsLoaded)                loadModels();
+        if (target === '#pane-keys'           && !agState.keysLoaded)                  loadKeys();
+        if (target === '#pane-spend'          && !agState.spendLoaded)                 loadSpend();
     });
 });
 
@@ -195,9 +197,9 @@ function renderCredentials(list) {
                       'data-id="' + escHtml(c.credential_id) + '" data-name="' + escHtml(c.name) + '" data-provider="' + escHtml(c.provider) + '" title="Rotate key">' +
                 '<i class="fas fa-sync-alt"></i>' +
               '</button>' +
-              '<button class="btn btn-danger btn-action btn-delete-cred" ' +
+              '<button class="btn btn-link text-danger btn-delete-cred" style="padding:0; margin-left:6px;" ' +
                       'data-id="' + escHtml(c.credential_id) + '" data-name="' + escHtml(c.name) + '" title="Delete">' +
-                '<i class="fas fa-trash"></i>' +
+                '<i class="fas fa-times"></i>' +
               '</button>' +
             '</td>' +
             '</tr>'
@@ -225,7 +227,7 @@ $('#btn-save-credential').on('click', function () {
     const provider = $('#cred-provider').val();
 
     if (!name || !provider) {
-        toastr.warning('Name and provider are required.');
+        toastr.error('Name and provider are required.');
         return;
     }
 
@@ -239,11 +241,11 @@ $('#btn-save-credential').on('click', function () {
     });
 
     if (!Object.keys(credentialValues).length) {
-        toastr.warning('Select a provider to reveal its credential fields.');
+        toastr.error('Select a provider to reveal its credential fields.');
         return;
     }
     if (missingRequired) {
-        toastr.warning('All required credential fields must be filled.');
+        toastr.error('All required credential fields must be filled.');
         return;
     }
 
@@ -295,7 +297,7 @@ $('#btn-confirm-rotate').on('click', function () {
     });
 
     if (!Object.keys(credentialValues).length || missingRequired) {
-        toastr.warning('Enter the new credential value(s).');
+        toastr.error('Enter the new credential value(s).');
         return;
     }
 
@@ -363,8 +365,9 @@ function loadModels() {
         method: 'GET',
         success: function (data) {
             agState.modelsLoaded = true;
+            agState.models = data.models || [];
             $('#models-loading').hide();
-            renderModels(data.models || []);
+            renderModels(agState.models);
         },
         error: function (xhr) {
             $('#models-loading').hide();
@@ -391,9 +394,9 @@ function renderModels(list) {
             '<td><span class="provider-badge">' + escHtml(provider) + '</span></td>' +
             '<td><code style="font-size:0.8em;">' + escHtml(model) + '</code></td>' +
             '<td>' +
-              '<button class="btn btn-danger btn-action btn-delete-model" ' +
+              '<button class="btn btn-link text-danger p-0 btn-delete-model" ' +
                       'data-id="' + escHtml(modelId) + '" data-name="' + escHtml(m.model_name || '') + '" title="Remove">' +
-                '<i class="fas fa-trash"></i>' +
+                '<i class="fas fa-trash-alt"></i>' +
               '</button>' +
             '</td>' +
             '</tr>'
@@ -585,7 +588,7 @@ $('#btn-save-model').on('click', function () {
     const model      = $.trim($('#model-name').val());
 
     if (!alias || !providerId || !model) {
-        toastr.warning('Model alias, provider, and model name are required.');
+        toastr.error('Model alias, provider, and model name are required.');
         return;
     }
 
@@ -611,7 +614,7 @@ $('#btn-save-model').on('click', function () {
 
     if (hasCredSection) {
         if (keySource === 'credential' && !credentialId) {
-            toastr.warning('Select a credential.');
+            toastr.error('Select a credential.');
             return;
         }
         if (keySource === 'direct') {
@@ -620,7 +623,7 @@ $('#btn-save-model').on('click', function () {
                 if ($(this).prop('required') && !$.trim($(this).val())) missingDirect = true;
             });
             if (missingDirect) {
-                toastr.warning('Enter the required credential value(s).');
+                toastr.error('Enter the required credential value(s).');
                 return;
             }
             $('#model-direct-fields [data-cred-param]').each(function () {
@@ -716,7 +719,7 @@ function renderKeys(list) {
     const tbody = $('#keys-tbody').empty();
     list.forEach(function (k) {
         const keyStr   = k.token || k.key || '';
-        const prefix   = keyStr ? keyStr.substring(0, 12) + '…' : '—';
+        const prefix   = k.key_name || (keyStr ? keyStr.substring(0, 12) + '…' : '—');
         const alias    = k.key_alias || k.alias || '—';
         const budget   = k.max_budget != null ? '$' + parseFloat(k.max_budget).toFixed(2) : '∞';
         const spend    = k.spend != null ? '$' + parseFloat(k.spend).toFixed(4) : '—';
@@ -727,7 +730,7 @@ function renderKeys(list) {
         // Owner column: show project or user binding
         var ownerHtml = '<span class="text-muted" style="font-size:0.8em;">—</span>';
         if (k.key_type === 'project' && k.project_name) {
-            ownerHtml = '<span class="ag-badge ag-badge-muted" style="font-size:0.78em;"><i class="fas fa-project-diagram mr-1"></i>' + escHtml(k.project_name) + '</span>';
+            ownerHtml = '<a href="/dashboard/projects/' + encodeURIComponent(k.project_name) + '" class="ag-badge ag-badge-muted" style="font-size:0.78em; text-decoration:none;"><i class="fas fa-project-diagram mr-1"></i>' + escHtml(k.project_name) + '</a>';
         } else if (k.key_type === 'user' && k.owner_username) {
             ownerHtml = '<span class="ag-badge ag-badge-muted" style="font-size:0.78em;"><i class="fas fa-user mr-1"></i>' + escHtml(k.owner_username) + '</span>';
         }
@@ -743,7 +746,7 @@ function renderKeys(list) {
             '<td>' + tpm + '</td>' +
             '<td><small>' + escHtml(models) + '</small></td>' +
             '<td>' +
-              '<button class="btn btn-primary btn-action mr-1 btn-update-key" ' +
+              '<button class="btn btn-link text-primary p-0 mr-2 btn-update-key" ' +
                       'data-id="' + escHtml(keyStr) + '" ' +
                       'data-alias="' + escHtml(alias) + '" ' +
                       'data-budget="' + (k.max_budget != null ? k.max_budget : '') + '" ' +
@@ -752,9 +755,9 @@ function renderKeys(list) {
                       'title="Edit limits">' +
                 '<i class="fas fa-edit"></i>' +
               '</button>' +
-              '<button class="btn btn-danger btn-action btn-delete-key" ' +
+              '<button class="btn btn-link text-danger p-0 btn-delete-key" ' +
                       'data-id="' + escHtml(keyStr) + '" data-alias="' + escHtml(alias) + '" title="Delete">' +
-                '<i class="fas fa-trash"></i>' +
+                '<i class="fas fa-trash-alt"></i>' +
               '</button>' +
             '</td>' +
             '</tr>'
@@ -766,8 +769,11 @@ function renderKeys(list) {
 // Create key
 $('#btn-create-key').on('click', function () {
     $('#form-create-key')[0].reset();
+    $('#key-project-name, #key-owner-username').val('');
+    $('#key-project-search, #key-user-search').val('');
+    $('#key-project-results, #key-user-results, #key-models-results').empty().hide();
     $('#key-project-group, #key-user-group').hide();
-    _loadProjectsDropdown();
+    _loadModelsMultiselect();
     $('#modal-create-key').modal('show');
 });
 
@@ -778,29 +784,139 @@ $('#key-type').on('change', function () {
     $('#key-user-group').toggle(val === 'user');
 });
 
-function _loadProjectsDropdown() {
-    const sel = $('#key-project-name').empty().append('<option value="" disabled selected>Loading...</option>');
+function _debounce(fn, ms) {
+    let t;
+    return function () { clearTimeout(t); t = setTimeout(fn.bind(this, ...arguments), ms); };
+}
+
+// Project typeahead
+$(document).on('input', '#key-project-search', _debounce(function () {
+    const query = $.trim($(this).val());
+    const results = $('#key-project-results').empty().hide();
+    $('#key-project-name').val('');
+    if (query.length < 2) return;
     $.ajax({
         url: '/api/v1/projects/search',
         method: 'GET',
-        data: { query: '' },
+        data: { query: query },
         success: function (data) {
-            sel.empty().append('<option value="" disabled selected>Select project</option>');
-            const projects = data.projects || data || [];
-            if (Array.isArray(projects) && projects.length) {
-                projects.forEach(function (p) {
-                    const name = p.project_name || p;
-                    sel.append('<option value="' + escHtml(name) + '">' + escHtml(name) + '</option>');
-                });
-            } else {
-                sel.append('<option disabled>No projects found</option>');
+            const projects = data.results || data.projects || [];
+            if (!projects.length) {
+                results.append('<div class="list-group-item text-muted">No projects found</div>').show();
+                return;
             }
-        },
-        error: function () {
-            sel.empty().append('<option disabled>Failed to load projects</option>');
+            projects.forEach(function (p) {
+                const name = p.project_name || p;
+                $('<a href="#" class="list-group-item list-group-item-action"></a>')
+                    .text(name)
+                    .on('click', function (e) {
+                        e.preventDefault();
+                        $('#key-project-search').val(name);
+                        $('#key-project-name').val(name);
+                        results.empty().hide();
+                    })
+                    .appendTo(results);
+            });
+            results.show();
         }
     });
+}, 250));
+
+// User typeahead
+$(document).on('input', '#key-user-search', _debounce(function () {
+    const query = $.trim($(this).val());
+    const results = $('#key-user-results').empty().hide();
+    $('#key-owner-username').val('');
+    if (query.length < 2) return;
+    $.ajax({
+        url: '/api/v1/users/search/',
+        method: 'GET',
+        data: { query: query },
+        success: function (data) {
+            const users = Array.isArray(data) ? data : (data.users || []);
+            if (!users.length) {
+                results.append('<div class="list-group-item text-muted">No users found</div>').show();
+                return;
+            }
+            users.forEach(function (u) {
+                const username = u.username || u;
+                $('<a href="#" class="list-group-item list-group-item-action"></a>')
+                    .text(username)
+                    .on('click', function (e) {
+                        e.preventDefault();
+                        $('#key-user-search').val(username);
+                        $('#key-owner-username').val(username);
+                        results.empty().hide();
+                    })
+                    .appendTo(results);
+            });
+            results.show();
+        }
+    });
+}, 250));
+
+// Models typeahead (multi-select via tags)
+function _loadModelsMultiselect() {
+    $('#key-models-search').val('');
+    $('#key-models-results').empty().hide();
+    $('#key-models-selected').empty();
+    agState.selectedModels = [];
 }
+
+$(document).on('input', '#key-models-search', _debounce(function () {
+    const query = $.trim($(this).val()).toLowerCase();
+    const results = $('#key-models-results').empty().hide();
+    if (!query) return;
+
+    function _searchModels(models) {
+        const filtered = models.filter(function (m) {
+            const alias = m.model_name || m.model_alias || m.id || '';
+            return alias.toLowerCase().indexOf(query) !== -1;
+        });
+        if (!filtered.length) {
+            results.append('<div class="list-group-item text-muted">No models found</div>').show();
+            return;
+        }
+        filtered.forEach(function (m) {
+            const alias = m.model_name || m.model_alias || m.id || '';
+            if (!alias) return;
+            $('<a href="#" class="list-group-item list-group-item-action"></a>')
+                .text(alias)
+                .on('click', function (e) {
+                    e.preventDefault();
+                    if (agState.selectedModels.indexOf(alias) === -1) {
+                        agState.selectedModels.push(alias);
+                        $('<span class="badge badge-primary mr-1 mb-1" style="font-size:0.85em; cursor:pointer;"></span>')
+                            .text(alias + ' ×')
+                            .data('alias', alias)
+                            .on('click', function () {
+                                const idx = agState.selectedModels.indexOf(alias);
+                                if (idx !== -1) agState.selectedModels.splice(idx, 1);
+                                $(this).remove();
+                            })
+                            .appendTo('#key-models-selected');
+                    }
+                    $('#key-models-search').val('');
+                    results.empty().hide();
+                })
+                .appendTo(results);
+        });
+        results.show();
+    }
+
+    if (agState.models && agState.models.length) {
+        _searchModels(agState.models);
+    } else {
+        $.ajax({
+            url: '/api/v1/ai-governance/models',
+            method: 'GET',
+            success: function (data) {
+                agState.models = data.models || [];
+                _searchModels(agState.models);
+            }
+        });
+    }
+}, 200));
 
 $('#btn-confirm-create-key').on('click', function () {
     const payload = {};
@@ -811,21 +927,23 @@ $('#btn-confirm-create-key').on('click', function () {
     const budget   = $('#key-budget').val();
     const rpm      = $('#key-rpm').val();
     const tpm      = $('#key-tpm').val();
-    const models   = $.trim($('#key-models').val());
+    const models   = agState.selectedModels || [];
 
-    if (alias)  payload.alias       = alias;
-    if (budget) payload.max_budget  = parseFloat(budget);
-    if (rpm)    payload.rpm_limit   = parseInt(rpm);
-    if (tpm)    payload.tpm_limit   = parseInt(tpm);
-    if (models) payload.models      = models.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    if (alias)          payload.alias       = alias;
+    if (budget)         payload.max_budget  = parseFloat(budget);
+    if (rpm)            payload.rpm_limit   = parseInt(rpm);
+    if (tpm)            payload.tpm_limit   = parseInt(tpm);
+    if (models.length)  payload.models      = models;
+
+    if (!keyType) { toastr.error('Select a key type.'); return; }
 
     if (keyType) {
         payload.key_type = keyType;
         if (keyType === 'project') {
-            if (!project) { toastr.warning('Select a project for this key.'); return; }
+            if (!project) { toastr.error('Select a project for this key.'); return; }
             payload.project_name = project;
         } else if (keyType === 'user') {
-            if (!username) { toastr.warning('Enter a username for this key.'); return; }
+            if (!username) { toastr.error('Enter a username for this key.'); return; }
             payload.owner_username = username;
         }
     }
@@ -858,13 +976,25 @@ $('#btn-confirm-create-key').on('click', function () {
     });
 });
 
-// Copy key
+// Reset key-created modal state on open
+$('#modal-key-created').on('show.bs.modal', function () {
+    $('#key-copied-confirm').prop('checked', false);
+    $('#btn-key-created-done').prop('disabled', true);
+});
+
+// Enable Done only after user confirms they copied the key
+$('#key-copied-confirm').on('change', function () {
+    $('#btn-key-created-done').prop('disabled', !this.checked);
+});
+
+// Copy key — also auto-checks the confirm box
 $('#btn-copy-key').on('click', function () {
     const text = $('#created-key-value').text();
     navigator.clipboard.writeText(text).then(function () {
         toastr.success('Copied to clipboard.');
+        $('#key-copied-confirm').prop('checked', true).trigger('change');
     }).catch(function () {
-        toastr.warning('Copy failed — select and copy manually.');
+        toastr.error('Copy failed — select and copy manually.');
     });
 });
 
@@ -964,25 +1094,46 @@ function loadSpend() {
     });
 }
 
+function normalizeModelName(name) {
+    // Collapse double-provider prefix (e.g. groq/groq/llama → groq/llama)
+    var parts = name.split('/');
+    if (parts.length >= 3 && parts[0] === parts[1]) {
+        return parts[0] + '/' + parts.slice(2).join('/');
+    }
+    return name;
+}
+
 function renderSpend(data) {
-    const global   = data.global   || {};
-    const byModel  = data.by_model || [];
-    const byKey    = data.by_key   || [];
+    const global     = data.global     || {};
+    const byModel    = data.by_model   || [];
+    const byKey      = data.by_key     || [];
+    const byProject  = data.by_project || [];
 
     // Summary
     const total = global.spend != null ? parseFloat(global.spend).toFixed(4) : '0.0000';
     $('#spend-total').text(total);
     $('#spend-keys-count').text(byKey.length);
-    $('#spend-models-count').text(byModel.length);
 
-    // By model
+    // By model — deduplicate double-prefixed names
+    const modelMap = {};
+    byModel.forEach(function (m) {
+        const name = normalizeModelName(m.model || m.model_name || '');
+        if (!modelMap[name]) {
+            modelMap[name] = { model: name, spend: 0, total_tokens: 0 };
+        }
+        modelMap[name].spend       += parseFloat(m.spend || m.total_spend || 0);
+        modelMap[name].total_tokens += parseInt(m.total_tokens || 0, 10);
+    });
+    // Filter out zero-spend entries (auth-failure noise with no real model activity)
+    const dedupedByModel = Object.values(modelMap).filter(function (m) { return m.spend > 0; });
+    $('#spend-models-count').text(dedupedByModel.length);
     const mTbody = $('#spend-by-model-tbody').empty();
-    if (byModel.length) {
-        byModel.forEach(function (m) {
+    if (dedupedByModel.length) {
+        dedupedByModel.forEach(function (m) {
             mTbody.append(
                 '<tr>' +
-                '<td>' + escHtml(m.model || m.model_name || '—') + '</td>' +
-                '<td>$' + parseFloat(m.spend || 0).toFixed(4) + '</td>' +
+                '<td>' + escHtml(m.model || '—') + '</td>' +
+                '<td>$' + parseFloat(m.spend || 0).toFixed(6) + '</td>' +
                 '<td>' + (m.total_tokens || '—') + '</td>' +
                 '</tr>'
             );
@@ -995,7 +1146,7 @@ function renderSpend(data) {
     const kTbody = $('#spend-by-key-tbody').empty();
     if (byKey.length) {
         byKey.forEach(function (k) {
-            const keyPfx = (k.api_key || k.key || '').substring(0, 12) + '…';
+            const keyPfx = k.key_name || (k.token ? k.token.substring(0, 12) + '…' : '—');
             kTbody.append(
                 '<tr>' +
                 '<td><code>' + escHtml(keyPfx) + '</code></td>' +
@@ -1008,105 +1159,94 @@ function renderSpend(data) {
         kTbody.append('<tr><td colspan="3" class="text-center text-muted">No spend data</td></tr>');
     }
 
+    // By project
+    const pTbody = $('#spend-by-project-tbody').empty();
+    if (byProject.length) {
+        byProject.slice().sort(function (a, b) { return b.spend - a.spend; }).forEach(function (p) {
+            pTbody.append(
+                '<tr>' +
+                '<td><a href="/dashboard/projects/' + encodeURIComponent(p.project_name) + '">' + escHtml(p.project_name) + '</a></td>' +
+                '<td>' + (p.key_count || 0) + '</td>' +
+                '<td>$' + parseFloat(p.spend || 0).toFixed(4) + '</td>' +
+                '</tr>'
+            );
+        });
+    } else {
+        pTbody.append('<tr><td colspan="3" class="text-center text-muted">No project spend</td></tr>');
+    }
+
     $('#spend-content').show();
 
-    // Load logs (with chart since we default to last 30 days)
+    // Load all logs once; chart + table derived client-side
     agState.spendLogsPage = 0;
-    loadSpendLogs(true);
+    loadSpendLogs();
+}
+
+function _defaultDateRange() {
+    return {
+        start: moment().subtract(29, 'days'),
+        end:   moment()
+    };
 }
 
 function initSpendDatePicker() {
     if (typeof $.fn.daterangepicker === 'undefined') return;
 
-    // Default to last 30 days
-    const defaultStart = moment().subtract(29, 'days');
-    const defaultEnd   = moment();
-    agState.spendStartDate = defaultStart.format('YYYY-MM-DD');
-    agState.spendEndDate   = defaultEnd.format('YYYY-MM-DD');
-    $('#spend-date-range').val(defaultStart.format('YYYY-MM-DD') + ' \u2013 ' + defaultEnd.format('YYYY-MM-DD'));
+    var dflt = _defaultDateRange();
+    agState.spendStartDate = dflt.start.format('YYYY-MM-DD');
+    agState.spendEndDate   = dflt.end.format('YYYY-MM-DD');
 
     $('#spend-date-range').daterangepicker({
-        startDate: defaultStart,
-        endDate:   defaultEnd,
-        autoUpdateInput: false,
+        startDate: dflt.start,
+        endDate:   dflt.end,
         opens: 'left',
         showDropdowns: true,
         maxDate: moment(),
-        locale: { format: 'YYYY-MM-DD', cancelLabel: 'Clear' }
+        locale: { format: 'YYYY-MM-DD' }
     });
+    $('#spend-date-range').val(agState.spendStartDate + ' \u2013 ' + agState.spendEndDate);
 
     $('#spend-date-range').on('apply.daterangepicker', function (ev, picker) {
         agState.spendStartDate = picker.startDate.format('YYYY-MM-DD');
         agState.spendEndDate   = picker.endDate.format('YYYY-MM-DD');
         $(this).val(agState.spendStartDate + ' \u2013 ' + agState.spendEndDate);
-    });
-
-    $('#spend-date-range').on('cancel.daterangepicker', function () {
-        agState.spendStartDate = null;
-        agState.spendEndDate   = null;
-        $(this).val('');
+        agState.spendLogsPage = 0;
+        applyLogsFilter();
     });
 
     $('#btn-spend-date-apply').on('click', function () {
         agState.spendLogsPage = 0;
-        loadSpendLogs(true);
+        applyLogsFilter();
     });
 
+    // Reset button — returns to default 30-day window (not "all time")
     $('#btn-spend-date-clear').on('click', function () {
-        agState.spendStartDate = null;
-        agState.spendEndDate   = null;
-        $('#spend-date-range').val('');
-        $('#spend-chart-row').hide();
-        if (agState.spendTrendChart) {
-            agState.spendTrendChart.destroy();
-            agState.spendTrendChart = null;
-        }
+        var d = _defaultDateRange();
+        agState.spendStartDate = d.start.format('YYYY-MM-DD');
+        agState.spendEndDate   = d.end.format('YYYY-MM-DD');
+        var picker = $('#spend-date-range').data('daterangepicker');
+        if (picker) { picker.setStartDate(d.start); picker.setEndDate(d.end); }
+        $('#spend-date-range').val(agState.spendStartDate + ' \u2013 ' + agState.spendEndDate);
         agState.spendLogsPage = 0;
-        loadSpendLogs(false);
+        applyLogsFilter();
     });
 }
 
 /**
- * Load spend logs.
- * @param {boolean} withChart  When true (date range active), also fetch a
- *                             large batch for the trend chart.
+ * Fetch all logs once from the server (no server-side date filter — LiteLLM
+ * breaks when both start_date and end_date are supplied).  Date filtering is
+ * applied client-side in applyLogsFilter().
  */
-function loadSpendLogs(withChart) {
-    const withChartBool = !!withChart;
-    const offset = agState.spendLogsPage * agState.spendLogsPageSize;
+function loadSpendLogs() {
     $('#spend-logs-tbody').html('<tr><td colspan="5" class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i></td></tr>');
-
-    const params = { limit: agState.spendLogsPageSize, offset: offset };
-    if (agState.spendStartDate) params.start_date = agState.spendStartDate;
-    if (agState.spendEndDate)   params.end_date   = agState.spendEndDate;
-
     $.ajax({
         url: '/api/v1/ai-governance/spend/logs',
         method: 'GET',
-        data: params,
+        data: { limit: 5000 },
         success: function (data) {
-            const logs = data.logs || [];
-            renderLogsTable(logs);
-            renderLogsPagination(logs.length);
-
-            if (withChartBool && agState.spendStartDate) {
-                // Fetch a large slice for aggregation into the trend chart
-                $.ajax({
-                    url: '/api/v1/ai-governance/spend/logs',
-                    method: 'GET',
-                    data: {
-                        limit: 5000,
-                        offset: 0,
-                        start_date: agState.spendStartDate,
-                        end_date: agState.spendEndDate
-                    },
-                    success: function (chartData) {
-                        renderTrendChart(chartData.logs || []);
-                    }
-                });
-            } else if (!agState.spendStartDate) {
-                $('#spend-chart-row').hide();
-            }
+            agState.allLogs = data.logs || [];
+            enrichModelTableFromAllLogs();
+            applyLogsFilter();
         },
         error: function () {
             $('#spend-logs-tbody').html('<tr><td colspan="5" class="text-center text-danger">Failed to load logs</td></tr>');
@@ -1114,18 +1254,68 @@ function loadSpendLogs(withChart) {
     });
 }
 
+/**
+ * After all logs are fetched, compute per-model token totals and update the
+ * Tokens column in the Spend by Model table.  The /global/spend/models endpoint
+ * does not return token counts, so we derive them from the log entries.
+ */
+function enrichModelTableFromAllLogs() {
+    const modelTokens = {};
+    (agState.allLogs || []).forEach(function (l) {
+        if ((l.total_tokens || 0) === 0 && parseFloat(l.spend || 0) === 0) return;
+        const name = normalizeModelName(l.model || '');
+        if (!name) return;
+        modelTokens[name] = (modelTokens[name] || 0) + parseInt(l.total_tokens || 0, 10);
+    });
+    $('#spend-by-model-tbody tr').each(function () {
+        const $tds = $(this).find('td');
+        if ($tds.length < 3) return;
+        const modelName = $tds.eq(0).text().trim();
+        const tokens = modelTokens[modelName];
+        $tds.eq(2).text(tokens != null ? tokens.toLocaleString() : '—');
+    });
+}
+
+/**
+ * Filter agState.allLogs client-side by the active date range, then
+ * render the paginated table and the trend chart.
+ */
+function applyLogsFilter() {
+    var logs = agState.allLogs;
+
+    if (agState.spendStartDate || agState.spendEndDate) {
+        logs = logs.filter(function (l) {
+            var d = (l.startTime || l.created_at || '').substring(0, 10);
+            if (!d) return false;
+            if (agState.spendStartDate && d < agState.spendStartDate) return false;
+            if (agState.spendEndDate   && d > agState.spendEndDate)   return false;
+            return true;
+        });
+    }
+
+    renderTrendChart(logs);
+
+    var pageStart = agState.spendLogsPage * agState.spendLogsPageSize;
+    renderLogsTable(logs.slice(pageStart, pageStart + agState.spendLogsPageSize));
+    renderLogsPagination(logs.length);
+}
+
 function renderLogsTable(logs) {
     const tbody = $('#spend-logs-tbody').empty();
-    if (!logs.length) {
+    // Filter out auth-failure noise entries (no tokens consumed, no spend)
+    const real = logs.filter(function (l) {
+        return (l.total_tokens > 0) || (parseFloat(l.spend || 0) > 0);
+    });
+    if (!real.length) {
         tbody.html('<tr><td colspan="5" class="text-center text-muted">No call logs</td></tr>');
         return;
     }
-    logs.forEach(function (l) {
+    real.forEach(function (l) {
         tbody.append(
             '<tr>' +
             '<td><small>' + fmtDate(l.startTime || l.created_at) + '</small></td>' +
-            '<td>' + escHtml(l.model || '\u2014') + '</td>' +
-            '<td><code style="font-size:0.78em;">' + escHtml((l.api_key || '').substring(0, 12) + '\u2026') + '</code></td>' +
+            '<td>' + escHtml(normalizeModelName(l.model || '') || '\u2014') + '</td>' +
+            '<td><code style="font-size:0.78em;">' + (l.api_key && l.api_key !== 'None' ? escHtml(l.api_key.substring(0, 12) + '\u2026') : '\u2014') + '</code></td>' +
             '<td>' + (l.total_tokens || '\u2014') + '</td>' +
             '<td>$' + parseFloat(l.spend || 0).toFixed(6) + '</td>' +
             '</tr>'
@@ -1152,12 +1342,10 @@ function renderTrendChart(logs) {
         agState.spendTrendChart = null;
     }
 
-    if (!labels.length) {
-        $('#spend-chart-row').hide();
-        return;
-    }
+    const chartTitle = (agState.spendStartDate && agState.spendEndDate)
+        ? 'Daily Spend \u2014 ' + agState.spendStartDate + '  \u2013  ' + agState.spendEndDate
+        : 'Daily Spend \u2014 Last 30 Days';
 
-    $('#spend-chart-row').show();
     const ctx = document.getElementById('spend-trend-chart').getContext('2d');
     agState.spendTrendChart = new Chart(ctx, {
         type: 'line',
@@ -1169,7 +1357,7 @@ function renderTrendChart(logs) {
                 borderColor: '#007bff',
                 backgroundColor: 'rgba(0,123,255,0.08)',
                 borderWidth: 2,
-                pointRadius: 3,
+                pointRadius: labels.length === 1 ? 5 : 3,
                 fill: true,
                 tension: 0.3
             }]
@@ -1178,6 +1366,13 @@ function renderTrendChart(logs) {
             responsive: true,
             plugins: {
                 legend: { display: false },
+                title: {
+                    display: true,
+                    text: chartTitle,
+                    padding: { top: 4, bottom: 14 },
+                    font: { size: 13, weight: '600' },
+                    color: '#495057'
+                },
                 tooltip: {
                     callbacks: {
                         label: function (ctx) {
@@ -1202,7 +1397,7 @@ function renderTrendChart(logs) {
 function renderLogsPagination(count) {
     const container = $('#spend-logs-pagination').empty();
     const prev = agState.spendLogsPage > 0;
-    const next = count === agState.spendLogsPageSize;
+    const next = (agState.spendLogsPage + 1) * agState.spendLogsPageSize < count;
 
     if (!prev && !next) return;
 
@@ -1220,12 +1415,12 @@ function renderLogsPagination(count) {
 
 $(document).on('click', '#logs-prev-btn', function (e) {
     e.preventDefault();
-    if (agState.spendLogsPage > 0) { agState.spendLogsPage--; loadSpendLogs(!!agState.spendStartDate); }
+    if (agState.spendLogsPage > 0) { agState.spendLogsPage--; applyLogsFilter(); }
 });
 $(document).on('click', '#logs-next-btn', function (e) {
     e.preventDefault();
     agState.spendLogsPage++;
-    loadSpendLogs(false);
+    applyLogsFilter();
 });
 
 $('#btn-refresh-spend').on('click', function () {
@@ -1287,3 +1482,4 @@ function extractError(xhr, fallback) {
         return body.detail || body.message || fallback;
     } catch (e) { return fallback; }
 }
+

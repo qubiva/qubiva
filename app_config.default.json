@@ -139,12 +139,12 @@
     ]
   },
   "cloud_analyst": {
-    "enabled": true,
+    "enabled": false,
     "llm": {
-      "provider": "openai",
-      "model": "gemini-2.5-flash",
+      "provider": "",
+      "model": "",
       "api_key_env": "LLM_API_KEY",
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+      "base_url": "",
       "max_tokens": 4096,
       "temperature": 0.1
     },
@@ -1564,13 +1564,16 @@
       "max_retries": 2
     },
     "virtual_keys": {
-      "prefix": "qbv_"
+      "prefix": "qbv_",
+      "max_per_project": 10,
+      "max_per_user": 5
     },
     "defaults": {
       "monthly_budget_usd": null,
       "rpm_limit": null,
       "tpm_limit": null
-    }
+    },
+    "spend_logs_retention_days": 90
   },
   "system": {
     "version": "1.0.0",

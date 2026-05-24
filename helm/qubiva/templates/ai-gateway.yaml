@@ -190,6 +190,12 @@ spec:
             # URL of the Qubiva service — used by the custom auth hook
             - name: QUBIVA_URL
               value: "http://{{ include "qubiva.fullname" . }}"
+            # Internal API key so the auth hook is accepted by Qubiva's internal endpoint
+            - name: INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "qubiva.secretName" . }}
+                  key: INTERNAL_API_KEY
             # Ensure /app is on the Python path so custom_auth.py is importable
             - name: PYTHONPATH
               value: "/app"
@@ -198,7 +204,7 @@ spec:
               mountPath: /app/config/litellm_config.yaml
               subPath: litellm_config.yaml
             - name: ai-gateway-auth
-              mountPath: /app/custom_auth.py
+              mountPath: /app/config/custom_auth.py
               subPath: custom_auth.py
           resources:
             {{- toYaml .Values.aiGateway.resources | nindent 12 }}
@@ -238,6 +244,43 @@ spec:
     - port: {{ .Values.aiGateway.service.port }}
       targetPort: {{ .Values.aiGateway.service.port }}
       name: http
+---
+# NetworkPolicy: allow AI gateway ingress only from the Qubiva app pod
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "qubiva.fullname" . }}-ai-gateway-allow-qubiva
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "qubiva.labels" . | nindent 4 }}
+    component: ai-gateway
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "qubiva.selectorLabels" . | nindent 6 }}
+      component: ai-gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow traffic from the Qubiva app pod
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "qubiva.selectorLabels" . | nindent 14 }}
+      ports:
+        - port: {{ .Values.aiGateway.service.port }}
+          protocol: TCP
+    {{- if .Values.aiGateway.ingress.enabled }}
+    # Allow traffic from the ingress controller when external access is enabled
+    - from:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+      ports:
+        - port: {{ .Values.aiGateway.service.port }}
+          protocol: TCP
+    {{- end }}
 ---
 # Secret: PostgreSQL connection URL (constructed from credentials)
 {{- if .Values.aiGateway.postgresql.enabled }}

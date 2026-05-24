@@ -1,6 +1,10 @@
 {
   "ai_governance": {
-    "enabled": false
+    "enabled": true,
+    "gateway": {
+      "url": "http://mock-ai-gateway:4000",
+      "master_key_env": "AI_GATEWAY_MASTER_KEY"
+    }
   },
   "cloud_analyst": {
     "enabled": true,

@@ -193,6 +193,7 @@
     {% block org_policy_styles %}{% endblock %}
     {% block github_app_config_select2 %}{% endblock %}
     {% block manage_sso_styles %}{% endblock %}
+    {% block ai_governance_select2 %}{% endblock %}
     {% block ai_governance_styles %}{% endblock %}
 </head>
 
@@ -293,7 +294,7 @@
                         <!-- AI Governance -->
                         <li class="nav-item" data-permission='["org_admin"]'>
                             <a href="/dashboard/ai-governance" class="nav-link {% if request.url.path.startswith('/dashboard/ai-governance') %}nav-link-active{% endif %}">
-                                <i class="nav-icon fas fa-shield-alt nav-icon-ai-governance"></i>
+                                <i class="nav-icon fas fa-microchip nav-icon-ai-governance"></i>
                                 <p>AI Governance</p>
                             </a>
                         </li>
@@ -373,7 +374,9 @@
                                             </a>
                                         </li>
 
-                                        <!-- Git repos-->
+                                        <!-- Git -->
+                                        <li class="nav-item nav-divider"></li>
+                                        <li class="nav-header">GIT</li>
                                         <li class="nav-item">
                                             <a href="/dashboard/projects/{{ project_name }}/git_repos"
                                             class="nav-link {% if request.url.path.endswith('/git_repos') %}nav-link-active{% endif %}">
@@ -398,8 +401,10 @@
                                             </a>
                                         </li>
                                         {% endif %}
-                                        
+
                                         <!-- Credentials -->
+                                        <li class="nav-item nav-divider"></li>
+                                        <li class="nav-header">CREDENTIALS</li>
                                         <li class="nav-item">
                                             <a href="/dashboard/projects/{{ project_name }}/credentials"
                                             class="nav-link {% if request.url.path.endswith('/credentials') %}nav-link-active{% endif %}">
@@ -424,8 +429,10 @@
                                             </a>
                                         </li>
                                         {% endif %}
-                
+
                                         <!-- Cloud Accounts -->
+                                        <li class="nav-item nav-divider"></li>
+                                        <li class="nav-header">CLOUD ACCOUNTS</li>
                                         <li class="nav-item">
                                             <a href="/dashboard/projects/{{ project_name }}/cloud_accounts"
                                                class="nav-link {% if request.url.path.endswith('/cloud_accounts') and not '/cloud_accounts/' in request.url.path %}nav-link-active{% endif %}">
@@ -439,7 +446,7 @@
                                                 <i class="fas fa-plus nav-icon nav-icon-cloud"></i>
                                                 <p>Add Cloud Account</p>
                                             </a>
-                                        </li>                                        
+                                        </li>
                                         {% if '/cloud_accounts/' in request.url.path and not request.url.path.endswith('/create') %}
                                         {% set path_parts = request.url.path.split('/') %}
                                         {% if path_parts|length >= 7 %}
@@ -474,7 +481,7 @@
                                                         <i class="fas fa-clock nav-icon nav-icon-scheduled-runs"></i>
                                                         <p>Scheduled Runs</p>
                                                     </a>
-                                                </li>   
+                                                </li>
                                                 <li class="nav-item">
                                                     <a href="/dashboard/projects/{{ project_name }}/cloud_accounts/{{ cloud_platform }}/{{ cloud_account_id }}/alerts"
                                                        class="nav-link {% if request.url.path.endswith('/alerts') %}nav-link-active{% endif %}">
@@ -486,8 +493,10 @@
                                         </li>
                                         {% endif %}
                                         {% endif %}
-                
+
                                         <!-- Workspaces -->
+                                        <li class="nav-item nav-divider"></li>
+                                        <li class="nav-header">WORKSPACES</li>
                                         <li class="nav-item">
                                             <a href="/dashboard/projects/{{ project_name }}/workspaces"
                                                class="nav-link {% if request.url.path.endswith('/workspaces') %}nav-link-active{% endif %}">
@@ -530,6 +539,11 @@
                                             </ul>
                                         </li>
                                         {% endif %}
+
+                                        <!-- Divider before standalone items -->
+                                        <li class="nav-item nav-divider"></li>
+
+                                        <!-- Tasks -->
                                         <li class="nav-item">
                                             <a href="/dashboard/projects/{{ project_name }}/tasks"
                                                class="nav-link {% if request.url.path.endswith('/tasks') or '/tasks/' in request.url.path %}nav-link-active{% endif %}">
@@ -538,12 +552,12 @@
                                             </a>
                                         </li>
 
-                                        <!-- Project Tokens -->
+                                        <!-- Service Tokens -->
                                         <li class="nav-item" data-permission='["project_token_list"]'>
                                             <a href="/dashboard/projects/{{ project_name }}/tokens"
                                                class="nav-link {% if request.url.path.endswith('/tokens') %}nav-link-active{% endif %}">
                                                 <i class="fas fa-id-badge nav-icon nav-icon-project-tokens"></i>
-                                                <p>Project Tokens</p>
+                                                <p>Service Tokens</p>
                                             </a>
                                         </li>
                                     </ul>

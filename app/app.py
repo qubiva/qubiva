@@ -30,6 +30,7 @@ from app.deps import (
     get_app_base_url,
     iac_pool_manager,
     discovery_pool_manager,
+    ai_gateway_manager,
 )
 
 # Import all route modules
@@ -197,6 +198,11 @@ async def lifespan(app: FastAPI):
                 logger.info(msg)
 
             await log_persistence.enforce_retention()
+
+            ag_cfg = config_manager.get_config("ai_governance") or {}
+            if ag_cfg.get("enabled"):
+                retention_days = int(ag_cfg.get("spend_logs_retention_days", 90))
+                await ai_gateway_manager.purge_old_spend_logs(retention_days)
         except Exception as e:
             logger.error(f"Periodic cleanup failed: {e}")
 

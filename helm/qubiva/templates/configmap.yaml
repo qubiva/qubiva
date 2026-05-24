@@ -88,3 +88,97 @@ data:
   RELEASE_VERSION: {{ .Values.image.tag | quote }}
   LOG_RETENTION_DAYS_TERRAFORM: {{ .Values.env.LOG_RETENTION_DAYS_TERRAFORM | quote }}
   LOG_RETENTION_DAYS_DISCOVERY: {{ .Values.env.LOG_RETENTION_DAYS_DISCOVERY | quote }}
+{{- if .Values.aiGateway.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "qubiva.fullname" . }}-ai-gateway-auth
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "qubiva.labels" . | nindent 4 }}
+data:
+  litellm_config.yaml: |
+    general_settings:
+      master_key: "os.environ/LITELLM_MASTER_KEY"
+      store_model_in_db: true
+      custom_auth: custom_auth.custom_auth
+  custom_auth.py: |
+    """
+    LiteLLM custom auth hook — Qubiva identity validation.
+
+    Every request to the AI gateway must carry:
+      Authorization: Bearer <virtual-key>   (standard LiteLLM virtual key)
+      X-Qubiva-Token: <qubiva-jwt>          (Qubiva user or project JWT)
+
+    The hook calls Qubiva's internal validate-token endpoint, which enforces
+    key-binding rules (project scope, user scope, RBAC permissions).
+    """
+    import os
+
+    import httpx
+    from fastapi import HTTPException, Request, status
+    from litellm.proxy._types import UserAPIKeyAuth, LitellmUserRoles
+
+    _QUBIVA_URL = os.environ.get("QUBIVA_URL", "http://qubiva").rstrip("/")
+    _VALIDATE_URL = f"{_QUBIVA_URL}/api/v1/internal/validate-token"
+    _INTERNAL_API_KEY = os.environ.get("INTERNAL_API_KEY", "")
+    _MASTER_KEY = os.environ.get("LITELLM_MASTER_KEY", "")
+    _TIMEOUT = 10
+
+
+    async def custom_auth(request: Request, api_key: str) -> UserAPIKeyAuth:
+        """Validate a Qubiva identity token against the presented LiteLLM virtual key.
+
+        Master key requests (Qubiva backend management calls) bypass Qubiva identity
+        validation — the master key never leaves the cluster and is already protected
+        by network isolation. All virtual key requests require X-Qubiva-Token.
+        """
+        if _MASTER_KEY and api_key == _MASTER_KEY:
+            return UserAPIKeyAuth(
+                api_key=api_key,
+                user_id="qubiva-backend",
+                user_role=LitellmUserRoles.PROXY_ADMIN,
+            )
+
+        qubiva_token = request.headers.get("x-qubiva-token", "").strip()
+        if not qubiva_token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=(
+                    "Missing X-Qubiva-Token header. "
+                    "Pass your Qubiva identity token alongside the virtual key."
+                ),
+            )
+
+        headers = {}
+        if _INTERNAL_API_KEY:
+            headers["X-Internal-Api-Key"] = _INTERNAL_API_KEY
+
+        try:
+            async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+                resp = await client.post(
+                    _VALIDATE_URL,
+                    json={"token": qubiva_token, "virtual_key": api_key},
+                    headers=headers,
+                )
+        except httpx.RequestError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Qubiva auth service unreachable: {exc}",
+            )
+
+        if resp.status_code == 200:
+            data = resp.json()
+            return UserAPIKeyAuth(
+                api_key=api_key,
+                user_id=data.get("username") or data.get("project_name"),
+                team_id=data.get("project_name"),
+            )
+
+        try:
+            detail = resp.json().get("detail", resp.text)
+        except Exception:
+            detail = resp.text
+        raise HTTPException(status_code=resp.status_code, detail=detail)
+{{- end }}

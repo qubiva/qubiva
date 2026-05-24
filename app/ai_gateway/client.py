@@ -72,7 +72,7 @@ class AIGatewayClient:
 
     async def delete_model(self, model_id: str) -> Dict:
         """Delete a model by its LiteLLM model_id."""
-        return await self._delete("/model/delete", {"id": model_id})
+        return await self._post("/model/delete", {"id": model_id})
 
     async def update_model(self, model_id: str, params: Dict) -> Dict:
         """Update a model's parameters (e.g. rotate api_key in-place)."""
@@ -84,9 +84,22 @@ class AIGatewayClient:
     # ------------------------------------------------------------------
 
     async def list_keys(self) -> List[Dict]:
-        """Return all virtual keys."""
+        """Return all virtual keys with full details."""
         data = await self._get("/key/list")
-        return data.get("keys", [])
+        hashes = data.get("keys", [])
+        results = []
+        for h in hashes:
+            if not isinstance(h, str):
+                results.append(h)
+                continue
+            try:
+                info_data = await self._get("/key/info", params={"key": h})
+                info = info_data.get("info", {})
+                info["token"] = h
+                results.append(info)
+            except Exception:
+                results.append({"token": h})
+        return results
 
     async def create_key(self, params: Dict) -> Dict:
         """Create a virtual key. params may include budget, rate limits, metadata."""
@@ -124,11 +137,16 @@ class AIGatewayClient:
         start_date: str = None, end_date: str = None
     ) -> List[Dict]:
         """Return detailed spend/call logs."""
+        from datetime import date, timedelta
         params: Dict = {"limit": limit, "offset": offset}
         if start_date:
             params["start_date"] = start_date
         if end_date:
-            params["end_date"] = end_date
+            # LiteLLM end_date is exclusive — add 1 day so the chosen date is included
+            try:
+                params["end_date"] = (date.fromisoformat(end_date) + timedelta(days=1)).isoformat()
+            except ValueError:
+                params["end_date"] = end_date
         data = await self._get("/spend/logs", params=params)
         return data if isinstance(data, list) else data.get("data", [])
 

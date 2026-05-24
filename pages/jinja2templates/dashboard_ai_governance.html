@@ -1,6 +1,11 @@
 {% extends "dashboard_base.html" %}
 {% block title %}AI Governance - Qubiva Dashboard{% endblock %}
 
+{% block ai_governance_select2 %}
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="{{ static_content_url }}/static/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+{% endblock %}
+
 {% block ai_governance_styles %}
 {{ super() }}
 <link rel="stylesheet" href="{{ static_content_url }}/static/custom/css/ai_governance.css">
@@ -20,7 +25,7 @@
 
 <div class="card-header card-secondary">
   <div class="info-box bg-docs">
-    <span class="info-box-icon"><i class="fas fa-shield-alt"></i></span>
+    <span class="info-box-icon"><i class="fas fa-microchip"></i></span>
     <div class="info-box-content">
       <span class="info-box-text">Manage LLM model routing, virtual access keys, and spend controls for your organisation. Requires the AI Gateway to be enabled in your deployment configuration.</span>
     </div>
@@ -223,33 +228,28 @@
          SPEND TAB
     ================================================================ -->
     <div class="tab-pane fade" id="pane-spend" role="tabpanel">
-      <div class="card" style="border-top:none; border-radius:0;">
-        <div class="card-header">
-          <h3 class="card-title">Spend Overview</h3>
-          <div class="card-tools d-flex align-items-center">
-            <input type="text" id="spend-date-range" class="form-control form-control-sm mr-2"
-                   style="width:230px;" placeholder="Last 30 days" readonly>
-            <button class="btn btn-sm btn-secondary mr-1" id="btn-spend-date-apply">Apply</button>
-            <button class="btn btn-sm btn-outline-secondary mr-2" id="btn-spend-date-clear">Clear</button>
-            <button type="button" class="btn btn-tool" id="btn-refresh-spend" title="Refresh">
-              <i class="fas fa-sync-alt"></i>
-            </button>
-          </div>
+
+      <!-- Loading state -->
+      <div id="spend-loading" class="card" style="border-top:none; border-radius:0;">
+        <div class="card-body" style="text-align:center; padding:40px;">
+          <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
         </div>
-        <div class="card-body">
-          <div id="spend-loading" style="text-align:center; padding:30px;">
-            <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-          </div>
-          <div id="spend-content" style="display:none;">
+      </div>
 
-            <!-- Daily spend trend chart (visible when date range active) -->
-            <div class="row mb-3" id="spend-chart-row" style="display:none;">
-              <div class="col-12">
-                <canvas id="spend-trend-chart" height="80"></canvas>
-              </div>
+      <!-- Content: three separate cards, revealed after load -->
+      <div id="spend-content" style="display:none;">
+
+        <!-- ── Card 1: Spend Overview (all-time summary) ─────────── -->
+        <div class="card" style="border-top:none; border-radius:0;">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-tachometer-alt mr-1"></i> Spend Overview</h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-tool" id="btn-refresh-spend" title="Refresh">
+                <i class="fas fa-sync-alt"></i>
+              </button>
             </div>
-
-            <!-- Summary small-boxes -->
+          </div>
+          <div class="card-body pb-1">
             <div class="row spend-summary-cards" id="spend-summary-row">
               <div class="col-lg-4 col-6">
                 <div class="small-box bg-success">
@@ -279,13 +279,21 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- Spend by Model -->
-            <h5 class="mt-2"><i class="fas fa-cubes mr-1"></i> Spend by Model</h5>
+        <!-- ── Card 2: Spend Breakdown (all-time, no filter) ──────── -->
+        <div class="card mt-3">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-chart-bar mr-1"></i> Spend Breakdown</h3>
+          </div>
+          <div class="card-body">
+
+            <p class="spend-section-label">By Model</p>
             <div class="table-responsive mb-4">
               <table class="table table-bordered table-striped table-sm">
                 <thead>
-                  <tr><th>Model</th><th>Spend (USD)</th><th>Requests</th></tr>
+                  <tr><th>Model</th><th>Spend (USD)</th><th>Tokens</th></tr>
                 </thead>
                 <tbody id="spend-by-model-tbody">
                   <tr><td colspan="3" class="text-center text-muted">No data</td></tr>
@@ -293,8 +301,7 @@
               </table>
             </div>
 
-            <!-- Spend by Key -->
-            <h5><i class="fas fa-ticket-alt mr-1"></i> Spend by Key</h5>
+            <p class="spend-section-label">By Key</p>
             <div class="table-responsive mb-4">
               <table class="table table-bordered table-striped table-sm">
                 <thead>
@@ -306,8 +313,40 @@
               </table>
             </div>
 
-            <!-- Call Logs -->
-            <h5><i class="fas fa-list mr-1"></i> Call Logs</h5>
+            <p class="spend-section-label">By Project</p>
+            <div class="table-responsive mb-0">
+              <table class="table table-bordered table-striped table-sm">
+                <thead>
+                  <tr><th>Project</th><th>Keys</th><th>Spend (USD)</th></tr>
+                </thead>
+                <tbody id="spend-by-project-tbody">
+                  <tr><td colspan="3" class="text-center text-muted">No data</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── Card 3: Call Activity (date-filtered) ──────────────── -->
+        <div class="card mt-3">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-history mr-1"></i> Call Activity</h3>
+            <div class="card-tools d-flex align-items-center">
+              <input type="text" id="spend-date-range" class="form-control form-control-sm mr-2"
+                     style="width:230px;" readonly>
+              <button class="btn btn-sm btn-secondary mr-1" id="btn-spend-date-apply">Apply</button>
+              <button class="btn btn-sm btn-outline-secondary" id="btn-spend-date-clear">Reset</button>
+            </div>
+          </div>
+          <div class="card-body">
+
+            <!-- Trend chart — always visible, defaults to last 30 days -->
+            <div class="mb-4">
+              <canvas id="spend-trend-chart" height="80"></canvas>
+            </div>
+
+            <p class="spend-section-label">Call Logs</p>
             <div class="table-responsive">
               <table class="table table-bordered table-striped table-sm">
                 <thead>
@@ -322,8 +361,9 @@
 
           </div>
         </div>
-      </div>
-    </div>
+
+      </div><!-- /spend-content -->
+    </div><!-- /pane-spend -->
 
   </div><!-- /tab-content -->
 </div><!-- /gateway-enabled-section -->
@@ -512,21 +552,27 @@
           <div class="form-group">
             <label for="key-type">Key Type</label>
             <select class="form-control" id="key-type">
-              <option value="">Unscoped (no owner binding)</option>
+              <option value="" disabled selected>Select key type</option>
               <option value="project">Project Key</option>
               <option value="user">User Key</option>
             </select>
             <small class="form-text text-muted">Project Key: shared by all project members with AI access. User Key: bound to a specific user.</small>
           </div>
           <div class="form-group" id="key-project-group" style="display:none;">
-            <label for="key-project-name">Project <span class="text-danger">*</span></label>
-            <select class="form-control" id="key-project-name">
-              <option value="" disabled selected>Loading projects...</option>
-            </select>
+            <label>Project <span class="text-danger">*</span></label>
+            <div class="ag-typeahead-wrap">
+              <input type="text" class="form-control" id="key-project-search" placeholder="Type to search projects..." autocomplete="off">
+              <div id="key-project-results" class="list-group ag-typeahead-results"></div>
+            </div>
+            <input type="hidden" id="key-project-name">
           </div>
           <div class="form-group" id="key-user-group" style="display:none;">
-            <label for="key-owner-username">Username <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="key-owner-username" placeholder="user@example.com" autocomplete="off">
+            <label>User <span class="text-danger">*</span></label>
+            <div class="ag-typeahead-wrap">
+              <input type="text" class="form-control" id="key-user-search" placeholder="Type to search users..." autocomplete="off">
+              <div id="key-user-results" class="list-group ag-typeahead-results"></div>
+            </div>
+            <input type="hidden" id="key-owner-username">
           </div>
           <hr>
           <div class="form-group">
@@ -542,9 +588,13 @@
             <input type="number" class="form-control" id="key-tpm" min="0" placeholder="Leave blank for unlimited">
           </div>
           <div class="form-group">
-            <label for="key-models">Restrict to Models</label>
-            <input type="text" class="form-control" id="key-models" placeholder="Comma-separated aliases, blank = all">
-            <small class="form-text text-muted">e.g. gpt-4o, claude-3-5-sonnet</small>
+            <label>Restrict to Models</label>
+            <div class="ag-typeahead-wrap">
+              <input type="text" class="form-control" id="key-models-search" placeholder="Type to search models..." autocomplete="off">
+              <div id="key-models-results" class="list-group ag-typeahead-results"></div>
+            </div>
+            <div id="key-models-selected" class="mt-1"></div>
+            <small class="form-text text-muted">Search and select models. Leave blank for no restriction.</small>
           </div>
         </form>
       </div>
@@ -559,22 +609,31 @@
 </div>
 
 <!-- Key Created Modal (shows the key once) -->
-<div class="modal fade" id="modal-key-created" tabindex="-1" role="dialog">
+<div class="modal fade" id="modal-key-created" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header border-0 pb-0">
         <h5 class="modal-title"><i class="fas fa-check-circle mr-2 text-success"></i>Key Created</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
       </div>
       <div class="modal-body">
-        <p class="text-muted">Copy this key now — it will not be shown again.</p>
+        <div class="alert alert-warning py-2 mb-3">
+          <i class="fas fa-exclamation-triangle mr-1"></i>
+          <strong>This key will not be shown again.</strong> Copy it now and store it securely.
+          If you lose it, you will need to rotate the key.
+        </div>
         <div class="key-revealed" id="created-key-value"></div>
         <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="btn-copy-key">
-          <i class="fas fa-copy mr-1"></i> Copy
+          <i class="fas fa-copy mr-1"></i> Copy to clipboard
         </button>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-dismiss="modal">Done</button>
+        <div class="form-check mr-auto">
+          <input class="form-check-input" type="checkbox" id="key-copied-confirm">
+          <label class="form-check-label text-muted small" for="key-copied-confirm">
+            I have copied this key
+          </label>
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-key-created-done" disabled data-dismiss="modal">Done</button>
       </div>
     </div>
   </div>
@@ -636,10 +695,12 @@
   </div>
 </div>
 
+
 {% endblock %}
 
 {% block ai_governance_scripts %}
 {{ super() }}
+<script src="{{ static_content_url }}/static/plugins/select2/js/select2.full.min.js"></script>
 <script src="{{ static_content_url }}/static/plugins/toastr/toastr.min.js"></script>
 <!-- Moment + Daterangepicker (used for spend date filter) -->
 <script src="https://cdn.jsdelivr.net/npm/moment/moment.min.js"></script>
