@@ -101,6 +101,7 @@ class CloudWatchLogStreamer:
                 cfg = k8s_client.Configuration.get_default_copy()
                 if 'authorization' in cfg.api_key and 'BearerToken' not in cfg.api_key:
                     orig_hook = cfg.refresh_api_key_hook
+
                     def _make_hook(h):
                         def _hook(c):
                             if h:

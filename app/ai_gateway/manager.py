@@ -12,7 +12,6 @@ import os
 from typing import Dict, List, Optional
 
 from app.ai_gateway.client import AIGatewayClient
-from app.app_config_manager import ConfigManager
 
 logger = logging.getLogger("uvicorn.error")
 

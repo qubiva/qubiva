@@ -9,7 +9,7 @@ Access is gated on project-level permissions:
   project_token_create / project_token_list / project_token_revoke
   (all covered by project_token_* — held by project_token_user role and project_admin via project_*)
 """
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel

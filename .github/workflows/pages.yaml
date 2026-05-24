@@ -1,10 +1,12 @@
-name: Deploy Deck to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
       - 'docs/deck/**'
+      - 'docs/screenshots/**'
+      - 'screenshots/**'
       - '.github/workflows/pages.yaml'
 
 permissions:
@@ -32,6 +34,12 @@ jobs:
             --theme docs/deck/theme.css \
             --html \
             --output build/index.html
+
+      - name: Build screenshots gallery
+        run: |
+          mkdir -p build/screenshots/img
+          cp screenshots/*.png build/screenshots/img/
+          cp docs/screenshots/index.html build/screenshots/index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Qubiva — Screenshots</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      border-bottom: 1px solid #21262d;
+    }
+
+    header .brand {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e6edf3;
+      text-decoration: none;
+      letter-spacing: -0.01em;
+    }
+
+    header a.gh {
+      font-size: 0.85rem;
+      color: #8b949e;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.15s;
+    }
+    header a.gh:hover { color: #e6edf3; }
+
+    .hero {
+      text-align: center;
+      padding: 40px 24px 24px;
+    }
+    .hero h1 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .hero p {
+      color: #8b949e;
+      font-size: 0.9rem;
+    }
+
+    .swiper-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 24px 40px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .swiper {
+      width: 100%;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      border: 1px solid #21262d;
+    }
+
+    .swiper-slide {
+      background: #161b22;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .swiper-slide img {
+      width: 100%;
+      display: block;
+      object-fit: contain;
+      max-height: 70vh;
+    }
+
+    .slide-caption {
+      width: 100%;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #21262d;
+      background: #161b22;
+    }
+
+    .slide-caption .label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #e6edf3;
+    }
+
+    .slide-caption .counter {
+      font-size: 0.8rem;
+      color: #8b949e;
+    }
+
+    .swiper-button-next,
+    .swiper-button-prev {
+      color: #e6edf3 !important;
+      background: rgba(13,17,23,0.75);
+      width: 40px !important;
+      height: 40px !important;
+      border-radius: 50%;
+      border: 1px solid #30363d;
+    }
+    .swiper-button-next::after,
+    .swiper-button-prev::after {
+      font-size: 16px !important;
+    }
+
+    .swiper-pagination-bullet {
+      background: #30363d !important;
+      opacity: 1 !important;
+    }
+    .swiper-pagination-bullet-active {
+      background: #388bfd !important;
+    }
+
+    .swiper-pagination {
+      bottom: 56px !important;
+    }
+
+    .kbd-hint {
+      margin-top: 16px;
+      font-size: 0.78rem;
+      color: #484f58;
+    }
+    .kbd-hint kbd {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="https://github.com/qubiva/qubiva">Qubiva</a>
+    <a class="gh" href="https://github.com/qubiva/qubiva">
+      <svg height="16" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+          0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
+          -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2
+          -3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82
+          .64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08
+          2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01
+          1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      View on GitHub
+    </a>
+  </header>
+
+  <div class="hero">
+    <h1>Qubiva Screenshots</h1>
+    <p>Open-source cloud governance, IaC execution, compliance, and AI infrastructure tooling</p>
+  </div>
+
+  <div class="swiper-wrap">
+    <div class="swiper">
+      <div class="swiper-wrapper">
+
+        <div class="swiper-slide">
+          <img src="img/screenshot_01_dashboard.png" alt="Dashboard" loading="eager" />
+          <div class="slide-caption">
+            <span class="label">Dashboard</span>
+            <span class="counter">1 / 10</span>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="img/screenshot_02_cloud_accounts.png" alt="Cloud Accounts" loading="lazy" />
+          <div class="slide-caption">
+            <span class="label">Cloud Accounts</span>
+            <span class="counter">2 / 10</span>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="img/screenshot_03_discovery.png" alt="Cloud Discovery" loading="lazy" />
+          <div class="slide-caption">
+            <span class="label">Cloud Discovery — SQL queries against live infrastructure</span>
+            <span class="counter">3 / 10</span>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="img/screenshot_04_compliance.png" alt="Compliance" loading="lazy" />
+          <div class="slide-caption">
+            <span class="label">Compliance — CIS, SOC 2, HIPAA, PCI DSS, NIST benchmarks</span>
+            <span class="counter">4 / 10</span>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="img/screenshot_05_iac_run.png" alt="IaC Run" loading="lazy" />
+          <div class="slide-caption">
+            <span class="label">IaC Run — OpenTofu / Terraform plan and apply</span>
+            <span class="counter">5 / 10</span>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="img/screenshot_06_analyst.png" alt="Cloud Analyst" loading="lazy" />
+          <div class="slide-caption">
+            <span class="label">Cloud Analyst — Natural language infrastructure queries</span>
+            <span class="counter">6 / 10</span>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="img/screenshot_07_tasks.png" alt="Tasks" loading="lazy" />
+          <div class="slide-caption">
+            <span class="label">Tasks — Operational workflows, sprints, and assignments</span>
+            <span class="counter">7 / 10</span>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="img/screenshot_08_alerts.png" alt="Alerts" loading="lazy" />
+          <div class="slide-caption">
+            <span class="label">Alerts — Cloud account monitoring and notifications</span>
+            <span class="counter">8 / 10</span>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="img/screenshot_09_tfapply.png" alt="Terraform Apply" loading="lazy" />
+          <div class="slide-caption">
+            <span class="label">Terraform Apply — Real-time log streaming</span>
+            <span class="counter">9 / 10</span>
+          </div>
+        </div>
+
+        <div class="swiper-slide">
+          <img src="img/screenshot_10_AI_Governance.png" alt="AI Governance" loading="lazy" />
+          <div class="slide-caption">
+            <span class="label">AI Governance — LLM spend tracking, virtual keys, and model management</span>
+            <span class="counter">10 / 10</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-pagination"></div>
+    </div>
+
+    <p class="kbd-hint">Navigate with <kbd>←</kbd> <kbd>→</kbd> arrow keys</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script>
+    const swiper = new Swiper('.swiper', {
+      loop: true,
+      keyboard: { enabled: true },
+      pagination: { el: '.swiper-pagination', clickable: true },
+      navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+    });
+  </script>
+</body>
+</html>

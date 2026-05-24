@@ -87,7 +87,9 @@ Qubiva brings these capabilities together into a single self-hosted Kubernetes-n
 
 ## Screenshots
 
-![Qubiva demo — dashboard, cloud discovery, compliance, IaC execution, AI analyst, tasks, and more](screenshots/demo.gif)
+[![Qubiva dashboard](screenshots/screenshot_01_dashboard.png)](https://qubiva.github.io/qubiva/screenshots/)
+
+**[View all screenshots →](https://qubiva.github.io/qubiva/screenshots/)**
 
 ---
 

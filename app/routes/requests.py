@@ -128,6 +128,7 @@ async def stop_request_execution(
         _cfg = k8s_client.Configuration.get_default_copy()
         if 'authorization' in _cfg.api_key and 'BearerToken' not in _cfg.api_key:
             _orig = _cfg.refresh_api_key_hook
+
             def _make_hook(h):
                 def _hook(c):
                     if h:
