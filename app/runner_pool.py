@@ -74,6 +74,8 @@ TERMINAL_STATES = frozenset({
     "cancelled",
     "benchmark succeeded",
     "benchmark failed",
+    "rejected",
+    "approval_timed_out",
 })
 
 
@@ -729,6 +731,10 @@ class RunnerPoolManager:
         timeout_seconds = timeout_hours * 3600
         start_time = time.time()
 
+        # When True, the workspace lock is intentionally held (plan awaiting approval).
+        # The approve/reject endpoints own lock release in that case.
+        hold_lock = False
+
         try:
             while (time.time() - start_time) < timeout_seconds:
                 # ── Primary: check request state ──────────────────────
@@ -740,6 +746,16 @@ class RunnerPoolManager:
                             "Request %s reached terminal state: %s (pod %s)",
                             request_id, state, pod.pod_name,
                         )
+                        pod.status = PoolPodStatus.COMPLETED
+                        return
+                    if state == "planned":
+                        # Plan pod finished and set state via callback.
+                        # Workspace lock is held pending approval — do NOT release.
+                        logger.info(
+                            "Request %s awaiting approval — monitor exiting, lock held (pod %s)",
+                            request_id, pod.pod_name,
+                        )
+                        hold_lock = True
                         pod.status = PoolPodStatus.COMPLETED
                         return
 
@@ -764,6 +780,14 @@ class RunnerPoolManager:
                         if success:
                             state = details.get("state")
                             if state in TERMINAL_STATES:
+                                pod.status = PoolPodStatus.COMPLETED
+                                return
+                            if state == "planned":
+                                logger.info(
+                                    "Request %s plan complete (pod %s), awaiting approval — lock held",
+                                    request_id, pod.pod_name,
+                                )
+                                hold_lock = True
                                 pod.status = PoolPodStatus.COMPLETED
                                 return
 
@@ -791,6 +815,14 @@ class RunnerPoolManager:
                         success, details = await request_tracker.get_request_details(request_id)
                         if success:
                             state = details.get("state")
+                            if state == "planned":
+                                logger.info(
+                                    "Request %s plan complete (pod cleaned up), awaiting approval — lock held",
+                                    request_id,
+                                )
+                                hold_lock = True
+                                pod.status = PoolPodStatus.COMPLETED
+                                return
                             if state not in TERMINAL_STATES:
                                 await request_tracker.update_error_details(
                                     request_id,
@@ -831,12 +863,13 @@ class RunnerPoolManager:
             )
 
         finally:
-            # Always: persist logs, release lock, clean up
+            # Always: persist logs, clean up pod
+            # Release workspace lock only when NOT holding for approval
             await self._persist_pod_logs(
-                pod.pod_name, request_id, project_name, log_persistence
+                pod.pod_name, request_id, project_name, log_persistence, request_tracker
             )
 
-            if self.runner_type == RunnerType.IAC and workspace_name:
+            if self.runner_type == RunnerType.IAC and workspace_name and not hold_lock:
                 await self._release_workspace_lock(
                     request_tracker, project_name, workspace_name
                 )
@@ -858,16 +891,17 @@ class RunnerPoolManager:
     async def _release_workspace_lock(
         self, request_tracker, project_name: str, workspace_name: str
     ):
-        """Release terraform workspace lock. Requires project_manager from request_tracker."""
+        """Release terraform workspace lock and trigger the next queued run."""
         try:
-            # The project_manager is needed for workspace lock release.
-            # We access it through a well-known import rather than threading it through.
-            from app.deps import project_manager
+            from app.deps import project_manager, queue_manager
             success, message = await project_manager.set_workspace_state(
                 project_name, workspace_name, False
             )
             if success:
                 logger.info("Workspace %s/%s unlocked", project_name, workspace_name)
+                asyncio.create_task(
+                    queue_manager.dequeue_next(project_name, workspace_name)
+                )
             else:
                 logger.error("Failed to unlock workspace: %s", message)
         except Exception as e:
@@ -883,14 +917,19 @@ class RunnerPoolManager:
         request_id: str,
         project_name: str,
         log_persistence=None,
+        request_tracker=None,
     ):
-        """Read pod logs directly and push to Loki for long-term storage.
+        """Read pod logs and persist — Loki first, MongoDB partial_logs as fallback.
+
+        The MongoDB fallback ensures logs survive in environments without Loki
+        (e.g. local dev).  partial_logs is read by CloudWatchLogStreamer when
+        replaying logs for finished runs.
 
         Unlike K8s Job pods, pool pods are standalone — we cannot use
         label_selector=job-name=... to find them. Instead we read logs
         directly by pod name.
         """
-        if not log_persistence:
+        if not log_persistence and not request_tracker:
             return
 
         try:
@@ -910,9 +949,17 @@ class RunnerPoolManager:
             logger.warning("Failed to read logs from pod %s: %s", pod_name, e)
             return
 
-        if log_text:
+        if not log_text:
+            return
+
+        # k8s client may return bytes; decode to str before pushing
+        if isinstance(log_text, bytes):
+            log_text = log_text.decode("utf-8", errors="replace")
+
+        pushed = False
+        if log_persistence:
             try:
-                await log_persistence.push_logs(
+                pushed = await log_persistence.push_logs(
                     request_id=request_id,
                     job_type=self.runner_type.value,
                     project_name=project_name,
@@ -921,6 +968,23 @@ class RunnerPoolManager:
             except Exception as e:
                 logger.warning(
                     "Failed to persist logs for request %s: %s", request_id, e
+                )
+
+        if not pushed and request_tracker:
+            # Loki unavailable — write directly to the request document so the
+            # log viewer can replay output without an external log store.
+            fallback_text = log_text[-512000:] if len(log_text) > 512000 else log_text
+            try:
+                await request_tracker.update_request_fields(
+                    request_id, {"partial_logs": fallback_text}
+                )
+                logger.info(
+                    "Stored partial logs in MongoDB for request %s (%d chars)",
+                    request_id, len(fallback_text),
+                )
+            except Exception as e:
+                logger.warning(
+                    "Failed to store partial_logs in MongoDB for %s: %s", request_id, e
                 )
 
     # ------------------------------------------------------------------

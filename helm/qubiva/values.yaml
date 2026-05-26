@@ -97,24 +97,40 @@ cloudAnalyst:
 # -- Application environment variables (non-sensitive)
 env:
   LOG_LEVEL: INFO
+  # CIDR range trusted for internal runner → app callbacks.
+  # Must cover your cluster's pod CIDR. Most clusters (EKS, GKE, AKS defaults)
+  # use 10.x addresses and work with this default. If your pod CIDR is in
+  # 172.16.0.0/12 or 192.168.0.0/16, change this or runs will silently hang.
+  # Check with: kubectl get nodes -o jsonpath='{.items[*].spec.podCIDR}'
   INTERNAL_CIDR: "10.0.0.0/8"
   TF_BACKEND_TYPE: kubernetes
+  # Email address for the bootstrap admin account created on first startup.
+  # Override this — the default placeholder works but you won't receive
+  # password-reset emails and it looks odd in the audit log.
   MASTER_ADMIN_USER: admin@qubiva.local
   JOB_TTL_SECONDS_AFTER_FINISHED: "3600"
   LOG_RETENTION_DAYS_TERRAFORM: "90"
   LOG_RETENTION_DAYS_DISCOVERY: "30"
 
-# -- Secrets (sensitive values — override these!)
+# -- Secrets (sensitive values)
+# localEncryptionKey, localSigningKey, jwtSecret, internalApiKey are AUTO-GENERATED
+# on first install if left blank. The chart reads back the existing Secret on upgrade
+# so generated values persist across helm upgrades — no manual rotation needed.
+# Set explicit values only if you need predictable keys (e.g. multi-cluster sync,
+# blue/green deployments, or disaster recovery from backup).
 secrets:
-  # MongoDB connection string (replica set required for change streams)
+  # MongoDB connection string (replica set required for change streams).
+  # Auto-built from bundled MongoDB service when mongodb.enabled=true.
+  # Set this when mongodb.enabled=false and you supply your own MongoDB.
   databaseUrl: ""
-  # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+  # Fernet key for encrypting secrets at rest. Auto-generated if blank.
+  # To generate manually: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
   localEncryptionKey: ""
-  # Any random string — used to derive RSA key pair
+  # Used to derive the RSA key pair for JWT signing. Auto-generated if blank.
   localSigningKey: ""
-  # Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+  # JWT signing secret. Auto-generated if blank.
   jwtSecret: ""
-  # Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+  # Shared secret for runner → app internal callbacks. Auto-generated if blank.
   internalApiKey: ""
   # LLM provider API key (OpenAI, Groq, Anthropic, etc.)
   llmApiKey: ""

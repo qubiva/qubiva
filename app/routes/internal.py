@@ -4,11 +4,12 @@ Internal routes for Qubiva.
 Endpoints called by Terraform/Discovery runner Jobs and the AI gateway auth hook via HTTP.
 """
 
+import base64
 import ipaddress
 import logging
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel
 
 from app.deps import (
@@ -203,6 +204,52 @@ async def validate_token(body: ValidateTokenRequest, request: Request):
 # Runner callback routes
 # ---------------------------------------------------------------------------
 
+def _extract_plan_summary(plan_output: str) -> str:
+    """Extract a brief resource diff summary from terraform plan output."""
+    if not plan_output:
+        return "Plan completed. Review the output before approving."
+    import re
+    match = re.search(r"Plan: (\d+ to add, \d+ to change, \d+ to destroy)", plan_output, re.IGNORECASE)
+    if match:
+        return f"Plan complete: {match.group(1)}. Review and approve to apply."
+    return "Plan completed. Review the output before approving."
+
+
+async def _maybe_update_check_run(request_id: str, new_state: str, plan_output: str = ""):
+    """If the request has a GitHub Check Run attached, update it to reflect the new state."""
+    try:
+        doc = await db_manager.find_document("requests", {"request_id": request_id})
+        if not doc:
+            return
+        check_run_id = doc.get("check_run_id")
+        repo_full_name = doc.get("check_run_repo")
+        if not check_run_id or not repo_full_name:
+            return
+
+        state_map = {
+            "in progress":       ("in_progress", None,               "In Progress",         "Terraform plan is running."),
+            "planned":           ("completed",   "action_required",  "Awaiting Approval",   _extract_plan_summary(plan_output or doc.get("plan_output", ""))),
+            "completed":         ("completed",   "success",          "Apply Succeeded",     "Infrastructure changes applied successfully."),
+            "execution failed":  ("completed",   "failure",          "Execution Failed",    doc.get("error_details", "Execution failed.")),
+            "timed out":         ("completed",   "failure",          "Timed Out",           "Runner exceeded timeout."),
+            "rejected":          ("completed",   "cancelled",        "Plan Rejected",       "Plan was rejected by a team member."),
+            "approval_timed_out":("completed",   "cancelled",        "Approval Timed Out",  "No approval received within the timeout period."),
+        }
+        if new_state not in state_map:
+            return
+        status, conclusion, title, summary = state_map[new_state]
+        await project_manager.update_check_run(
+            repo_full_name=repo_full_name,
+            check_run_id=check_run_id,
+            status=status,
+            conclusion=conclusion,
+            title=title,
+            summary=summary,
+        )
+    except Exception as exc:
+        logger.debug("Check run update failed for %s state=%s: %s", request_id, new_state, exc)
+
+
 @router.post("/api/internal/v1/update_request_state/{request_id}")
 async def update_request_state(
     request_id: str,
@@ -213,6 +260,9 @@ async def update_request_state(
     success, message = await tracker.update_request_state(request_id, request.state)
     if not success:
         raise HTTPException(status_code=400, detail=message)
+    # Update GitHub Check Run if applicable (fire-and-forget)
+    import asyncio
+    asyncio.create_task(_maybe_update_check_run(request_id, request.state))
     return {
         "status": "success",
         "message": f"Request {request_id} updated to state: {request.state}",
@@ -249,6 +299,83 @@ async def get_discovery_config(
         "status": "success",
         "discovery_config": result,
     }
+
+
+class PlanArtifactUpload(BaseModel):
+    plan_output: str   # Captured text from `terraform plan`
+    plan_binary_b64: str = ""  # Base64-encoded .tfplan binary (may be empty if runner skips)
+    plan_summary: dict = {}  # Structured resource change counts from `terraform show -json`
+
+
+@router.post("/api/internal/v1/requests/{request_id}/plan_artifact")
+async def upload_plan_artifact(
+    request_id: str,
+    body: PlanArtifactUpload,
+    tracker: RequestTracker = Depends(get_request_tracker),
+    user: dict = Depends(authenticate_http_user),
+):
+    """Runner uploads plan output text and optional plan binary after terraform plan completes."""
+    from app.managers.plan_store import PlanStore
+    store = PlanStore()
+
+    # Store plan text and structured summary in the request document
+    fields = {"plan_output": body.plan_output}
+    if body.plan_summary:
+        fields["plan_summary"] = body.plan_summary
+    await tracker.update_request_fields(request_id, fields)
+
+    # Store plan binary to filesystem (if provided)
+    if body.plan_binary_b64:
+        try:
+            store.save_plan_binary(request_id, body.plan_binary_b64)
+        except Exception as exc:
+            logger.warning("Failed to save plan binary for %s: %s", request_id, exc)
+
+    return {"status": "success", "message": "Plan artifact stored"}
+
+
+@router.get("/api/internal/v1/requests/{request_id}/plan_artifact")
+async def download_plan_artifact(
+    request_id: str,
+    tracker: RequestTracker = Depends(get_request_tracker),
+    user: dict = Depends(authenticate_http_user),
+):
+    """Apply runner downloads the saved plan binary for this request."""
+    from app.managers.plan_store import PlanStore
+    store = PlanStore()
+
+    if not store.has_plan_binary(request_id):
+        raise HTTPException(status_code=404, detail=f"No plan binary found for request {request_id}")
+
+    binary = store.get_plan_binary(request_id)
+    return Response(
+        content=binary,
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="tfplan.bin"'},
+    )
+
+
+class RunMetadataUpdate(BaseModel):
+    head_sha: str = ""
+    head_commit_url: str = ""
+
+
+@router.post("/api/internal/v1/requests/{request_id}/run_metadata")
+async def update_run_metadata(
+    request_id: str,
+    body: RunMetadataUpdate,
+    tracker: RequestTracker = Depends(get_request_tracker),
+    user: dict = Depends(authenticate_http_user),
+):
+    """Runner reports commit SHA and URL after clone so manual runs show commit info."""
+    fields = {}
+    if body.head_sha:
+        fields["head_sha"] = body.head_sha
+    if body.head_commit_url:
+        fields["head_commit_url"] = body.head_commit_url
+    if fields:
+        await tracker.update_request_fields(request_id, fields)
+    return {"status": "success"}
 
 
 @router.post("/api/internal/v1/reload-config")

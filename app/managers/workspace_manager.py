@@ -11,7 +11,7 @@ class WorkspaceManager(ManagerBase):
         super().__init__(db_manager, kms_manager)
         self.git_repo_manager = git_repo_manager
 
-    async def create_workspace(self, project_name: str, workspace_name: str, description: str = "", variables: dict = None, secrets: dict = None, terraform_version: str = None, github_repo_name: str = None, cloud_account: str = None, cloud_platform: str = None, acting_user: str = None):
+    async def create_workspace(self, project_name: str, workspace_name: str, description: str = "", variables: dict = None, secrets: dict = None, terraform_version: str = None, github_repo_name: str = None, cloud_account: str = None, cloud_platform: str = None, trigger_branch: str = None, acting_user: str = None):
         try:
             # Check if the project exists
             project = await self.db_manager.find_document('projects', {'project_name': project_name})
@@ -57,7 +57,8 @@ class WorkspaceManager(ManagerBase):
                 'terraform_version': terraform_version,
                 'github_repo_name': github_repo_name,
                 'cloud_account': cloud_account,
-                'cloud_platform': cloud_platform
+                'cloud_platform': cloud_platform,
+                'trigger_branch': trigger_branch or None,
             }
             workspace_data.update(self._audit_create(acting_user))
             logger.debug(f"Creating workspace data: {workspace_data}")
@@ -93,7 +94,7 @@ class WorkspaceManager(ManagerBase):
             logger.error(f"Failed to delete workspace '{workspace_name}' from project '{project_name}': {str(e)}")
             return False, f"Failed to delete workspace: {str(e)}"
 
-    async def update_workspace(self, project_name: str, workspace_name: str, description: str = None, variables: dict = None, secrets: dict = None, terraform_version: str = None, github_repo_name: str = None, cloud_account: str = None, cloud_platform: str = None, acting_user: str = None):
+    async def update_workspace(self, project_name: str, workspace_name: str, description: str = None, variables: dict = None, secrets: dict = None, terraform_version: str = None, github_repo_name: str = None, cloud_account: str = None, cloud_platform: str = None, trigger_branch: str = None, acting_user: str = None):
         try:
             # Fetch the existing workspace
             workspace = await self.db_manager.find_document('workspaces', {'project_name': project_name, 'name': workspace_name})
@@ -125,6 +126,8 @@ class WorkspaceManager(ManagerBase):
                 update_data['cloud_account'] = cloud_account
             if cloud_platform is not None:
                 update_data['cloud_platform'] = cloud_platform
+            # Always update trigger_branch (None is a valid clear value)
+            update_data['trigger_branch'] = trigger_branch or None
 
             # Update the workspace in the database
             result = await self.db_manager.update_one_document(

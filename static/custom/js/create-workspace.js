@@ -144,6 +144,7 @@ function createWorkspace() {
         github_repo_name: gitRepoName,
         cloud_account: cloudAccountValue,
         cloud_platform: cloudPlatformValue,
+        trigger_branch: $('#trigger-branch').val().trim() || null,
         variables: variables,
         secrets: secrets
     };

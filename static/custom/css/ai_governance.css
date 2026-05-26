@@ -1,49 +1,55 @@
 /* AI Governance page styles */
 
-/* ---- Feature overlay (gateway not configured / unreachable) ---- */
-.ag-tabs-wrapper {
+/* ---- Disabled state — matches Cloud Analyst pattern ---- */
+#ag-page-wrapper {
   position: relative;
+}
+
+#ag-page-wrapper.ag-disabled > :not(#ag-feature-overlay) {
+  opacity: 0.25;
+  pointer-events: none;
+  filter: grayscale(80%);
 }
 
 .ag-feature-overlay {
   position: absolute;
-  inset: 0;
-  background: rgba(248, 249, 250, 0.93);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 200;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.ag-not-configured-content {
   text-align: center;
-  padding: 40px;
-  pointer-events: all;
+  max-width: 450px;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.ag-feature-overlay .ag-overlay-icon {
-  font-size: 3rem;
-  color: #adb5bd;
-  margin-bottom: 16px;
-}
-
-.ag-feature-overlay h5 {
+.ag-not-configured-content h5 {
   color: #495057;
   margin-bottom: 8px;
 }
 
-.ag-feature-overlay p {
+.ag-not-configured-content p {
   color: #6c757d;
-  max-width: 480px;
 }
 
-.ag-feature-overlay pre {
-  background: #f4f4f4;
+.ag-not-configured-content pre {
+  background: #f4f6f9;
   padding: 10px 14px;
   font-size: 0.82em;
   text-align: left;
   border-radius: 4px;
-  max-width: 480px;
-  width: 100%;
+  margin-top: 12px;
 }
 
 .ag-gateway-warning {

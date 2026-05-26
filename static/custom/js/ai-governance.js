@@ -102,6 +102,7 @@ function loadStatus() {
             // Always show tabs; overlay controls interactivity
             $('#ag-feature-overlay').remove();
             $('#ag-gateway-warning').remove();
+            $('#ag-page-wrapper').removeClass('ag-disabled');
 
             if (!data.enabled) {
                 _showTabsOverlay(
@@ -126,15 +127,18 @@ function loadStatus() {
 
 function _showTabsOverlay(iconClass, title, body, codeHint) {
     var codeBlock = codeHint ? '<pre>' + escHtml(codeHint) + '</pre>' : '';
+    $('#ag-page-wrapper').addClass('ag-disabled');
     var overlay = $(
         '<div id="ag-feature-overlay" class="ag-feature-overlay">' +
-          '<div class="ag-overlay-icon"><i class="' + iconClass + '"></i></div>' +
-          '<h5>' + escHtml(title) + '</h5>' +
-          '<p>' + escHtml(body) + '</p>' +
-          codeBlock +
+          '<div class="ag-not-configured-content">' +
+            '<i class="' + iconClass + '" style="font-size:2.5rem; color:#adb5bd; margin-bottom:1rem;"></i>' +
+            '<h5>' + escHtml(title) + '</h5>' +
+            '<p>' + escHtml(body) + '</p>' +
+            codeBlock +
+          '</div>' +
         '</div>'
     );
-    $('#gateway-enabled-section').append(overlay);
+    $('#ag-page-wrapper').append(overlay);
 }
 
 function _showGatewayWarning(msg) {

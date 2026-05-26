@@ -200,6 +200,85 @@ function handle_error() {
     exit 1
 }
 
+# Function to upload plan output text and binary to Qubiva for the approval gate
+function upload_plan_artifact() {
+    local plan_text=""
+    if [[ -f /tmp/plan_output.txt ]]; then
+        plan_text=$(cat /tmp/plan_output.txt)
+    fi
+
+    local plan_b64=""
+    if [[ -f "tfplan" ]]; then
+        plan_b64=$(base64 -w 0 tfplan 2>/dev/null || base64 tfplan)
+    fi
+
+    local payload
+    payload=$(jq -n \
+        --arg plan_output "$plan_text" \
+        --arg plan_binary_b64 "$plan_b64" \
+        --argjson plan_summary "${plan_summary_json:-{\}}" \
+        '{plan_output: $plan_output, plan_binary_b64: $plan_binary_b64, plan_summary: $plan_summary}')
+
+    if [[ -n "$QUBIVA_API_ENDPOINT" && -n "$REQUEST_ID" ]]; then
+        local retry_count=0
+        local max_retries=3
+        while [ $retry_count -lt $max_retries ]; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+                "$QUBIVA_API_ENDPOINT/api/internal/v1/requests/$REQUEST_ID/plan_artifact" \
+                -H "Content-Type: application/json" \
+                -H "X-Internal-Api-Key: $INTERNAL_API_KEY" \
+                -d "$payload")
+            if [ "$response" = "200" ]; then
+                echo "Plan artifact uploaded successfully"
+                return 0
+            fi
+            echo "Failed to upload plan artifact (HTTP $response)"
+            retry_count=$((retry_count+1))
+            sleep 3
+        done
+        return 1
+    fi
+}
+
+# =============================================================================
+# Cancel watcher — polls /tmp/cancel_requested every 2 s.
+# When the file appears (created by the Qubiva stop endpoint via kubectl exec),
+# SIGTERM is sent to the IaC engine process so terraform/tofu can save state
+# and release its state-lock before the pod is cleaned up.  After 8 s a
+# SIGKILL is used as a last resort.  The main script checks for the cancel
+# flag after each phase and sets the request state to "cancelled" before
+# exiting, so the runner — not the Qubiva server — owns the final state
+# transition in the happy path.
+# =============================================================================
+(
+    while true; do
+        sleep 2
+        if [[ -f /tmp/cancel_requested ]]; then
+            echo "=== Cancellation requested — stopping ${TF_ENGINE} gracefully ==="
+            pkill -TERM -x "${TF_ENGINE}" 2>/dev/null || true
+            # Wait for TF to exit on its own — no time cap, TF handles state save
+            while pgrep -x "${TF_ENGINE}" > /dev/null 2>&1; do
+                sleep 1
+            done
+            echo "=== ${TF_ENGINE} exited, terminating runner ==="
+            # kill -TERM -$$ uses kill(-1,sig) semantics when $$=1 (bash is
+            # PID 1 in the container), which Linux explicitly excludes PID 1
+            # from receiving.  Use two targeted kills instead:
+            #   1. pkill -TERM -P $$ — SIGTERM to all direct children (wget, git)
+            #   2. kill -TERM $$      — SIGTERM directly to the main bash PID
+            #                           (kill(pid,sig) works even for PID 1)
+            # Signal main bash FIRST — if pkill below kills this subshell
+            # before kill runs, the parent still got the signal already.
+            kill -TERM $$ 2>/dev/null || true
+            pkill -TERM -P $$ 2>/dev/null || true
+            exit 0
+        fi
+    done
+) &
+CANCEL_WATCHER_PID=$!
+trap 'kill "${CANCEL_WATCHER_PID}" 2>/dev/null || true' EXIT
+trap 'exit 0' TERM
+
 # Start execution - mark as in progress
 update_task_state "in progress" || handle_error "Failed to update task state to in progress"
 
@@ -325,7 +404,7 @@ fi
 # Clone repository
 echo "Cloning repository..."
 if [[ -n "$GITHUB_TOKEN" ]]; then
-    git clone "https://${GITHUB_TOKEN}@${GITHUB_REPO#https://}" /workspace/repo
+    git clone "https://x-access-token:${GITHUB_TOKEN}@${GITHUB_REPO#https://}" /workspace/repo
     clone_exit=$?
     if [ $clone_exit -ne 0 ]; then
         handle_error "Failed to clone repository using token (exit code: $clone_exit)"
@@ -343,20 +422,36 @@ if [[ -n "$GITHUB_BRANCH" ]]; then
     if ! cd /workspace/repo; then
         handle_error "Failed to navigate to repository directory"
     fi
-    
+
     git checkout "$GITHUB_BRANCH"
     checkout_exit=$?
     if [ $checkout_exit -ne 0 ]; then
         handle_error "Failed to checkout branch: $GITHUB_BRANCH (exit code: $checkout_exit)"
     fi
-    
+
     echo "Successfully checked out branch: $GITHUB_BRANCH"
+fi
+
+# Report commit SHA back to Qubiva so it shows in run details
+if [[ -n "$QUBIVA_API_ENDPOINT" && -n "$REQUEST_ID" ]]; then
+    HEAD_SHA=$(git -C /workspace/repo rev-parse HEAD 2>/dev/null || echo "")
+    if [[ -n "$HEAD_SHA" ]]; then
+        REPO_URL_CLEAN="${GITHUB_REPO%.git}"
+        COMMIT_URL="${REPO_URL_CLEAN}/commit/${HEAD_SHA}"
+        curl -sf -X POST \
+            "$QUBIVA_API_ENDPOINT/api/internal/v1/requests/$REQUEST_ID/run_metadata" \
+            -H "Content-Type: application/json" \
+            -H "X-Internal-Api-Key: $INTERNAL_API_KEY" \
+            -d "{\"head_sha\":\"$HEAD_SHA\",\"head_commit_url\":\"$COMMIT_URL\"}" \
+            > /dev/null 2>&1 || true
+        echo "Commit: $HEAD_SHA"
+    fi
 fi
 
 if [[ -n "$ORG_POLICY_REPO_URL" ]]; then
     echo "Cloning organization policy repository..."
     if [[ -n "$ORG_POLICY_TOKEN" ]]; then
-        git clone "https://${ORG_POLICY_TOKEN}@${ORG_POLICY_REPO_URL#https://}" /workspace/org-policies
+        git clone "https://x-access-token:${ORG_POLICY_TOKEN}@${ORG_POLICY_REPO_URL#https://}" /workspace/org-policies
         org_clone_exit=$?
         if [ $org_clone_exit -ne 0 ]; then
             handle_error "Failed to clone org policy repository using token (exit code: $org_clone_exit)"
@@ -479,6 +574,10 @@ phase_enabled() { [[ ",$TF_PHASES," == *",$1,"* ]]; }
 echo "Initializing $TF_ENGINE..."
 $TF_ENGINE init
 init_exit=$?
+if [[ -f /tmp/cancel_requested ]]; then
+    update_task_state "cancelled" "Stopped by user"
+    exit 0
+fi
 if [ $init_exit -ne 0 ]; then
     handle_error "$TF_ENGINE initialization failed (exit code: $init_exit)"
 fi
@@ -488,6 +587,10 @@ if phase_enabled "validate"; then
     echo "Validating $TF_ENGINE configuration..."
     $TF_ENGINE validate
     validate_exit=$?
+    if [[ -f /tmp/cancel_requested ]]; then
+        update_task_state "cancelled" "Stopped by user"
+        exit 0
+    fi
     if [ $validate_exit -ne 0 ]; then
         handle_error "$TF_ENGINE validation failed (exit code: $validate_exit)"
     fi
@@ -498,20 +601,28 @@ if phase_enabled "refresh"; then
     echo "Refreshing $TF_ENGINE state..."
     $TF_ENGINE apply -refresh-only --auto-approve
     refresh_exit=$?
+    if [[ -f /tmp/cancel_requested ]]; then
+        update_task_state "cancelled" "Stopped by user"
+        exit 0
+    fi
     if [ $refresh_exit -ne 0 ]; then
         handle_error "$TF_ENGINE refresh failed (exit code: $refresh_exit)"
     fi
 fi
 
-# Plan (required for apply and destroy too)
-if phase_enabled "plan" || phase_enabled "apply" || phase_enabled "destroy"; then
+# Plan — skipped when TF_PLAN_REQUEST_ID is set (apply phase downloads the saved binary instead)
+if [[ -z "$TF_PLAN_REQUEST_ID" ]] && (phase_enabled "plan" || phase_enabled "apply" || phase_enabled "destroy"); then
     echo "Generating $TF_ENGINE plan..."
     if phase_enabled "destroy"; then
-        $TF_ENGINE plan -destroy -out=tfplan
+        $TF_ENGINE plan -destroy -out=tfplan 2>&1 | tee /tmp/plan_output.txt
     else
-        $TF_ENGINE plan -out=tfplan
+        $TF_ENGINE plan -out=tfplan 2>&1 | tee /tmp/plan_output.txt
     fi
-    plan_exit=$?
+    plan_exit=${PIPESTATUS[0]}
+    if [[ -f /tmp/cancel_requested ]]; then
+        update_task_state "cancelled" "Stopped by user"
+        exit 0
+    fi
     if [ $plan_exit -ne 0 ]; then
         handle_error "$TF_ENGINE plan failed (exit code: $plan_exit)"
     fi
@@ -581,23 +692,91 @@ if phase_enabled "plan" || phase_enabled "apply" || phase_enabled "destroy"; the
             echo "Warning: No valid policy directories found, skipping policy checks"
         fi
     fi
+
+    # Extract structured plan summary via JSON (accurate resource change counts).
+    # tfplan.json may already exist if conftest ran; generate it if not.
+    plan_summary_json="{}"
+    if [[ ! -f tfplan.json ]] && [[ -f tfplan ]]; then
+        $TF_ENGINE show -json tfplan > tfplan.json 2>/dev/null || true
+    fi
+    if [[ -f tfplan.json ]]; then
+        plan_summary_json=$(python3 - <<'PYEOF'
+import sys, json
+try:
+    with open("tfplan.json") as f:
+        data = json.load(f)
+    add = change = destroy = replace = 0
+    for c in data.get("resource_changes", []):
+        actions = set(c.get("change", {}).get("actions", []))
+        if not actions or actions <= {"no-op", "read"}:
+            continue
+        if "create" in actions and "delete" in actions:
+            replace += 1
+        elif "create" in actions:
+            add += 1
+        elif "update" in actions:
+            change += 1
+        elif "delete" in actions:
+            destroy += 1
+    print(json.dumps({"add": add, "change": change, "destroy": destroy, "replace": replace}))
+except Exception:
+    print("{}")
+PYEOF
+        ) || plan_summary_json="{}"
+    fi
+
+    # Only gate for approval if the run intends to apply or destroy.
+    # Plan-only runs (TF_PHASES=plan or validate,plan) complete immediately.
+    if phase_enabled "apply" || phase_enabled "destroy"; then
+        echo "Plan complete — uploading artifact for approval gate..."
+        upload_plan_artifact || echo "Warning: failed to upload plan artifact"
+        update_task_state "planned" || handle_error "Failed to set state to planned"
+        echo "Run is now awaiting approval. Apply will begin after an admin approves."
+        exit 0
+    fi
 fi
 
-# Apply
-if phase_enabled "apply" && ! phase_enabled "destroy"; then
-    echo "Applying $TF_ENGINE configuration..."
-    $TF_ENGINE apply --auto-approve tfplan
+# Apply (approval-triggered phase: TF_PLAN_REQUEST_ID points to the saved plan binary)
+if [[ -n "$TF_PLAN_REQUEST_ID" ]] && phase_enabled "apply" && ! phase_enabled "destroy"; then
+    echo "Downloading saved plan binary for request $TF_PLAN_REQUEST_ID..."
+    curl -sf -X GET \
+        "$QUBIVA_API_ENDPOINT/api/internal/v1/requests/$TF_PLAN_REQUEST_ID/plan_artifact" \
+        -H "X-Internal-Api-Key: $INTERNAL_API_KEY" \
+        -o tfplan
+    download_exit=$?
+    if [ $download_exit -ne 0 ] || [ ! -s tfplan ]; then
+        handle_error "Failed to download plan binary for $TF_PLAN_REQUEST_ID (exit code: $download_exit)"
+    fi
+    echo "Applying $TF_ENGINE saved plan..."
+    $TF_ENGINE apply tfplan
     apply_exit=$?
+    if [[ -f /tmp/cancel_requested ]]; then
+        update_task_state "cancelled" "Stopped by user"
+        exit 0
+    fi
     if [ $apply_exit -ne 0 ]; then
         handle_error "$TF_ENGINE apply failed (exit code: $apply_exit)"
     fi
 fi
 
-# Destroy
-if phase_enabled "destroy"; then
+# Destroy (approval-triggered phase: TF_PLAN_REQUEST_ID points to the saved destroy plan binary)
+if [[ -n "$TF_PLAN_REQUEST_ID" ]] && phase_enabled "destroy"; then
+    echo "Downloading saved destroy plan binary for request $TF_PLAN_REQUEST_ID..."
+    curl -sf -X GET \
+        "$QUBIVA_API_ENDPOINT/api/internal/v1/requests/$TF_PLAN_REQUEST_ID/plan_artifact" \
+        -H "X-Internal-Api-Key: $INTERNAL_API_KEY" \
+        -o tfplan
+    download_exit=$?
+    if [ $download_exit -ne 0 ] || [ ! -s tfplan ]; then
+        handle_error "Failed to download destroy plan binary for $TF_PLAN_REQUEST_ID (exit code: $download_exit)"
+    fi
     echo "Destroying $TF_ENGINE resources..."
-    $TF_ENGINE apply --auto-approve tfplan
+    $TF_ENGINE apply tfplan
     destroy_exit=$?
+    if [[ -f /tmp/cancel_requested ]]; then
+        update_task_state "cancelled" "Stopped by user"
+        exit 0
+    fi
     if [ $destroy_exit -ne 0 ]; then
         handle_error "$TF_ENGINE destroy failed (exit code: $destroy_exit)"
     fi

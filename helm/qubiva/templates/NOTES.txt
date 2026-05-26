@@ -1,0 +1,56 @@
+Qubiva {{ .Chart.AppVersion }} deployed successfully.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ACCESS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{{- if .Values.ingress.enabled }}
+  URL: https://{{ .Values.ingress.host }}
+{{- else }}
+  Ingress is disabled. Use port-forward to access locally:
+
+    kubectl port-forward svc/{{ include "qubiva.fullname" . }} 8080:80 -n {{ .Release.Namespace }}
+
+  Then open: http://localhost:8080
+{{- end }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  FIRST LOGIN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Admin account: {{ .Values.env.MASTER_ADMIN_USER }}
+
+  Retrieve the auto-generated password from the secret:
+
+    kubectl get secret {{ include "qubiva.secretName" . }} -n {{ .Release.Namespace }} \
+      -o jsonpath='{.data.MASTER_ADMIN_PASSWORD}' | base64 -d
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  IMPORTANT — CHECK BEFORE GOING LIVE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{{- if not .Values.ingress.enabled }}
+  ⚠  Ingress is disabled. Enable it for production:
+
+       helm upgrade {{ .Release.Name }} . \
+         --set ingress.enabled=true \
+         --set ingress.host=qubiva.yourcompany.com \
+         --reuse-values
+
+{{- end }}
+{{- if eq .Values.env.MASTER_ADMIN_USER "admin@qubiva.local" }}
+  ⚠  Default admin email in use (admin@qubiva.local).
+     Override with --set env.MASTER_ADMIN_USER=you@yourcompany.com
+
+{{- end }}
+{{- if eq .Values.env.INTERNAL_CIDR "10.0.0.0/8" }}
+  ℹ  INTERNAL_CIDR is 10.0.0.0/8 (default). If your pod CIDR is outside
+     this range, runner jobs will fail to call back. Check with:
+       kubectl get nodes -o jsonpath='{.items[*].spec.podCIDR}'
+     Override with --set env.INTERNAL_CIDR=<your-pod-cidr>
+
+{{- end }}
+{{- if .Values.mongodb.enabled }}
+  ℹ  Bundled MongoDB is enabled (single-node, not suitable for HA production).
+     For production, set mongodb.enabled=false and supply secrets.databaseUrl
+     pointing to a replica-set MongoDB (e.g. MongoDB Atlas or self-managed).
+{{- end }}
+
+Docs: https://github.com/qubiva/qubiva

@@ -26,14 +26,30 @@ class CloudWatchLogStreamer:
         self._k8s_cfg = None  # fixed Configuration for in-cluster auth workaround
 
     async def _query_persisted_logs(self, request_id: str) -> Optional[str]:
-        """Fetch historical logs from Loki if available."""
-        if not self.log_persistence:
-            return None
+        """Fetch historical logs from Loki, falling back to MongoDB partial_logs field.
+
+        partial_logs is always written by the stop endpoint (and iac_executor
+        _persist_logs) so logs are readable instantly on page refresh, even
+        when Loki is available but has an indexing delay.
+        """
+        # Try Loki first
+        if self.log_persistence:
+            try:
+                loki_text = await self.log_persistence.query_logs(request_id)
+                if loki_text:
+                    return loki_text
+            except Exception as e:
+                logger.warning(f"Failed to query persisted logs for {request_id}: {e}")
+
+        # Fallback: partial_logs stored directly in the request document
         try:
-            return await self.log_persistence.query_logs(request_id)
+            doc = await self.db_manager.find_document("requests", {"request_id": request_id})
+            if doc and doc.get("partial_logs"):
+                return doc["partial_logs"]
         except Exception as e:
-            logger.warning(f"Failed to query persisted logs for {request_id}: {e}")
-            return None
+            logger.warning(f"Failed to query partial_logs from MongoDB for {request_id}: {e}")
+
+        return None
 
     async def _stream_persisted_logs(self, websocket: WebSocket, request_id: str) -> bool:
         """Stream historical logs from Loki if available."""
@@ -44,8 +60,22 @@ class CloudWatchLogStreamer:
 
             await self.send_info_message(websocket, "Streaming persisted logs from storage...")
             for line in log_text.split('\n'):
-                if line:
-                    await websocket.send_text(line)
+                if not line:
+                    continue
+                # Handle bytes-repr strings stored by older code (e.g. b'...\n...')
+                # These are entire log blobs stored as str(bytes) with escaped newlines.
+                if line.startswith("b'") or line.startswith('b"'):
+                    try:
+                        import ast
+                        raw = ast.literal_eval(line)
+                        if isinstance(raw, bytes):
+                            for real_line in raw.decode('utf-8', errors='replace').split('\n'):
+                                if real_line:
+                                    await websocket.send_text(real_line)
+                            continue
+                    except Exception:
+                        pass
+                await websocket.send_text(line)
             return True
         except Exception as e:
             logger.warning(f"Failed to stream persisted logs for {request_id}: {e}")
@@ -134,6 +164,37 @@ class CloudWatchLogStreamer:
     async def stream_logs(self, websocket: WebSocket, request_id: str):
         try:
             await self._ensure_k8s_client()
+
+            # Two-phase run (plan → approval → apply): replay plan-phase logs first
+            doc = await self.db_manager.find_document("requests", {"request_id": request_id})
+            if doc and doc.get("plan_logs"):
+                await self.send_info_message(websocket, "--- Plan phase logs ---")
+                await self._stream_persisted_logs(websocket, request_id)
+                await self.send_info_message(websocket, "--- Apply phase logs ---")
+
+            # If the run is queued, wait for it to leave that state before
+            # attempting pod log streaming — no point retrying for a pod that
+            # hasn't been scheduled yet.
+            while True:
+                current_doc = await self.db_manager.find_document("requests", {"request_id": request_id})
+                current_state = (current_doc or {}).get("state", "")
+                if current_state != "queued":
+                    break
+                await self.send_info_message(websocket, "Run is queued — waiting for workspace to become available...")
+                await asyncio.sleep(5)
+
+            # If already in a terminal state, show any persisted logs then exit.
+            # This path is hit both when a queued run is cancelled before starting
+            # AND when the page is refreshed for an already-finished run.
+            # We try Loki first then fall back to the MongoDB partial_logs field
+            # so logs are visible even in environments without a Loki instance.
+            current_doc = await self.db_manager.find_document("requests", {"request_id": request_id})
+            current_state = (current_doc or {}).get("state", "")
+            if current_state in ("cancelled", "rejected", "failed", "approval_timed_out"):
+                await self._stream_persisted_logs(websocket, request_id)
+                await self.send_info_message(websocket, f"Run {current_state}.")
+                await websocket.close(code=1000)
+                return
 
             pod_name, container_name = None, None
             for attempt in range(self.max_retries):

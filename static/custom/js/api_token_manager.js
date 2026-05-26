@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.getElementById("btn-open-create-token").addEventListener("click", openCreateModal);
-    document.getElementById("btn-open-create-token-empty").addEventListener("click", openCreateModal);
 
     // ----------------------------------------------------------------
     // Confirm create

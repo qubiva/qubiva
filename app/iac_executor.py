@@ -2,7 +2,6 @@ import logging
 import os
 import traceback
 import asyncio
-import urllib.parse
 from datetime import datetime, timedelta, timezone
 from kubernetes import client as k8s_client, config as k8s_config
 
@@ -13,7 +12,7 @@ logger.setLevel(logging.DEBUG)
 class IaCJobTrigger:
     DEFAULT_TIMEOUT_HOURS = 6
 
-    def __init__(self, request_tracker, request_id, project_manager, log_persistence=None, pool_manager=None, config_manager=None):
+    def __init__(self, request_tracker, request_id, project_manager, log_persistence=None, pool_manager=None, config_manager=None, queue_manager=None):
         self.namespace = os.environ.get('K8S_NAMESPACE', 'default')
         self.job_image = os.environ.get('IAC_RUNNER_IMAGE', 'qubiva/iac-runner:latest')
         self.job_ttl_seconds = int(os.environ.get('JOB_TTL_SECONDS_AFTER_FINISHED', '3600'))
@@ -23,6 +22,7 @@ class IaCJobTrigger:
         self.log_persistence = log_persistence
         self.pool_manager = pool_manager
         self.config_manager = config_manager
+        self.queue_manager = queue_manager
         self._init_k8s_client()
 
     def _init_k8s_client(self):
@@ -74,8 +74,8 @@ class IaCJobTrigger:
             return False
 
     async def _persist_logs(self, job_name, request_id, project_name):
-        """Fetch pod logs and push to Loki for long-term storage."""
-        if not self.log_persistence:
+        """Fetch pod logs and push to Loki + MongoDB for storage."""
+        if not self.log_persistence and not self.request_tracker:
             return
         try:
             pods = self.core_v1.list_namespaced_pod(
@@ -99,16 +99,35 @@ class IaCJobTrigger:
                 return
 
             if log_text:
-                await self.log_persistence.push_logs(
-                    request_id=request_id,
-                    job_type='terraform',
-                    project_name=project_name,
-                    log_text=log_text,
-                )
+                # k8s client may return bytes; decode to str before pushing
+                if isinstance(log_text, bytes):
+                    log_text = log_text.decode("utf-8", errors="replace")
+
+                pushed_to_loki = False
+                if self.log_persistence:
+                    pushed_to_loki = await self.log_persistence.push_logs(
+                        request_id=request_id,
+                        job_type='terraform',
+                        project_name=project_name,
+                        log_text=log_text,
+                    )
+
+                # Always write to MongoDB partial_logs for immediate availability.
+                # Loki has an indexing delay — query_range returns empty for
+                # several seconds after a successful push.
+                if self.request_tracker:
+                    fallback_text = log_text[-512000:] if len(log_text) > 512000 else log_text
+                    await self.request_tracker.update_request_fields(
+                        request_id, {"partial_logs": fallback_text}
+                    )
+                    logger.info(
+                        f"Pushed {len(fallback_text)} chars to MongoDB partial_logs for {request_id}"
+                        + (", also pushed to Loki" if pushed_to_loki else "")
+                    )
         except Exception as e:
             logger.warning(f"Failed to persist logs for {request_id}: {e}")
 
-    async def monitor_task_status(self, job_name, request_id, project_name, workspace_name, poll_interval=5, grace_period=60, timeout_hours=None):
+    async def monitor_task_status(self, job_name, request_id, project_name, workspace_name, poll_interval=5, grace_period=5, timeout_hours=None):
         """Monitor a K8s Job until completion, failure, or timeout"""
         try:
             success, request_details = await self.request_tracker.get_request_details(request_id)
@@ -133,9 +152,15 @@ class IaCJobTrigger:
                 success, updated = await self.request_tracker.get_request_details(request_id)
                 if success:
                     state = updated.get("state")
-                    if state in ["completed", "failed", "execution failed", "timed out", "cancelled"]:
+                    if state in ["completed", "failed", "execution failed", "timed out", "cancelled",
+                                 "rejected", "approval_timed_out"]:
                         logger.info(f"Request {request_id} reached terminal state: {state}")
                         await self._release_workspace_lock(project_name, workspace_name)
+                        return
+                    if state == "planned":
+                        # Plan pod finished and called back; workspace lock is intentionally held
+                        # pending approval. Monitor exits here — approve/reject endpoints own cleanup.
+                        logger.info(f"Request {request_id} awaiting approval — monitor exiting, lock held")
                         return
 
                 # Check K8s job status
@@ -144,17 +169,29 @@ class IaCJobTrigger:
                     if job.status.succeeded and job.status.succeeded > 0:
                         await asyncio.sleep(grace_period)
                         success, final = await self.request_tracker.get_request_details(request_id)
-                        if success and final.get("state") not in ["completed", "failed", "execution failed"]:
-                            await self.request_tracker.update_request_state(request_id, "completed")
+                        if success:
+                            final_state = final.get("state")
+                            if final_state == "planned":
+                                # Runner already set planned state — lock held, exit cleanly
+                                logger.info(f"Request {request_id} plan complete, awaiting approval — lock held")
+                                return
+                            if final_state not in ["completed", "failed", "execution failed"]:
+                                await self.request_tracker.update_request_state(request_id, "completed")
                         await self._release_workspace_lock(project_name, workspace_name)
                         return
 
                     if job.status.failed and job.status.failed > 0:
                         await asyncio.sleep(grace_period)
                         success, final = await self.request_tracker.get_request_details(request_id)
-                        if success and final.get("state") not in ["completed", "failed", "execution failed"]:
-                            await self.request_tracker.update_error_details(request_id, "Run failed")
-                            await self.request_tracker.update_request_state(request_id, "execution failed")
+                        if success:
+                            final_state = final.get("state")
+                            if final_state == "planned":
+                                # Defensive: runner already uploaded plan before pod exit code
+                                logger.info(f"Request {request_id} plan complete despite job failure — lock held")
+                                return
+                            if final_state not in ["completed", "failed", "execution failed"]:
+                                await self.request_tracker.update_error_details(request_id, "Run failed")
+                                await self.request_tracker.update_request_state(request_id, "execution failed")
                         await self._release_workspace_lock(project_name, workspace_name)
                         return
 
@@ -174,9 +211,14 @@ class IaCJobTrigger:
                         # Job was deleted or cleaned up
                         await asyncio.sleep(grace_period)
                         success, final = await self.request_tracker.get_request_details(request_id)
-                        if success and final.get("state") not in ["completed", "failed", "execution failed", "timed out", "cancelled"]:
-                            await self.request_tracker.update_error_details(request_id, "Run was interrupted unexpectedly")
-                            await self.request_tracker.update_request_state(request_id, "execution failed")
+                        if success:
+                            final_state = final.get("state")
+                            if final_state == "planned":
+                                logger.info(f"Request {request_id} plan complete (job cleaned up) — lock held")
+                                return
+                            if final_state not in ["completed", "failed", "execution failed", "timed out", "cancelled"]:
+                                await self.request_tracker.update_error_details(request_id, "Run was interrupted unexpectedly")
+                                await self.request_tracker.update_request_state(request_id, "execution failed")
                         await self._release_workspace_lock(project_name, workspace_name)
                         return
                     else:
@@ -225,19 +267,50 @@ class IaCJobTrigger:
             logger.debug(f"Error checking pod state for {job_name}: {e}")
         return None
 
-    async def trigger_terraform_command(self, project_name, workspace_name, run_details, phases, request_id, timeout_hours=None):
-        try:
-            lock_success, lock_message = await self._check_and_set_workspace_lock(project_name, workspace_name)
-            if not lock_success:
-                error_msg = f"Cannot start terraform run: {lock_message}"
-                await self.request_tracker.update_error_details(self.request_id, error_msg)
-                await self.request_tracker.update_request_state(self.request_id, 'failed')
-                return {'status': 'error', 'error': error_msg}
+    async def trigger_terraform_command(self, project_name, workspace_name, run_details, phases, request_id, timeout_hours=None, plan_request_id=None, is_speculative=False):
+        """Trigger a Terraform run.
 
-            await self.request_tracker.update_request_state(self.request_id, 'queued')
+        plan_request_id: when set, this is the apply phase of a previously approved plan.
+          Workspace lock is NOT re-acquired (already held from the plan phase).
+          Phases are forced to ["apply"] and TF_PLAN_REQUEST_ID is passed to the runner.
+        is_speculative: PR speculative plan — skips workspace lock so it runs in parallel.
+        """
+        try:
+            if plan_request_id:
+                # Apply phase after approval: workspace already locked, skip initial states
+                phases = ['apply']
+            elif is_speculative:
+                # Speculative plan: never lock the workspace
+                pass
+            else:
+                lock_success, lock_message = await self._check_and_set_workspace_lock(project_name, workspace_name)
+                if not lock_success:
+                    # Workspace is busy — enqueue if a queue_manager is available
+                    if self.queue_manager:
+                        queue_full = await self.queue_manager.is_queue_full(project_name, workspace_name)
+                        if queue_full:
+                            error_msg = f"Cannot queue run: workspace queue is full for {project_name}/{workspace_name}"
+                            await self.request_tracker.update_error_details(self.request_id, error_msg)
+                            await self.request_tracker.update_request_state(self.request_id, 'failed')
+                            return {'status': 'error', 'error': error_msg}
+                        # Leave request in "queued" state — dequeue_next will start it
+                        # when the workspace becomes available.
+                        queue_depth = await self.queue_manager.count_queued(project_name, workspace_name) + 1
+                        logger.info("Request %s queued for %s/%s (position %d)", self.request_id, project_name, workspace_name, queue_depth)
+                        return {'status': 'queued', 'request_id': self.request_id, 'queue_position': queue_depth}
+                    # No queue_manager — legacy reject behaviour
+                    error_msg = f"Cannot start terraform run: {lock_message}"
+                    await self.request_tracker.update_error_details(self.request_id, error_msg)
+                    await self.request_tracker.update_request_state(self.request_id, 'failed')
+                    return {'status': 'error', 'error': error_msg}
+
+                await self.request_tracker.update_request_state(self.request_id, 'queued')
 
             github_repo = run_details['github_repo']['repo_url']
-            github_token = run_details['github_repo'].get('token')
+            github_token, _ = await self.project_manager.get_github_token_for_container_run(
+                repo_url=github_repo,
+                repo_details=run_details['github_repo'],
+            )
             tf_config_path = run_details['github_repo']['terraform_config_path']
             terraform_version = run_details['terraform_version']
             github_branch = run_details['github_repo'].get('branch')
@@ -304,8 +377,7 @@ class IaCJobTrigger:
             if tf_config_path:
                 env_vars.append({'name': 'TF_CONFIG_PATH', 'value': str(tf_config_path)})
             if github_token:
-                encoded_token = urllib.parse.quote(github_token, safe='')
-                env_vars.append({'name': 'GITHUB_TOKEN', 'value': encoded_token})
+                env_vars.append({'name': 'GITHUB_TOKEN', 'value': github_token})
 
             for k, v in run_details['variables'].items():
                 if v is not None:
@@ -320,6 +392,10 @@ class IaCJobTrigger:
             # Pass selected execution phases to runner
             if phases:
                 env_vars.append({'name': 'TF_PHASES', 'value': ','.join(phases)})
+
+            # Apply phase: tell runner where to find the saved plan binary
+            if plan_request_id:
+                env_vars.append({'name': 'TF_PLAN_REQUEST_ID', 'value': plan_request_id})
 
             # Pass backend type (kubernetes, s3, local, gcs, azurerm)
             env_vars.append({'name': 'TF_BACKEND_TYPE', 'value': backend_type})
@@ -355,6 +431,9 @@ class IaCJobTrigger:
                     inject_result = await self.pool_manager.inject_env_and_execute(pod, env_vars)
                     if not inject_result.get("error"):
                         await self.request_tracker.update_job_name(request_id, pod.pod_name)
+                        # For apply phase: save plan pod ref before overwriting logs field
+                        if plan_request_id:
+                            await self._save_plan_logs_ref(request_id)
                         success, message = await self.request_tracker.update_log_stream(
                             request_id, pod.pod_name, "iac-runner"
                         )
@@ -394,7 +473,9 @@ class IaCJobTrigger:
                 return {'status': 'error', 'error': msg}
 
             # Create Kubernetes Job (fallback when pool is disabled or empty)
-            job_name = f"iac-{request_id[:20].lower().replace('_', '-')}"
+            # Apply-phase jobs get an '-a' suffix so they don't collide with the plan job name.
+            phase_suffix = '-a' if plan_request_id else ''
+            job_name = f"iac-{request_id[:18].lower().replace('_', '-')}{phase_suffix}"
             k8s_env = [k8s_client.V1EnvVar(name=e['name'], value=e['value']) for e in env_vars]
 
             container = k8s_client.V1Container(
@@ -455,6 +536,9 @@ class IaCJobTrigger:
 
             # Update log stream reference
             log_ref = f"{pod_name}:iac-runner"
+            # For apply phase: save plan pod ref before overwriting logs field
+            if plan_request_id:
+                await self._save_plan_logs_ref(request_id)
             success, message = await self.request_tracker.update_log_stream(request_id, pod_name, "iac-runner")
             if not success:
                 logger.error(f"Failed to update log stream: {message}")
@@ -477,13 +561,29 @@ class IaCJobTrigger:
             logger.error(traceback.format_exc())
             return {'status': 'error', 'error': error_msg}
 
+    async def _save_plan_logs_ref(self, request_id: str):
+        """Before overwriting the logs field for the apply pod, copy the current
+        value into plan_logs so the log streamer can replay plan-phase history."""
+        try:
+            doc = await self.request_tracker.db_manager.find_document(
+                "requests", {"request_id": request_id}
+            )
+            if doc and doc.get("logs"):
+                await self.request_tracker.db_manager.update_document(
+                    "requests",
+                    {"request_id": request_id},
+                    {"plan_logs": doc["logs"]},
+                )
+        except Exception as exc:
+            logger.warning("Could not save plan_logs ref for %s: %s", request_id, exc)
+
     async def _check_and_set_workspace_lock(self, project_name, workspace_name):
         try:
             is_locked, current_run_id = await self.project_manager.is_workspace_locked(project_name, workspace_name)
 
             if is_locked and current_run_id:
                 success, run_details = await self.request_tracker.get_request_details(current_run_id)
-                if success and run_details.get('state') in ['in progress', 'queued']:
+                if success and run_details.get('state') in ['in progress', 'queued', 'planned']:
                     return False, f"Workspace is locked by active request {current_run_id}"
                 else:
                     logger.info(f"Clearing stale lock from request {current_run_id}")
@@ -509,6 +609,10 @@ class IaCJobTrigger:
             )
             if success:
                 logger.info(f"Workspace {project_name}/{workspace_name} unlocked")
+                if self.queue_manager:
+                    asyncio.create_task(
+                        self.queue_manager.dequeue_next(project_name, workspace_name)
+                    )
             else:
                 logger.error(f"Failed to unlock workspace: {message}")
             return success, message

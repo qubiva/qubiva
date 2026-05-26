@@ -275,14 +275,10 @@ $(function () {
         $submitButton.prop('disabled', true).append($spinner);
         
 
-        // NEW CODE: Collect selected Terraform phases
+        // Collect selected Terraform phases
         var selectedPhases = [];
         $('input[name="terraform-phases"]:checked').each(function() {
-            var phase = $(this).val();
-            if (phase === 'apply' && $(this).data('auto-approve')) {
-                phase = 'apply -auto-approve';
-            }
-            selectedPhases.push(phase);
+            selectedPhases.push($(this).val());
         });
 
         var timeoutValue = $('#task-timeout').val().trim();
@@ -400,13 +396,32 @@ $(function () {
             var statusClass = getStatusClass(run.state);
             var statusText = getStatusText(run.state);
             var truncatedId = run.request_id ? run.request_id.substring(0, 8) + '...' : 'N/A';
-            
+            var isSpeculative = !!run.is_speculative;
+            var isPlanned = run.state === 'planned' && !isSpeculative;
+
+            // Source badge: webhook push, webhook PR (speculative), or manual
+            var sourceBadge = '';
+            if (run.trigger_source === 'webhook_pr' || isSpeculative) {
+                var prLabel = run.pr_number ? `PR #${run.pr_number}` : 'PR';
+                sourceBadge = `<span class="badge badge-info ml-1" title="Speculative plan triggered by pull request"><i class="fab fa-github mr-1"></i>${prLabel} · Speculative</span>`;
+            } else if (run.trigger_source === 'webhook_push') {
+                var shaLabel = run.head_sha ? run.head_sha.substring(0, 7) : '';
+                sourceBadge = `<span class="badge badge-secondary ml-1" title="Triggered by GitHub push${shaLabel ? ' · ' + shaLabel : ''}"><i class="fab fa-github mr-1"></i>Push${shaLabel ? ' · ' + shaLabel : ''}</span>`;
+            }
+
+            var approvalActions = isPlanned ? `
+                <button class="btn btn-success btn-sm approve-run-btn ml-1" data-request-id="${run.request_id}" title="Approve plan and proceed with apply">Approve</button>
+                <button class="btn btn-danger btn-sm reject-run-btn ml-1" data-request-id="${run.request_id}" title="Reject plan">Reject</button>
+                <button class="btn btn-secondary btn-sm view-plan-btn ml-1" data-request-id="${run.request_id}" title="View plan output">Plan Output</button>
+            ` : '';
+
             $runsList.append(`
-                <div class="run-item" data-request-id="${run.request_id}">
+                <div class="run-item" data-request-id="${run.request_id}" data-is-speculative="${isSpeculative}">
                     <div class="run-id" title="${run.request_id}">${truncatedId}</div>
                     <div class="run-account-repo">
-                        ${run.requested_by_user || run.requested_by || 'Unknown User'} • 
+                        ${run.requested_by_user || run.requested_by || 'Unknown User'} •
                         ${run.phases ? run.phases.join(', ') : 'Standard Run'}
+                        ${sourceBadge}
                     </div>
                     <div class="run-status-container">
                         <div class="run-status ${statusClass}">${statusText}</div>
@@ -414,8 +429,10 @@ $(function () {
                     <div class="run-time">${new Date(run.requested_on).toLocaleString()}</div>
                     <div class="run-actions">
                         <button class="btn btn-primary btn-sm view-logs-btn" data-request-id="${run.request_id}">View Logs</button>
+                        ${approvalActions}
                     </div>
                 </div>
+                ${isPlanned ? `<div class="plan-output-panel collapse" id="plan-output-${run.request_id}"><pre class="plan-output-text bg-dark text-light p-3 m-2 rounded" style="max-height:400px;overflow:auto;white-space:pre-wrap;font-size:0.8em;">Loading plan output...</pre></div>` : ''}
             `);
         });
         console.log("Runs list updated");
@@ -428,7 +445,9 @@ $(function () {
         if (normalized.includes('benchmark') && normalized.includes('failed')) return 'status-warning';
         if (normalized.includes('failed')) return 'status-failed';
         if (normalized.includes('progress') || normalized === 'queued') return 'status-in-progress';
-        if (normalized.includes('timed')) return 'status-timeout';
+        if (normalized.includes('timed') || normalized === 'approval_timed_out') return 'status-timeout';
+        if (normalized === 'planned') return 'status-planned';
+        if (normalized === 'rejected') return 'status-failed';
         return '';
     }
 
@@ -441,7 +460,9 @@ $(function () {
         if (normalized === 'failed') return 'Failed';
         if (normalized.includes('progress')) return '<span class="custom-spinner"></span> In Progress';
         if (normalized === 'queued') return '<span class="custom-spinner"></span> Queued';
-        if (normalized.includes('timed')) return 'Timed Out';
+        if (normalized.includes('timed') || normalized === 'approval_timed_out') return 'Approval Timed Out';
+        if (normalized === 'planned') return '<i class="fas fa-lock mr-1"></i> Awaiting Approval';
+        if (normalized === 'rejected') return 'Rejected';
         return status;
     }
 
@@ -498,8 +519,10 @@ $(function () {
                         const $status = $(this).find('.run-status');
                         const statusText = $status.text().trim().toLowerCase();
                         const hasSpinner = $status.find('.custom-spinner').length > 0;
-                        const isActive = statusText.includes('in progress') || 
-                                       statusText.includes('queued') || 
+                        const isActive = statusText.includes('in progress') ||
+                                       statusText.includes('queued') ||
+                                       statusText.includes('awaiting approval') ||
+                                       $status.hasClass('status-planned') ||
                                        hasSpinner;
                         console.log(`Run item status check - Text: "${statusText}", HasSpinner: ${hasSpinner}, IsActive: ${isActive}`);
                         return isActive;
@@ -591,34 +614,135 @@ $(function () {
 
     function updateRunItem(requestId, update) {
         console.log(`Beginning update for run item ${requestId}:`, update);
-        
+
         const $runItem = $(`.run-item[data-request-id="${requestId}"]`);
         if ($runItem.length) {
             console.log(`Found run item element for ${requestId}`);
-            
+
             if (update.state) {
-                const $statusElement = $runItem.find('.run-status');
-                const currentState = $statusElement.text().trim();
                 const newState = update.state;
-                
-                console.log(`Updating status from "${currentState}" to "${newState}"`);
-                
                 const statusClass = getStatusClass(newState);
                 const statusText = getStatusText(newState);
-                
-                console.log(`New status class: ${statusClass}, New status text: ${statusText}`);
-                
-                $statusElement
-                    .removeClass('status-completed status-in-progress status-failed')
+
+                $runItem.find('.run-status')
+                    .removeClass('status-completed status-in-progress status-failed status-planned status-timeout')
                     .addClass(statusClass)
                     .html(statusText);
-                
+
+                // When a planned run transitions to another state, remove approval buttons
+                if (newState !== 'planned') {
+                    $runItem.find('.approve-run-btn, .reject-run-btn, .view-plan-btn').remove();
+                    $(`#plan-output-${requestId}`).remove();
+                } else if ($runItem.find('.approve-run-btn').length === 0 && $runItem.data('is-speculative') !== true && $runItem.attr('data-is-speculative') !== 'true') {
+                    // Transitioned INTO planned (non-speculative) — add approval buttons dynamically
+                    $runItem.find('.run-actions').append(`
+                        <button class="btn btn-success btn-sm approve-run-btn ml-1" data-request-id="${requestId}">Approve</button>
+                        <button class="btn btn-danger btn-sm reject-run-btn ml-1" data-request-id="${requestId}">Reject</button>
+                        <button class="btn btn-secondary btn-sm view-plan-btn ml-1" data-request-id="${requestId}">Plan Output</button>
+                    `);
+                    $runItem.after(`<div class="plan-output-panel collapse" id="plan-output-${requestId}"><pre class="plan-output-text bg-dark text-light p-3 m-2 rounded" style="max-height:400px;overflow:auto;white-space:pre-wrap;font-size:0.8em;">Loading plan output...</pre></div>`);
+                }
+
                 console.log(`Status updated successfully for ${requestId}`);
             }
         } else {
             console.log(`Could not find run item element for ${requestId}`);
         }
     }
+
+    // ── Approve / Reject / Plan Output ─────────────────────────────────────────
+
+    var _pendingApprovalId = null;
+    var _pendingRejectId = null;
+
+    $(document).on('click', '.approve-run-btn', function() {
+        _pendingApprovalId = $(this).data('request-id');
+        $('#approveConfirmModal').modal('show');
+    });
+
+    $('#confirmApproveBtn').on('click', function() {
+        $('#approveConfirmModal').modal('hide');
+        if (!_pendingApprovalId) return;
+        var requestId = _pendingApprovalId;
+        _pendingApprovalId = null;
+
+        var $btn = $(`.approve-run-btn[data-request-id="${requestId}"]`);
+        $btn.prop('disabled', true).text('Approving...');
+
+        $.ajax({
+            url: `/api/v1/projects/${projectName}/workspaces/${workspaceName}/runs/${requestId}/approve`,
+            method: 'POST',
+            success: function() {
+                toastr.success('Plan approved. Apply phase started.', 'Approved');
+                $btn.closest('.run-item').find('.approve-run-btn, .reject-run-btn, .view-plan-btn').remove();
+                $(`#plan-output-${requestId}`).remove();
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.detail) ? xhr.responseJSON.detail : 'Failed to approve plan';
+                toastr.error(msg, 'Error');
+                $btn.prop('disabled', false).text('Approve');
+            }
+        });
+    });
+
+    $(document).on('click', '.reject-run-btn', function() {
+        _pendingRejectId = $(this).data('request-id');
+        $('#rejectConfirmModal').modal('show');
+    });
+
+    $('#confirmRejectBtn').on('click', function() {
+        $('#rejectConfirmModal').modal('hide');
+        if (!_pendingRejectId) return;
+        var requestId = _pendingRejectId;
+        _pendingRejectId = null;
+
+        var $btn = $(`.reject-run-btn[data-request-id="${requestId}"]`);
+        $btn.prop('disabled', true).text('Rejecting...');
+
+        $.ajax({
+            url: `/api/v1/projects/${projectName}/workspaces/${workspaceName}/runs/${requestId}/reject`,
+            method: 'POST',
+            success: function() {
+                toastr.success('Plan rejected. Workspace unlocked.', 'Rejected');
+                $btn.closest('.run-item').find('.approve-run-btn, .reject-run-btn, .view-plan-btn').remove();
+                $(`#plan-output-${requestId}`).remove();
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.detail) ? xhr.responseJSON.detail : 'Failed to reject plan';
+                toastr.error(msg, 'Error');
+                $btn.prop('disabled', false).text('Reject');
+            }
+        });
+    });
+
+    $(document).on('click', '.view-plan-btn', function() {
+        var requestId = $(this).data('request-id');
+        var $panel = $(`#plan-output-${requestId}`);
+
+        if ($panel.hasClass('show')) {
+            $panel.removeClass('show');
+            return;
+        }
+
+        $panel.addClass('show');
+        var $pre = $panel.find('.plan-output-text');
+
+        // Only fetch if not already loaded
+        if ($pre.data('loaded')) return;
+
+        $.ajax({
+            url: `/api/v1/projects/${projectName}/workspaces/${workspaceName}/runs/${requestId}/plan`,
+            method: 'GET',
+            success: function(resp) {
+                $pre.text(resp.plan_output || '(No plan output available)');
+                $pre.data('loaded', true);
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.detail) ? xhr.responseJSON.detail : 'Failed to load plan output';
+                $pre.text('Error: ' + msg);
+            }
+        });
+    });
 
     // View logs
     $(document).on('click', '.view-logs-btn', function() {

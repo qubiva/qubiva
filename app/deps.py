@@ -114,6 +114,9 @@ chat_manager = ChatManager(
 
 ai_gateway_manager = AIGatewayManager(ConfigManager, db_manager, kms_manager)
 
+from app.managers.queue_manager import QueueManager
+queue_manager = QueueManager(db_manager, ConfigManager)
+
 # Runner pod pools (pre-warmed pods for IaC/discovery batch runs)
 from app.runner_pool import RunnerPoolManager, RunnerType
 

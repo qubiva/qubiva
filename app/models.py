@@ -178,6 +178,7 @@ class Models:
         github_repo_name: str
         cloud_account: str
         cloud_platform: str
+        trigger_branch: Optional[str] = None
 
         @field_validator("name")
         def validate_name(cls, value):
@@ -208,6 +209,7 @@ class Models:
         github_repo_name: str
         cloud_account: str
         cloud_platform: str
+        trigger_branch: Optional[str] = None
 
     class OrgPolicyRepoUpdate(BaseModel):
         repo_url: str

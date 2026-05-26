@@ -53,6 +53,7 @@ from app.routes import (
     dashboard,
     ai_governance,
     project_tokens,
+    run_actions,
 )
 
 log_level = getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO)
@@ -90,6 +91,15 @@ def _store_initial_admin_secret(password: str):
         except k8s_config.ConfigException:
             k8s_config.load_kube_config()
 
+        # kubernetes-python-client v29+ bug: load_incluster_config() writes
+        # the token to api_key['authorization'] but auth_settings() checks
+        # api_key['BearerToken'], so no auth header is sent → system:anonymous.
+        # Fix: keep both keys in sync.
+        cfg = k8s_client.Configuration.get_default_copy()
+        if 'authorization' in cfg.api_key and 'BearerToken' not in cfg.api_key:
+            cfg.api_key['BearerToken'] = cfg.api_key['authorization']
+        api_client = k8s_client.ApiClient(configuration=cfg)
+
         namespace = os.environ.get("K8S_NAMESPACE", "default")
         secret = k8s_client.V1Secret(
             metadata=k8s_client.V1ObjectMeta(
@@ -99,7 +109,7 @@ def _store_initial_admin_secret(password: str):
             ),
             string_data={"password": password},
         )
-        core_v1 = k8s_client.CoreV1Api()
+        core_v1 = k8s_client.CoreV1Api(api_client=api_client)
         try:
             core_v1.read_namespaced_secret("qubiva-initial-admin-secret", namespace)
             core_v1.replace_namespaced_secret("qubiva-initial-admin-secret", namespace, secret)
@@ -254,6 +264,59 @@ async def lifespan(app: FastAPI):
 
     await runner_pool_maintenance()
 
+    # Approval timeout: auto-reject plans that have been awaiting approval too long
+    @repeat_every(seconds=300)  # Every 5 minutes
+    async def approval_timeout_check():
+        try:
+            from datetime import datetime, timedelta, timezone
+            from app.database_generic_operator import MongoDBManager
+            from app.managers.plan_store import PlanStore
+
+            ag_cfg = config_manager.get_config("approval_gate") or {}
+            timeout_hours = int(ag_cfg.get("timeout_hours", 48))
+            cutoff = datetime.now(timezone.utc) - timedelta(hours=timeout_hours)
+
+            _db_manager = MongoDBManager()
+            planned = await _db_manager.find_documents(
+                "requests",
+                {"state": "planned"},
+            )
+            if not planned:
+                return
+
+            plan_store = PlanStore()
+            expired = [
+                r for r in planned
+                if r.get("requested_on") and
+                datetime.fromisoformat(r["requested_on"]).replace(tzinfo=timezone.utc) < cutoff
+            ]
+
+            for r in expired:
+                request_id = r.get("request_id")
+                p_name = r.get("project_name")
+                w_name = r.get("workspace_name")
+                try:
+                    await _db_manager.update_document(
+                        "requests",
+                        {"request_id": request_id},
+                        {"state": "approval_timed_out",
+                         "error_details": f"Plan approval not received within {timeout_hours} hours"},
+                    )
+                    if p_name and w_name:
+                        await project_manager.set_workspace_state(p_name, w_name, False)
+                        from app.deps import queue_manager as _qm
+                        await _qm.dequeue_next(p_name, w_name)
+                    plan_store.delete_plan(request_id)
+                    from app.routes.internal import _maybe_update_check_run
+                    await _maybe_update_check_run(request_id, "approval_timed_out")
+                    logger.info("Auto-rejected plan %s (approval timeout)", request_id)
+                except Exception as exc:
+                    logger.error("Failed to auto-reject plan %s: %s", request_id, exc)
+        except Exception as e:
+            logger.error(f"Approval timeout check failed: {e}")
+
+    await approval_timeout_check()
+
     # Create default admin user on first boot
     success, _ = await project_manager.user_exists(master_admin)
     if not success:
@@ -407,6 +470,7 @@ app.include_router(analyst.router)
 app.include_router(dashboard.router)
 app.include_router(ai_governance.router)
 app.include_router(project_tokens.router)
+app.include_router(run_actions.router)
 
 
 if __name__ == "__main__":

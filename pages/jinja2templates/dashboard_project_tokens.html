@@ -31,10 +31,6 @@
       <i class="fas fa-id-badge fa-3x text-muted mb-3" style="display:block;"></i>
       <h5 class="text-muted">No service tokens</h5>
       <p class="text-muted">Create a token to give applications or CI/CD pipelines access to this project.</p>
-      <button type="button" class="btn btn-primary btn-sm mt-1" id="btn-create-token-empty"
-              data-permission='["project_token_create"]'>
-        <i class="fas fa-plus mr-1"></i> Create Token
-      </button>
     </div>
     <div id="tokens-list-wrap" style="display:none;" class="p-3">
       <div id="tokens-list"></div>
@@ -274,7 +270,7 @@ function openCreateModal() {
     $('#modal-create-token').modal('show');
 }
 
-$('#btn-create-project-token, #btn-create-token-empty').on('click', openCreateModal);
+$('#btn-create-project-token').on('click', openCreateModal);
 
 /* ---- Confirm create ---- */
 $('#btn-confirm-create-token').on('click', function () {

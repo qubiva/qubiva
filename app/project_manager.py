@@ -286,6 +286,15 @@ class ProjectManager:
     async def get_installation_token_for_repo(self, *args, **kwargs):
         return await self._github_app_mgr.get_installation_token_for_repo(*args, **kwargs)
 
+    async def get_webhook_secret(self):
+        return await self._github_app_mgr.get_webhook_secret()
+
+    async def create_check_run(self, *args, **kwargs):
+        return await self._github_app_mgr.create_check_run(*args, **kwargs)
+
+    async def update_check_run(self, *args, **kwargs):
+        return await self._github_app_mgr.update_check_run(*args, **kwargs)
+
     async def search_github_app_repos_for_picker(self, *args, **kwargs):
         return await self._github_app_mgr.search_github_app_repos_for_picker(*args, **kwargs)
 

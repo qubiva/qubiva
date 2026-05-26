@@ -14,7 +14,7 @@ class GitHubAppManager(ManagerBase):
     def __init__(self, db_manager, kms_manager):
         super().__init__(db_manager, kms_manager)
 
-    async def setup_github_app(self, app_id: int, private_key_content: str):
+    async def setup_github_app(self, app_id: int, private_key_content: str, webhook_secret: str = None):
         """One-time setup to store GitHub App credentials securely"""
         try:
             github_app_config = {
@@ -23,6 +23,8 @@ class GitHubAppManager(ManagerBase):
                 'private_key': self.encrypt_data(private_key_content),
                 'updated_at': datetime.utcnow()
             }
+            if webhook_secret is not None:
+                github_app_config['webhook_secret'] = self.encrypt_data(webhook_secret)
 
             await self.db_manager.update_one_document(
                 'org_settings',
@@ -38,6 +40,21 @@ class GitHubAppManager(ManagerBase):
         except Exception as e:
             logger.error(f"Failed to setup GitHub App: {str(e)}")
             return False, f"Failed to setup GitHub App: {str(e)}"
+
+    async def get_webhook_secret(self) -> str | None:
+        """Return the decrypted webhook secret, or None if not configured."""
+        try:
+            config = await self.db_manager.find_document('org_settings', {'setting_type': 'github_app'})
+            if not config or 'webhook_secret' not in config:
+                return None
+            secret = self.decrypt_data(config['webhook_secret'])
+            if secret == "DECRYPTION_FAILED":
+                logger.error("Failed to decrypt GitHub App webhook secret")
+                return None
+            return secret
+        except Exception as e:
+            logger.error("Error retrieving webhook secret: %s", e)
+            return None
 
     async def store_installation_mapping(self, org_name: str, installation_id: int):
         """Store GitHub App installation ID for an organization"""
@@ -313,7 +330,7 @@ class GitHubAppManager(ManagerBase):
             payload = {
                 "iat": now - 60,          # allow clock skew
                 "exp": now + 9 * 60,      # < 10 minutes
-                "iss": app_id
+                "iss": str(app_id)
             }
             app_jwt = jwt.encode(payload, private_key, algorithm="RS256")
 
@@ -392,7 +409,7 @@ class GitHubAppManager(ManagerBase):
 
             # --- Fallback: REST API with JWT ---
             now = int(time.time())
-            payload = {"iat": now - 60, "exp": now + 9 * 60, "iss": app_id}
+            payload = {"iat": now - 60, "exp": now + 9 * 60, "iss": str(app_id)}
             app_jwt = jwt.encode(payload, private_key, algorithm="RS256")
 
             url = f"https://api.github.com/app/installations/{installation_id}"
@@ -413,3 +430,132 @@ class GitHubAppManager(ManagerBase):
 
         except Exception as e:
             return False, f"Validation failed: {str(e)}"
+
+    # ------------------------------------------------------------------
+    # GitHub Check Runs
+    # ------------------------------------------------------------------
+
+    async def _get_installation_token_for_repo_full_name(self, repo_full_name: str) -> str | None:
+        """Get an installation token scoped to a specific repository by full name (owner/repo)."""
+        try:
+            config = await self.db_manager.find_document('org_settings', {'setting_type': 'github_app'})
+            if not config:
+                return None
+            app_id = int(config.get("app_id"))
+            private_key = self.decrypt_data(config.get("private_key", ""))
+            if private_key == "DECRYPTION_FAILED":
+                return None
+            if isinstance(private_key, (bytes, bytearray)):
+                private_key = private_key.decode("utf-8", errors="ignore")
+
+            now = int(time.time())
+            app_jwt = jwt.encode(
+                {"iat": now - 60, "exp": now + 9 * 60, "iss": str(app_id)},
+                private_key,
+                algorithm="RS256",
+            )
+            headers = {
+                "Authorization": f"Bearer {app_jwt}",
+                "Accept": "application/vnd.github+json",
+                "User-Agent": "qubiva-app",
+            }
+
+            # Find installation for the repo owner
+            owner = repo_full_name.split("/")[0]
+            install_doc = await self.db_manager.find_document("github_installations", {"org_name": owner})
+            if not install_doc:
+                return None
+            installation_id = install_doc["installation_id"]
+
+            token_url = f"https://api.github.com/app/installations/{installation_id}/access_tokens"
+            resp = requests.post(token_url, headers=headers, timeout=15)
+            if resp.status_code not in (200, 201):
+                logger.error("Failed to get installation token: %s %s", resp.status_code, resp.text)
+                return None
+            return resp.json().get("token")
+        except Exception as exc:
+            logger.error("_get_installation_token_for_repo_full_name error: %s", exc)
+            return None
+
+    async def create_check_run(
+        self,
+        repo_full_name: str,
+        head_sha: str,
+        name: str,
+        status: str,
+        conclusion: str | None = None,
+        title: str = "",
+        summary: str = "",
+        details_url: str | None = None,
+    ) -> int | None:
+        """Create a GitHub Check Run. Returns the check_run_id or None on failure."""
+        token = await self._get_installation_token_for_repo_full_name(repo_full_name)
+        if not token:
+            logger.warning("Cannot create check run — no installation token for %s", repo_full_name)
+            return None
+        try:
+            url = f"https://api.github.com/repos/{repo_full_name}/check-runs"
+            payload = {
+                "name": name,
+                "head_sha": head_sha,
+                "status": status,
+            }
+            if conclusion:
+                payload["conclusion"] = conclusion
+                payload["completed_at"] = datetime.utcnow().isoformat() + "Z"
+            if title or summary:
+                payload["output"] = {"title": title, "summary": summary}
+            if details_url:
+                payload["details_url"] = details_url
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/vnd.github+json",
+                "User-Agent": "qubiva-app",
+            }
+            resp = requests.post(url, json=payload, headers=headers, timeout=15)
+            if resp.status_code not in (200, 201):
+                logger.error("create_check_run failed: %s %s", resp.status_code, resp.text)
+                return None
+            check_run_id = resp.json().get("id")
+            logger.info("Created check run %s for %s sha=%s", check_run_id, repo_full_name, head_sha[:8])
+            return check_run_id
+        except Exception as exc:
+            logger.error("create_check_run error: %s", exc)
+            return None
+
+    async def update_check_run(
+        self,
+        repo_full_name: str,
+        check_run_id: int,
+        status: str,
+        conclusion: str | None = None,
+        title: str = "",
+        summary: str = "",
+    ) -> bool:
+        """Update an existing GitHub Check Run. Returns True on success."""
+        token = await self._get_installation_token_for_repo_full_name(repo_full_name)
+        if not token:
+            logger.warning("Cannot update check run — no installation token for %s", repo_full_name)
+            return False
+        try:
+            url = f"https://api.github.com/repos/{repo_full_name}/check-runs/{check_run_id}"
+            payload: dict = {"status": status}
+            if conclusion:
+                payload["conclusion"] = conclusion
+                payload["completed_at"] = datetime.utcnow().isoformat() + "Z"
+            if title or summary:
+                payload["output"] = {"title": title, "summary": summary}
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/vnd.github+json",
+                "User-Agent": "qubiva-app",
+            }
+            resp = requests.patch(url, json=payload, headers=headers, timeout=15)
+            if resp.status_code not in (200, 201):
+                logger.error("update_check_run failed: %s %s", resp.status_code, resp.text)
+                return False
+            logger.info("Updated check run %s for %s", check_run_id, repo_full_name)
+            return True
+        except Exception as exc:
+            logger.error("update_check_run error: %s", exc)
+            return False

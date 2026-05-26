@@ -4,6 +4,19 @@ $(document).ready(function() {
   let githubAppConfigured = false;
 
 
+  // toggle webhook secret visibility
+  $('#toggle-webhook-secret-visibility').on('click', function() {
+    const input = $('#webhook-secret');
+    const icon = $('#toggle-webhook-secret-icon');
+    if (input.attr('type') === 'password') {
+      input.attr('type', 'text');
+      icon.removeClass('fa-eye').addClass('fa-eye-slash');
+    } else {
+      input.attr('type', 'password');
+      icon.removeClass('fa-eye-slash').addClass('fa-eye');
+    }
+  });
+
   // toggle private key bullets
   $('#toggle-private-key-visibility').on('click', function() {
     const input = $('#private-key');
@@ -95,6 +108,7 @@ $(document).ready(function() {
   function saveAndMaybeLink() {
     const appId = ($('#app-id').val() || '').trim();
     const privateKey = ($('#private-key').val() || '').trim();
+    const webhookSecret = ($('#webhook-secret').val() || '').trim();
     const slug = ($('#app-slug').val() || '').trim();
     const installationId = ($('#installation-id').val() || '').trim();
 
@@ -125,7 +139,10 @@ $(document).ready(function() {
       url: '/api/v1/org/github-app/setup',
       method: 'POST',
       contentType: 'application/json',
-      data: JSON.stringify({ app_id: parseInt(appId, 10), private_key: privateKey }),
+      data: JSON.stringify(Object.assign(
+        { app_id: parseInt(appId, 10), private_key: privateKey },
+        webhookSecret ? { webhook_secret: webhookSecret } : {}
+      )),
       success: function(resp) {
 
         githubAppConfigured = true;
@@ -134,6 +151,9 @@ $(document).ready(function() {
         // hide key and reset eye icon
         $('#private-key').val('').css('-webkit-text-security', 'disc');
         $('#toggle-private-key-icon').removeClass('fa-eye-slash').addClass('fa-eye');
+        // clear webhook secret field
+        $('#webhook-secret').val('').attr('type', 'password');
+        $('#toggle-webhook-secret-icon').removeClass('fa-eye-slash').addClass('fa-eye');
         loadGitHubAppStatus();
 
         // 2) If an Installation ID was provided, link it now

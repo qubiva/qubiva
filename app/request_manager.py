@@ -215,7 +215,11 @@ class RequestTracker:
         except Exception as e:
             return False, f"Failed to update request's log detail: {str(e)}"
 
-    TERMINAL_STATES = {"completed", "failed", "execution failed", "timed out", "cancelled", "benchmark succeeded", "benchmark failed"}
+    TERMINAL_STATES = {
+        "completed", "failed", "execution failed", "timed out", "cancelled",
+        "benchmark succeeded", "benchmark failed",
+        "rejected", "approval_timed_out",
+    }
 
     async def update_job_name(self, request_id: str, job_name: str) -> Tuple[bool, str]:
         try:
@@ -293,6 +297,19 @@ class RequestTracker:
             return True, "Discovery config updated successfully"
         except Exception as e:
             return False, f"Failed to update discovery config: {str(e)}"
+
+    async def update_request_fields(self, request_id: str, fields: Dict[str, Any]) -> Tuple[bool, str]:
+        """Update arbitrary fields on a request document (used for plan_output, approved_by, etc.)."""
+        try:
+            await self.db_manager.update_document(
+                self.collection_name,
+                {"request_id": request_id},
+                fields,
+            )
+            await self.broadcast_update(request_id, fields)
+            return True, "Request fields updated successfully"
+        except Exception as e:
+            return False, f"Failed to update request fields: {str(e)}"
 
     async def get_discovery_config(self, request_id: str) -> Tuple[bool, Union[Dict[str, str], str]]:
         """

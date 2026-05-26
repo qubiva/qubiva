@@ -1329,22 +1329,182 @@ def seed(db, fernet):
     print("  Created finops-dashboard tasks")
 
     # ── IaC run history ─────────────────────────────────────────────────
+    # Helper: generate realistic terraform plan output text
+    def tf_plan_output(add=0, change=0, destroy=0, replace=0):
+        lines = [
+            "Terraform used the selected providers to generate the following execution plan.",
+            "Resource actions are indicated with the following symbols:",
+        ]
+        if add:    lines.append("  + create")
+        if change: lines.append("  ~ update in-place")
+        if destroy:lines.append("  - destroy")
+        if replace:lines.append("-/+ destroy and then create replacement")
+        lines.append("")
+        lines.append("Terraform will perform the following actions:")
+        lines.append("")
+        total = add + change + destroy + replace
+        if total == 0:
+            lines.append("No changes. Your infrastructure matches the configuration.")
+        else:
+            parts = []
+            if add:     parts.append(f"{add} to add")
+            if change:  parts.append(f"{change} to change")
+            if destroy: parts.append(f"{destroy} to destroy")
+            if replace: parts.append(f"{replace} to replace (destroy then create)")
+            lines.append(f"Plan: {', '.join(parts)}.")
+        return "\n".join(lines)
+
     iac_runs = [
-        {"request_id": "run-001", "project_name": "acme-platform", "workspace_name": "network-prod", "phases": ["init", "plan", "apply"], "state": "completed", "offset_days": -14},
-        {"request_id": "run-002", "project_name": "acme-platform", "workspace_name": "eks-cluster", "phases": ["init", "plan", "apply"], "state": "completed", "offset_days": -10},
-        {"request_id": "run-003", "project_name": "acme-platform", "workspace_name": "network-prod", "phases": ["init", "plan", "apply"], "state": "completed", "offset_days": -7},
-        {"request_id": "run-004", "project_name": "acme-platform", "workspace_name": "eks-cluster", "phases": ["init", "plan", "apply"], "state": "failed", "offset_days": -5, "error": "Error: creating EKS Node Group: operation error EKS: CreateNodegroup, ResourceLimitExceededException"},
-        {"request_id": "run-005", "project_name": "acme-platform", "workspace_name": "eks-cluster", "phases": ["init", "plan"], "state": "completed", "offset_days": -3},
-        {"request_id": "run-006", "project_name": "acme-platform", "workspace_name": "azure-landing-zone", "phases": ["init", "plan", "apply"], "state": "completed", "offset_days": -2},
-        {"request_id": "run-007", "project_name": "acme-platform", "workspace_name": "network-prod", "phases": ["init", "plan"], "state": "completed", "offset_days": -1},
-        {"request_id": "run-008", "project_name": "finops-dashboard", "workspace_name": "cost-collector", "phases": ["init", "plan", "apply"], "state": "completed", "offset_days": -8},
-        {"request_id": "run-009", "project_name": "finops-dashboard", "workspace_name": "cost-collector", "phases": ["init", "plan", "apply"], "state": "completed", "offset_days": -2},
+        # run-001: network-prod — push by james-t, approved, 2 new security group rules
+        {
+            "request_id": "run-001",
+            "project_name": "acme-platform", "workspace_name": "network-prod",
+            "phases": ["init", "plan", "apply"], "state": "completed",
+            "offset_days": -14,
+            "trigger_source": "webhook_push", "triggered_by": "james-t",
+            "head_sha": "a3f8c2d14e7b9051f6a2c3d4e5f6a7b8c9d0e1f2",
+            "repo_full_name": "acme-corp/infrastructure",
+            "head_commit_url": "https://github.com/acme-corp/infrastructure/commit/a3f8c2d1",
+            "plan_summary": {"add": 2, "change": 0, "destroy": 0, "replace": 0},
+            "plan_output": tf_plan_output(add=2),
+            "approved_by": "admin@qubiva.local", "approved_offset_hours": 1.5,
+        },
+        # run-002: eks-cluster — push by sarah-k, approved, node group scaling
+        {
+            "request_id": "run-002",
+            "project_name": "acme-platform", "workspace_name": "eks-cluster",
+            "phases": ["init", "plan", "apply"], "state": "completed",
+            "offset_days": -10,
+            "trigger_source": "webhook_push", "triggered_by": "sarah-k",
+            "head_sha": "b4e9d3e25f8c0162g7b3c4d5e6f7a8b9c0d1e2f3",
+            "repo_full_name": "acme-corp/infrastructure",
+            "head_commit_url": "https://github.com/acme-corp/infrastructure/commit/b4e9d3e2",
+            "plan_summary": {"add": 1, "change": 3, "destroy": 0, "replace": 0},
+            "plan_output": tf_plan_output(add=1, change=3),
+            "approved_by": "admin@qubiva.local", "approved_offset_hours": 0.5,
+        },
+        # run-003: network-prod — manual run, approved by sarah, minor update
+        {
+            "request_id": "run-003",
+            "project_name": "acme-platform", "workspace_name": "network-prod",
+            "phases": ["init", "plan", "apply"], "state": "completed",
+            "offset_days": -7,
+            "trigger_source": "manual", "triggered_by": None,
+            "head_sha": "c5f0e4f36a9d1273h8c4d5e6f7a8b9c0d1e2f3a4",
+            "repo_full_name": "acme-corp/infrastructure",
+            "head_commit_url": "https://github.com/acme-corp/infrastructure/commit/c5f0e4f3",
+            "plan_summary": {"add": 0, "change": 1, "destroy": 0, "replace": 0},
+            "plan_output": tf_plan_output(change=1),
+            "approved_by": "sarah@example.com", "approved_offset_hours": 2.0,
+        },
+        # run-004: eks-cluster — push by james-t, execution failed during apply
+        {
+            "request_id": "run-004",
+            "project_name": "acme-platform", "workspace_name": "eks-cluster",
+            "phases": ["init", "plan", "apply"], "state": "execution failed",
+            "offset_days": -5,
+            "trigger_source": "webhook_push", "triggered_by": "james-t",
+            "head_sha": "d6a1f5a47b0e2384i9d5e6f7a8b9c0d1e2f3a4b5",
+            "repo_full_name": "acme-corp/infrastructure",
+            "head_commit_url": "https://github.com/acme-corp/infrastructure/commit/d6a1f5a4",
+            "plan_summary": {"add": 2, "change": 1, "destroy": 0, "replace": 0},
+            "plan_output": tf_plan_output(add=2, change=1),
+            "approved_by": "admin@qubiva.local", "approved_offset_hours": 0.25,
+            "error": "Error: creating EKS Node Group: operation error EKS: CreateNodegroup, ResourceLimitExceededException",
+        },
+        # run-005: eks-cluster — speculative plan from PR #14, plan-only
+        {
+            "request_id": "run-005",
+            "project_name": "acme-platform", "workspace_name": "eks-cluster",
+            "phases": ["init", "plan"], "state": "completed",
+            "offset_days": -3,
+            "trigger_source": "webhook_pr", "triggered_by": "james-t",
+            "is_speculative": True,
+            "pr_number": 14,
+            "pr_url": "https://github.com/acme-corp/infrastructure/pull/14",
+            "head_sha": "e7b2a6b58c1f3495j0e6f7a8b9c0d1e2f3a4b5c6",
+            "repo_full_name": "acme-corp/infrastructure",
+            "head_commit_url": "https://github.com/acme-corp/infrastructure/commit/e7b2a6b5",
+            "plan_summary": {"add": 0, "change": 2, "destroy": 0, "replace": 1},
+            "plan_output": tf_plan_output(change=2, replace=1),
+        },
+        # run-006: azure-landing-zone — push by james-t, approved, large rollout
+        {
+            "request_id": "run-006",
+            "project_name": "acme-platform", "workspace_name": "azure-landing-zone",
+            "phases": ["init", "plan", "apply"], "state": "completed",
+            "offset_days": -2,
+            "trigger_source": "webhook_push", "triggered_by": "james-t",
+            "head_sha": "f8c3b7c69d2a4506k1f7a8b9c0d1e2f3a4b5c6d7",
+            "repo_full_name": "acme-corp/infrastructure",
+            "head_commit_url": "https://github.com/acme-corp/infrastructure/commit/f8c3b7c6",
+            "plan_summary": {"add": 5, "change": 2, "destroy": 0, "replace": 0},
+            "plan_output": tf_plan_output(add=5, change=2),
+            "approved_by": "admin@qubiva.local", "approved_offset_hours": 3.0,
+        },
+        # run-007: network-prod — manual run, plan rejected (destroy detected)
+        {
+            "request_id": "run-007",
+            "project_name": "acme-platform", "workspace_name": "network-prod",
+            "phases": ["init", "plan", "apply"], "state": "rejected",
+            "offset_days": -1,
+            "trigger_source": "manual", "triggered_by": None,
+            "head_sha": "a9d4c8d70e3b5617l2a8b9c0d1e2f3a4b5c6d7e8",
+            "repo_full_name": "acme-corp/infrastructure",
+            "head_commit_url": "https://github.com/acme-corp/infrastructure/commit/a9d4c8d7",
+            "plan_summary": {"add": 0, "change": 0, "destroy": 1, "replace": 0},
+            "plan_output": tf_plan_output(destroy=1),
+            "rejected_by": "admin@qubiva.local",
+        },
+        # run-008: cost-collector — push by deploy-bot, approved, new lambda
+        {
+            "request_id": "run-008",
+            "project_name": "finops-dashboard", "workspace_name": "cost-collector",
+            "phases": ["init", "plan", "apply"], "state": "completed",
+            "offset_days": -8,
+            "trigger_source": "webhook_push", "triggered_by": "deploy-bot",
+            "head_sha": "b0e5d9e81f4c6728m3b9c0d1e2f3a4b5c6d7e8f9",
+            "repo_full_name": "acme-corp/finops",
+            "head_commit_url": "https://github.com/acme-corp/finops/commit/b0e5d9e8",
+            "plan_summary": {"add": 1, "change": 0, "destroy": 0, "replace": 0},
+            "plan_output": tf_plan_output(add=1),
+            "approved_by": "admin@qubiva.local", "approved_offset_hours": 0.75,
+        },
+        # run-009: cost-collector — manual, awaiting approval (planned state)
+        {
+            "request_id": "run-009",
+            "project_name": "finops-dashboard", "workspace_name": "cost-collector",
+            "phases": ["init", "plan", "apply"], "state": "planned",
+            "offset_days": 0,
+            "trigger_source": "manual", "triggered_by": None,
+            "head_sha": "c1f6e0f92a5d7839n4c0d1e2f3a4b5c6d7e8f9a0",
+            "repo_full_name": "acme-corp/finops",
+            "head_commit_url": "https://github.com/acme-corp/finops/commit/c1f6e0f9",
+            "plan_summary": {"add": 2, "change": 1, "destroy": 1, "replace": 0},
+            "plan_output": tf_plan_output(add=2, change=1, destroy=1),
+        },
+        # run-010: eks-cluster — push, approval timed out
+        {
+            "request_id": "run-010",
+            "project_name": "acme-platform", "workspace_name": "eks-cluster",
+            "phases": ["init", "plan", "apply"], "state": "approval_timed_out",
+            "offset_days": -4,
+            "trigger_source": "webhook_push", "triggered_by": "sarah-k",
+            "head_sha": "d2a7f1a03b6e8940o5d1e2f3a4b5c6d7e8f9a0b1",
+            "repo_full_name": "acme-corp/infrastructure",
+            "head_commit_url": "https://github.com/acme-corp/infrastructure/commit/d2a7f1a0",
+            "plan_summary": {"add": 1, "change": 0, "destroy": 0, "replace": 0},
+            "plan_output": tf_plan_output(add=1),
+        },
     ]
     for r in iac_runs:
         run_time = NOW + timedelta(days=r["offset_days"])
-        db.requests.insert_one({
+        approved_at = None
+        if r.get("approved_by") and r.get("approved_offset_hours"):
+            approved_at = iso(run_time + timedelta(hours=r["approved_offset_hours"]))
+        doc = {
             "request_id": r["request_id"],
-            "requested_by": "admin@qubiva.local",
+            "requested_by": r["triggered_by"] or "admin@qubiva.local",
             "requested_on": iso(run_time),
             "request_type": "terraform_run",
             "state": r["state"],
@@ -1355,8 +1515,25 @@ def seed(db, fernet):
             "logs": None,
             "job_name": None,
             "error": r.get("error"),
-        })
-    print("  Created IaC run history")
+            # Trigger metadata
+            "trigger_source": r.get("trigger_source", "manual"),
+            "triggered_by": r.get("triggered_by") or "",
+            "head_sha": r.get("head_sha", ""),
+            "head_commit_url": r.get("head_commit_url", ""),
+            "repo_full_name": r.get("repo_full_name", ""),
+            "is_speculative": r.get("is_speculative", False),
+            "pr_number": r.get("pr_number"),
+            "pr_url": r.get("pr_url", ""),
+            # Plan output
+            "plan_summary": r.get("plan_summary", {}),
+            "plan_output": r.get("plan_output", ""),
+            # Approval / rejection
+            "approved_by": r.get("approved_by"),
+            "approved_at": approved_at,
+            "rejected_by": r.get("rejected_by"),
+        }
+        db.requests.insert_one(doc)
+    print("  Created IaC run history (10 runs with full metadata)")
 
     # ── AWS Discovery runs (acme-platform) — 4 runs for trend charts ───
     aws_disc_runs = [

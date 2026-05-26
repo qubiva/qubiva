@@ -76,6 +76,9 @@ body {
 .status-warning { background-color: #fff4ce; color: #8a6d00; }
 .status-in-progress { background-color: #deecf9; color: #0078d4; }
 .status-timeout { background-color: #e1dfdd; color: #323130; }
+.status-planned { background-color: #fff4e5; color: #8a4b00; }
+.plan-output-panel { border-top: 1px solid #dee2e6; display: none; }
+.plan-output-panel.show { display: block; }
 
 .custom-spinner::before {
     content: '';

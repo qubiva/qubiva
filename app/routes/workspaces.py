@@ -15,6 +15,7 @@ from app.deps import (
     project_manager,
     request_tracker,
     iac_pool_manager,
+    queue_manager,
     get_request_tracker,
 )
 from app.models import Models
@@ -62,6 +63,7 @@ async def api_create_workspace(
         workspace_data.github_repo_name,
         workspace_data.cloud_account,
         workspace_data.cloud_platform,
+        trigger_branch=workspace_data.trigger_branch,
         acting_user=username,
     )
 
@@ -111,6 +113,7 @@ async def api_update_workspace(
         workspace_data.github_repo_name,
         workspace_data.cloud_account,
         workspace_data.cloud_platform,
+        trigger_branch=workspace_data.trigger_branch,
         acting_user=username,
     )
 
@@ -172,6 +175,7 @@ async def execute_terraform(
                 log_persistence=log_persistence,
                 pool_manager=iac_pool_manager,
                 config_manager=ConfigManager,
+                queue_manager=queue_manager,
             )
         except Exception as e:
             error_msg = f"Failed to set up IaC execution environment: {str(e)}"
@@ -256,7 +260,16 @@ async def execute_terraform(
             await tracker.update_request_state(request_id, "failed")
             raise HTTPException(status_code=400, detail=error_msg)
 
-        # If no error, update tracker to 'in progress'
+        # Workspace busy — run queued, will start when workspace becomes available
+        if result["status"] == "queued":
+            return {
+                "status": "queued",
+                "message": f"Workspace is busy. Run queued at position {result.get('queue_position', '?')}.",
+                "request_id": request_id,
+                "queue_position": result.get("queue_position"),
+            }
+
+        # Execution started — update tracker to 'in progress'
         await tracker.update_request_state(request_id, "in progress")
         return {
             "status": "success",
@@ -309,6 +322,10 @@ async def get_terraform_runs(
                 "cloud_account": run.get("cloud_account", "N/A"),
                 "github_repo": run.get("github_repo", "N/A"),
                 "phases": run.get("phases", ["N/A"]),
+                "trigger_source": run.get("trigger_source", "manual"),
+                "is_speculative": run.get("is_speculative", False),
+                "pr_number": run.get("pr_number"),
+                "head_sha": run.get("head_sha", ""),
             }
             formatted_runs.append(formatted_run)
         logger.debug("deepak")
@@ -341,9 +358,20 @@ async def get_workspace_lock_status(
         if is_locked and current_run_id:
             success, details = await request_tracker.get_request_details(current_run_id)
             if success:
+                state = details.get('state')
+                # Stale lock: the run that held the lock has already finished.
+                # Clear it now and report the workspace as available so the UI
+                # never shows "Locked by completed run".
+                if state in RequestTracker.TERMINAL_STATES:
+                    await project_manager.set_workspace_state(project_name, workspace_name, False)
+                    return {
+                        "is_locked": False,
+                        "current_run_request_id": None,
+                        "request_details": None,
+                    }
                 request_details = {
                     'request_id': current_run_id,
-                    'state': details.get('state'),
+                    'state': state,
                     'requested_by': details.get('requested_by'),
                     'requested_on': details.get('requested_on')
                 }

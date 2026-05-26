@@ -102,7 +102,7 @@
           <label><input type="checkbox" name="terraform-phases" value="refresh"> Refresh</label>
         </div>
         <div class="checkbox">
-          <label><input type="checkbox" name="terraform-phases" value="apply" data-auto-approve="true"> Apply (auto approved)</label>
+          <label><input type="checkbox" name="terraform-phases" value="apply"> Apply</label>
         </div>
         <div class="checkbox">
           <label><input type="checkbox" name="terraform-phases" value="destroy"> Destroy</label>
@@ -173,6 +173,50 @@
   </div>
 </div>
 
+<!-- Approve Plan Modal -->
+<div class="modal fade" id="approveConfirmModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Approve Plan</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to <strong>approve</strong> this plan and proceed with apply?
+        This will make changes to your infrastructure.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="confirmApproveBtn">Approve &amp; Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Plan Modal -->
+<div class="modal fade" id="rejectConfirmModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reject Plan</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to <strong>reject</strong> this plan? The workspace will be unlocked
+        and no infrastructure changes will be made.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmRejectBtn">Reject Plan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="unlockConfirmModal" tabindex="-1" role="dialog" aria-labelledby="unlockConfirmModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -202,5 +246,5 @@
 <script src="{{ static_content_url }}/static/plugins/select2/js/select2.full.min.js"></script>
 <!-- Toastr -->
 <script src="{{ static_content_url }}/static/plugins/toastr/toastr.min.js"></script>
-<script src="{{ static_content_url }}/static/custom/js/terraform-executor.js?v=3"></script>
+<script src="{{ static_content_url }}/static/custom/js/terraform-executor.js?v=4"></script>
 {% endblock %}

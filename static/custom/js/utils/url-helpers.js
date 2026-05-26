@@ -132,3 +132,13 @@ Qubiva.extractError = function (xhr, fallback) {
         return msg;
     }
 };
+
+Qubiva.escapeHtml = function (text) {
+    'use strict';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};

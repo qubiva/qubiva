@@ -71,6 +71,7 @@ _KEY_DEFS = [
     {
         "token": "sk-demo-platform-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "alias": "platform-team",
+        "project": "acme-platform",
         "max_budget": 2000.0,
         "rpm_limit": 1000,
         "tpm_limit": 500_000,
@@ -82,6 +83,7 @@ _KEY_DEFS = [
     {
         "token": "sk-demo-datateam-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "alias": "data-team",
+        "project": "finops-dashboard",
         "max_budget": 1000.0,
         "rpm_limit": 500,
         "tpm_limit": 200_000,
@@ -93,6 +95,7 @@ _KEY_DEFS = [
     {
         "token": "sk-demo-frontend-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "alias": "frontend-team",
+        "project": "acme-platform",
         "max_budget": 500.0,
         "rpm_limit": 200,
         "tpm_limit": 100_000,
@@ -104,6 +107,7 @@ _KEY_DEFS = [
     {
         "token": "sk-demo-pipeline-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "alias": "ci-pipeline",
+        "project": "acme-platform",
         "max_budget": None,
         "rpm_limit": 300,
         "tpm_limit": 150_000,
@@ -115,6 +119,7 @@ _KEY_DEFS = [
     {
         "token": "sk-demo-research-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "alias": "research",
+        "project": None,
         "max_budget": 250.0,
         "rpm_limit": 100,
         "tpm_limit": 50_000,
@@ -206,6 +211,7 @@ KEYS = [
         "models": kd["models"],
         "user_id": f"{kd['alias']}@demo.local",
         "team_id": kd["alias"],
+        "project_name": kd.get("project"),
         "created_at": (NOW - timedelta(days=kd["days_ago"])).isoformat(),
         "expires": None,
         "metadata": {"team": kd["alias"]},
@@ -229,9 +235,11 @@ SPEND_BY_MODEL = [
 
 SPEND_BY_KEY = [
     {
-        "api_key": k["token"],
+        "token": k["token"],
+        "key_name": k["key_name"],
         "key_alias": k["key_alias"],
-        "total_spend": k["spend"],
+        "spend": k["spend"],
+        "project_name": k.get("project_name"),
     }
     for k in KEYS
 ]

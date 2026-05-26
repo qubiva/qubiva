@@ -118,6 +118,8 @@ function populateWorkspaceForm(data) {
         $('#cloud-account-search').append(option).trigger('change');
     }
 
+    $('#trigger-branch').val(data.trigger_branch || '');
+
     if (data.variables) {
         Object.entries(data.variables).forEach(([key, value]) => {
             Qubiva.variableEntry.add(key, value, false, '#edit-workspace-form');
@@ -179,14 +181,15 @@ function getCurrentFormData() {
         }
     });
 
-    return { 
-        description, 
-        terraform_version: terraformVersion, 
+    return {
+        description,
+        terraform_version: terraformVersion,
         github_repo_name: githubRepoName,
         cloud_account: cloudAccount,
         cloud_platform: cloudPlatform,
-        variables, 
-        secrets 
+        trigger_branch: $('#trigger-branch').val().trim() || null,
+        variables,
+        secrets
     };
 }
 function setupEventHandlers() {

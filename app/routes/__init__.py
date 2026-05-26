@@ -21,6 +21,7 @@ from app.routes import (
     analyst,
     dashboard,
     project_tokens,
+    run_actions,
 )
 
 __all__ = [
@@ -41,4 +42,5 @@ __all__ = [
     "analyst",
     "dashboard",
     "project_tokens",
+    "run_actions",
 ]
