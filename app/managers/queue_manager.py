@@ -10,8 +10,6 @@ collection is needed.  Queued requests already carry all the context fields
 set by the @track_request decorator (project_name, workspace_name, phases).
 """
 import logging
-from datetime import datetime, timezone
-from typing import Optional
 
 logger = logging.getLogger("uvicorn.error")
 

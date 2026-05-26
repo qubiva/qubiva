@@ -4,7 +4,6 @@ Internal routes for Qubiva.
 Endpoints called by Terraform/Discovery runner Jobs and the AI gateway auth hook via HTTP.
 """
 
-import base64
 import ipaddress
 import logging
 import os
@@ -233,7 +232,7 @@ async def _maybe_update_check_run(request_id: str, new_state: str, plan_output: 
             "execution failed":  ("completed",   "failure",          "Execution Failed",    doc.get("error_details", "Execution failed.")),
             "timed out":         ("completed",   "failure",          "Timed Out",           "Runner exceeded timeout."),
             "rejected":          ("completed",   "cancelled",        "Plan Rejected",       "Plan was rejected by a team member."),
-            "approval_timed_out":("completed",   "cancelled",        "Approval Timed Out",  "No approval received within the timeout period."),
+            "approval_timed_out": ("completed",  "cancelled",        "Approval Timed Out",  "No approval received within the timeout period."),
         }
         if new_state not in state_map:
             return
@@ -351,7 +350,7 @@ async def download_plan_artifact(
     return Response(
         content=binary,
         media_type="application/octet-stream",
-        headers={"Content-Disposition": f'attachment; filename="tfplan.bin"'},
+        headers={"Content-Disposition": 'attachment; filename="tfplan.bin"'},
     )
 
 

@@ -15,7 +15,6 @@ Pull request events (opened / synchronize / reopened):
 Pull request event (closed + merged):
   - Treated as a push to the base branch (deduped by head_sha).
 """
-import asyncio
 import logging
 from typing import Optional
 
@@ -72,11 +71,7 @@ class WebhookDispatcher:
         )
 
         from app.deps import project_manager, db_manager, queue_manager, request_tracker
-        from app.iac_executor import IaCJobTrigger
         from app.deps import log_persistence, iac_pool_manager, ConfigManager
-        from app.auth.cloud_auth import MultiCloudAuthentication
-        import uuid
-        from datetime import datetime, timezone
 
         # Find workspaces matching this repo + trigger branch
         workspaces = await db_manager.find_documents(
