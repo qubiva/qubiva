@@ -65,7 +65,7 @@ Use the same demo credentials above.
 
 ---
 
-## Deploy on Kubernetes (Production)
+## Deploy on Kubernetes (Full Deployment)
 
 Install Qubiva on any Kubernetes cluster using the Helm chart. This is the full deployment — connects to real cloud accounts, executes OpenTofu/Terraform operations, and persists all data.
 
