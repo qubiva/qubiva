@@ -90,17 +90,44 @@ helm install qubiva oci://ghcr.io/qubiva/charts/qubiva \
 
 ### Access the dashboard
 
+**Quick access (port-forward):**
+
 ```bash
 kubectl port-forward -n qubiva svc/qubiva 8000:80
 ```
 
-Open:
+Open `http://localhost:8000`. This is fine for initial setup but not for ongoing use.
 
-```text
-http://localhost:8000
+**Using Ingress:**
+
+If you have an ingress controller running in your cluster, you can expose Qubiva via a Kubernetes Ingress resource. Any ingress controller works (nginx, Traefik, Contour, HAProxy, etc.).
+
+Via `--set` flags:
+
+```bash
+helm install qubiva oci://ghcr.io/qubiva/charts/qubiva \
+  --namespace qubiva --create-namespace \
+  --set ingress.enabled=true \
+  --set ingress.host=qubiva.yourdomain.com \
+  --set ingress.className=<your-ingress-class>
 ```
 
-Retrieve the generated admin password:
+Or via a `values.yaml` file:
+
+```yaml
+ingress:
+  enabled: true
+  host: qubiva.yourdomain.com
+  className: ""  # leave empty to use the cluster's default ingress class
+```
+
+This creates a Kubernetes Ingress resource only — it does not install an ingress controller.
+
+**Other ingress methods:**
+
+If your cluster uses a service mesh, cloud load balancer, or another ingress method, skip `ingress.enabled` and expose the `qubiva` service (port 80) using whatever approach fits your environment.
+
+**Retrieve the generated admin password:**
 
 ```bash
 kubectl get secret qubiva-initial-admin-secret -n qubiva \

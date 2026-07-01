@@ -16,8 +16,8 @@ Secrets and encryption keys are auto-generated on first install and preserved ac
 Access the dashboard:
 
 ```bash
-kubectl port-forward -n qubiva svc/qubiva 8080:80
-# Open http://localhost:8080 — login: admin@qubiva.local
+kubectl port-forward -n qubiva svc/qubiva 8000:80
+# Open http://localhost:8000 — login: admin@qubiva.local
 kubectl get secret qubiva-initial-admin-secret -n qubiva \
   -o jsonpath='{.data.password}' | base64 -d
 ```

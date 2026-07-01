@@ -271,12 +271,9 @@ spec:
         - port: {{ .Values.aiGateway.service.port }}
           protocol: TCP
     {{- if .Values.aiGateway.ingress.enabled }}
-    # Allow traffic from the ingress controller when external access is enabled
+    # Allow traffic from any ingress controller when external access is enabled
     - from:
         - namespaceSelector: {}
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: ingress-nginx
       ports:
         - port: {{ .Values.aiGateway.service.port }}
           protocol: TCP

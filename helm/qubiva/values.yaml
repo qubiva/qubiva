@@ -26,18 +26,23 @@ service:
   port: 80
 
 # -- Ingress configuration
+# className defaults to "" which uses the cluster's default ingress class.
+# Set className to match your ingress controller (e.g. "nginx", "traefik", "contour").
+# Qubiva uses WebSockets for log streaming — ensure your ingress controller and
+# any annotations are configured to allow WebSocket upgrades and sufficient timeouts.
+# Example nginx annotations:
+#   nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+#   nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+#   nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+#   nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+#   nginx.ingress.kubernetes.io/configuration-snippet: |
+#     proxy_set_header Upgrade $http_upgrade;
+#     proxy_set_header Connection "upgrade";
 ingress:
   enabled: false
-  className: nginx
+  className: ""
   host: qubiva.local
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
-    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      proxy_set_header Upgrade $http_upgrade;
-      proxy_set_header Connection "upgrade";
+  annotations: {}
   tls: []
 
 # -- Qubiva app resource limits
@@ -188,7 +193,7 @@ aiGateway:
       memory: 2Gi
   ingress:
     enabled: false
-    className: nginx
+    className: ""
     host: ""
     annotations: {}
     tls: []
