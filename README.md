@@ -11,7 +11,17 @@ Built for AWS, Azure, and GCP with self-hosted deployment, unified RBAC, SSO, au
 
 ---
 
-## Try Qubiva in 2 Minutes
+## Getting Started
+
+**Evaluating Qubiva?** Use the demo — no cloud account or Kubernetes cluster needed. Pre-loaded with sample data so you can explore the full UI immediately.
+
+**Ready to deploy?** Install on Kubernetes using the Helm chart. This is the only path that connects to real cloud accounts and runs actual IaC operations.
+
+---
+
+## Try the Demo
+
+### Demo Option 1 — GitHub Codespaces (no setup at all)
 
 Launch a fully working demo instantly in GitHub Codespaces.
 
@@ -26,7 +36,7 @@ Click the button above, then **"Create new codespace"**. Wait for setup to compl
 
 If your browser blocks the popup, go to the **Ports** tab in the Codespaces editor and open the URL for port 80.
 
-### Demo credentials
+#### Demo credentials
 
 ```text
 Email: admin@qubiva.local
@@ -35,9 +45,7 @@ Password: Demo@2026
 
 > Codespaces is free for up to 60 hours/month. Remember to delete your codespace at https://github.com/codespaces when you're done to conserve your free hours.
 
----
-
-## Run Locally
+### Demo Option 2 — Run locally with Docker
 
 ```bash
 git clone https://github.com/qubiva/qubiva.git
@@ -53,7 +61,51 @@ http://localhost
 
 Use the same demo credentials above.
 
-> The local demo runs with pre-loaded sample data for evaluation only. To connect real cloud accounts, deploy on Kubernetes using the Helm chart below.
+> Both demo options run with pre-loaded sample data for evaluation only. Neither connects to real cloud accounts or executes live IaC operations. For a real deployment, use the Helm chart below.
+
+---
+
+## Deploy on Kubernetes (Production)
+
+Install Qubiva on any Kubernetes cluster using the Helm chart. This is the full deployment — connects to real cloud accounts, executes OpenTofu/Terraform operations, and persists all data.
+
+```bash
+helm install qubiva oci://ghcr.io/qubiva/charts/qubiva \
+  --namespace qubiva --create-namespace
+```
+
+Encryption keys and secrets are auto-generated on first install and preserved across upgrades.
+
+### Provide your own encryption key
+
+```bash
+# Generate a Fernet-compatible encryption key
+python3 -c 'import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())'
+
+# Pass it during install
+helm install qubiva oci://ghcr.io/qubiva/charts/qubiva \
+  --namespace qubiva --create-namespace \
+  --set secrets.localEncryptionKey="YOUR_KEY_HERE"
+```
+
+### Access the dashboard
+
+```bash
+kubectl port-forward -n qubiva svc/qubiva 8000:80
+```
+
+Open:
+
+```text
+http://localhost:8000
+```
+
+Retrieve the generated admin password:
+
+```bash
+kubectl get secret qubiva-initial-admin-secret -n qubiva \
+  -o jsonpath='{.data.password}' | base64 -d
+```
 
 ---
 
@@ -195,48 +247,6 @@ Requires the AI Gateway (LiteLLM proxy) to be enabled in your Helm deployment. F
 - **Discovery Runner Jobs** — Cloud discovery and compliance execution
 - **MongoDB** — Stores users, projects, tasks, credentials, and metadata
 - **Loki** — Retains logs beyond Kubernetes pod lifetime
-
----
-
-## Deploy on Kubernetes (Helm)
-
-```bash
-helm install qubiva oci://ghcr.io/qubiva/charts/qubiva \
-  --namespace qubiva --create-namespace
-```
-
-Encryption keys and secrets are auto-generated on first install and preserved across upgrades.
-
-### Provide your own encryption key
-
-```bash
-# Generate a Fernet-compatible encryption key
-python3 -c 'import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())'
-
-# Pass it during install
-helm install qubiva oci://ghcr.io/qubiva/charts/qubiva \
-  --namespace qubiva --create-namespace \
-  --set secrets.localEncryptionKey="YOUR_KEY_HERE"
-```
-
-### Access the dashboard
-
-```bash
-kubectl port-forward -n qubiva svc/qubiva 8000:80
-```
-
-Open:
-
-```text
-http://localhost:8000
-```
-
-Retrieve the generated admin password:
-
-```bash
-kubectl get secret qubiva-initial-admin-secret -n qubiva \
-  -o jsonpath='{.data.password}' | base64 -d
-```
 
 ---
 
